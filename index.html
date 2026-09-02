@@ -171,7 +171,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
-    /* Video Wrapper & Fullscreen Fix for Mobile Landscape */
+    /* Video Wrapper & Dynamic Fullscreen Handling */
     .video-wrapper {
       position: relative;
       width: 100%;
@@ -189,7 +189,7 @@
       border: none;
     }
 
-    /* Stylings saat elemen video wrapper masuk mode Fullscreen Native */
+    /* Fullscreen CSS Native Fix */
     .video-wrapper:-webkit-full-screen {
       width: 100vw !important;
       height: 100vh !important;
@@ -446,12 +446,12 @@
     <!-- CATEGORY PILLS -->
     <div class="categories-bar">
       <div class="category-pill active" onclick="filterCategory(this, '')">🔥 Populer</div>
+      <div class="category-pill" onclick="filterCategory(this, 'YouTube Shorts Indonesia')">📱 Shorts</div>
       <div class="category-pill" onclick="filterCategory(this, 'Lofi Chill Beats')">🎧 Lofi Chill</div>
       <div class="category-pill" onclick="filterCategory(this, 'Musik Hits Indonesia')">🎵 Musik</div>
       <div class="category-pill" onclick="filterCategory(this, 'Gaming Indonesia')">🎮 Gaming</div>
       <div class="category-pill" onclick="filterCategory(this, 'Otomotif Heavy Equipment Truck')">🚜 Otomotif & Alat Berat</div>
       <div class="category-pill" onclick="filterCategory(this, 'Web Development Tutorial')">💻 Coding</div>
-      <div class="category-pill" onclick="filterCategory(this, 'Berita Terkini Indonesia')">📰 Berita</div>
     </div>
 
     <!-- MAIN GRID -->
@@ -473,7 +473,7 @@
             </div>
             <div class="action-btns">
               <button class="btn-icon" id="fullscreenBtn" onclick="toggleFullScreen()">
-                <i class="fa-solid fa-expand"></i> Landscape Fullscreen
+                <i class="fa-solid fa-expand"></i> Fullscreen
               </button>
               <button class="btn-icon" id="theaterBtn" onclick="toggleTheaterMode()">
                 <i class="fa-solid fa-table-columns"></i> Teater
@@ -486,7 +486,7 @@
         </div>
       </div>
 
-      <!-- RIGHT: SIDEBAR (SEARCH, PLAYLIST & WATCH HISTORY) -->
+      <!-- RIGHT: SIDEBAR -->
       <div class="sidebar-section">
         <div class="sidebar-card">
           <div class="tab-header">
@@ -524,6 +524,7 @@
     let ytPlayer = null;
     let currentVideoId = 'jfKfPfyJRdk';
     let currentChannelId = '';
+    let isCurrentVideoShort = false;
     let activeTab = 'search';
     
     let searchResults = [];
@@ -547,14 +548,13 @@
       });
     }
 
-    // Deteksi saat video selesai diputar -> AUTO PLAY NEXT VIDEO
+    // Deteksi Otomatis Akhir Video -> Autoplay Next Video
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.ENDED) {
         playNextVideo();
       }
     }
 
-    // Fungsi Putar Video Selanjutnya
     function playNextVideo() {
       let currentList = activeTab === 'search' ? searchResults : (activeTab === 'playlist' ? savedPlaylist : watchHistory);
       currentList = currentList.filter(item => !item.isChannel);
@@ -569,7 +569,7 @@
     }
 
     function extractYouTubeID(url) {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
       return (match && match[2].length === 11) ? match[2] : (url.length === 11 ? url : null);
     }
@@ -626,7 +626,8 @@
 
       const directId = extractYouTubeID(query);
       if (directId) {
-        playVideo(directId, `Video (${directId})`, 'YouTube Direct', '');
+        const isShortsUrl = query.includes('shorts/');
+        playVideo(directId, `Video (${directId})`, 'YouTube Direct', '', isShortsUrl);
         return;
       }
 
@@ -700,9 +701,22 @@
       }
     }
 
-    function playVideo(id, title = 'YouTube Video', author = 'YouTube', channelId = '') {
+    // DETEKSI CERDAS APAKAH VIDEO SHORTS ATAU LONG
+    function playVideo(id, title = 'YouTube Video', author = 'YouTube', channelId = '', explicitShort = false) {
       currentVideoId = id;
       currentChannelId = channelId;
+
+      const titleLower = title.toLowerCase();
+      // Cek apakah judul mengandung tag shorts / short
+      isCurrentVideoShort = explicitShort || titleLower.includes('#shorts') || titleLower.includes('#short') || titleLower.includes('shorts');
+
+      // Update tampilan tombol Fullscreen
+      const fsBtn = document.getElementById('fullscreenBtn');
+      if (isCurrentVideoShort) {
+        fsBtn.innerHTML = `<i class="fa-solid fa-mobile-screen"></i> Portrait Fullscreen`;
+      } else {
+        fsBtn.innerHTML = `<i class="fa-solid fa-expand"></i> Landscape Fullscreen`;
+      }
 
       if (ytPlayer && ytPlayer.loadVideoById) {
         ytPlayer.loadVideoById(id);
@@ -711,16 +725,14 @@
       document.getElementById('currentVideoTitle').innerText = title;
       document.getElementById('currentChannelName').innerText = author;
 
-      // Simpan Otomatis ke Watch History
       addToHistory({ id, title, author, channelId });
-
       renderSidebar();
     }
 
     function addToHistory(item) {
       watchHistory = watchHistory.filter(v => v.id !== item.id);
       watchHistory.unshift(item);
-      if (watchHistory.length > 30) watchHistory.pop(); // Max 30 riwayat
+      if (watchHistory.length > 30) watchHistory.pop();
       localStorage.setItem('zentube_history', JSON.stringify(watchHistory));
     }
 
@@ -796,12 +808,11 @@
       });
     }
 
-    // FUNGSI KHUSUS FULLSCREEN + AUTO LANDSCAPE ROTATE PADA HP
+    // PENGATURAN FULLSCREEN CERDAS BERDASARKAN JENIS VIDEO (SHORTS VS LONG)
     async function toggleFullScreen() {
       const elem = document.getElementById('videoWrapper');
       
       if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
-        // Masuk mode native fullscreen
         if (elem.requestFullscreen) {
           await elem.requestFullscreen();
         } else if (elem.webkitRequestFullscreen) {
@@ -810,12 +821,13 @@
           await elem.mozRequestFullScreen();
         }
 
-        // Kunci orientasi ke Landscape (jika didukung HP & Browser)
+        // Jika SHORTS -> Kunci Layar ke PORTRAIT
+        // Jika LONG VIDEO -> Kunci Layar ke LANDSCAPE
         if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(err => console.log('Orientation lock warning:', err));
+          const targetOrientation = isCurrentVideoShort ? 'portrait' : 'landscape';
+          screen.orientation.lock(targetOrientation).catch(err => console.log('Orientation lock warning:', err));
         }
       } else {
-        // Keluar dari mode fullscreen
         if (document.exitFullscreen) {
           await document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
@@ -824,7 +836,6 @@
           await document.mozCancelFullScreen();
         }
 
-        // Lepas kunci orientasi layar
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
         }
