@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>YouTube Mobile App Web</title>
+  <title>HidaTube Mobile App</title>
   
-  <!-- Google Fonts & FontAwesome Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
@@ -33,7 +32,7 @@
       overflow-x: hidden;
     }
 
-    /* Container Aplikasi Mobile */
+    /* Container Aplikasi Mobile HidaTube */
     .app-viewport {
       width: 100%;
       max-width: 480px; /* Lebar Tampilan Mobile */
@@ -45,7 +44,7 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
 
-    /* 1. TOP NAVBAR (HEADER ATAS) */
+    /* 1. TOP NAVBAR (HEADER ATAS HIDATUBE) */
     .top-header {
       position: fixed;
       top: 0;
@@ -64,8 +63,8 @@
     .yt-logo {
       display: flex;
       align-items: center;
-      gap: 4px;
-      font-size: 18px;
+      gap: 6px;
+      font-size: 19px;
       font-weight: 700;
       letter-spacing: -0.5px;
       color: #fff;
@@ -101,7 +100,7 @@
       border-radius: 10px;
     }
 
-    /* BAR PENCARIAN TERSEMBUNYI / EXPANDABLE */
+    /* BAR PENCARIAN TERSEMBUNYI */
     .search-bar-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -208,7 +207,7 @@
       color: #fff;
       font-size: 11px;
       font-weight: 500;
-      padding: 2px 5px;
+      padding: 2px 6px;
       border-radius: 4px;
     }
 
@@ -300,7 +299,7 @@
       overflow: hidden;
     }
 
-    /* 4. PLAYER VIEW (HALAMAN TONTON ALA YOUTUBE MOBILE) */
+    /* 4. PLAYER VIEW (PEMUTAR VIDEO DENGAN FULLSCREEN LANDSCAPE) */
     .player-view {
       display: none;
       position: fixed;
@@ -318,8 +317,8 @@
       height: 44px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       padding: 0 12px;
-      gap: 16px;
       background: var(--yt-black);
     }
 
@@ -333,6 +332,16 @@
     }
 
     .sticky-player iframe { width: 100%; height: 100%; border: none; }
+
+    /* CSS Fullscreen Native untuk Player agar Layar Penuh Landscape */
+    .sticky-player:-webkit-full-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+    }
+    .sticky-player:fullscreen {
+      width: 100vw !important;
+      height: 100vh !important;
+    }
 
     .watch-details {
       padding: 12px;
@@ -398,7 +407,7 @@
       cursor: pointer;
     }
 
-    /* 5. BOTTOM NAVIGATION BAR (FIXED BOTTOM) */
+    /* 5. BOTTOM NAVIGATION BAR */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -430,9 +439,7 @@
     .nav-item.active { color: #fff; }
     .nav-item.active i { color: #fff; }
 
-    .create-btn i {
-      font-size: 28px;
-    }
+    .create-btn i { font-size: 28px; }
 
     /* SPINNER */
     .loading-spinner {
@@ -446,11 +453,10 @@
 
   <div class="app-viewport">
     
-    <!-- 1. TOP HEADER -->
     <header class="top-header">
-      <div class="yt-logo" onclick="switchView('feed'); loadTrendingVideos();">
+      <div class="yt-logo" onclick="switchNav(document.querySelector('.nav-item'), 'beranda')">
         <i class="fa-brands fa-youtube"></i>
-        <span>YouTube</span>
+        <span>HidaTube</span>
       </div>
 
       <div class="header-actions">
@@ -464,13 +470,12 @@
         </button>
       </div>
 
-      <!-- SEARCH OVERLAY -->
       <div class="search-bar-overlay" id="searchOverlay">
         <button class="icon-btn" onclick="toggleSearchOverlay(false)">
           <i class="fa-solid fa-arrow-left"></i>
         </button>
         <div class="search-input-box">
-          <input type="text" id="searchInput" placeholder="Cari di YouTube..." onkeyup="handleSearchKey(event)">
+          <input type="text" id="searchInput" placeholder="Cari di HidaTube..." onkeyup="handleSearchKey(event)">
         </div>
         <button class="icon-btn" onclick="executeSearch()">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -478,7 +483,6 @@
       </div>
     </header>
 
-    <!-- 2. CATEGORY PILLS -->
     <nav class="chips-wrapper" id="chipsWrapper">
       <div class="explore-chip"><i class="fa-solid fa-compass"></i></div>
       <div class="chip active" onclick="filterCategory(this, '')">Semua</div>
@@ -489,38 +493,37 @@
       <div class="chip" onclick="filterCategory(this, 'Gaming Indonesia')">Gaming</div>
     </nav>
 
-    <!-- MAIN CONTAINER (BERANDA / FEED / SUBSCRIPTION / ANDA) -->
     <main id="mainContent">
       <div class="loading-spinner" id="loadingSpinner">
         <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
-        <p style="margin-top:8px; font-size:12px;">Memuat YouTube...</p>
+        <p style="margin-top:8px; font-size:12px;">Memuat HidaTube...</p>
       </div>
 
       <div class="feed-container" id="feedContainer">
-        <!-- Video Feed Cards Dirender di sini -->
-      </div>
+        </div>
     </main>
 
-    <!-- 3. WATCH PLAYER VIEW (FULLSCREEN OVERLAY UTK PLAY VIDEO) -->
     <div class="player-view" id="playerView">
       <div class="player-header-bar">
-        <button class="icon-btn" onclick="closePlayerView()">
-          <i class="fa-solid fa-arrow-left"></i>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="icon-btn" onclick="closePlayerView()">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <span style="font-weight: 500; font-size: 14px;">Pemutar Video</span>
+        </div>
+        <button class="icon-btn" onclick="togglePlayerFullScreen()" title="Layar Penuh Landscape">
+          <i class="fa-solid fa-expand"></i>
         </button>
-        <span style="font-weight: 500; font-size: 14px;">Pemutar Video</span>
       </div>
 
-      <!-- STICKY IFRAME PLAYER -->
-      <div class="sticky-player">
+      <div class="sticky-player" id="stickyPlayer">
         <div id="ytPlayerContainer"></div>
       </div>
 
-      <!-- WATCH DETAILS -->
       <div class="watch-details">
-        <h1 class="watch-title" id="watchTitle">Judul Video YouTube</h1>
+        <h1 class="watch-title" id="watchTitle">Judul Video HidaTube</h1>
         <div class="watch-stats">12RB x ditonton • 2 jam yang lalu</div>
 
-        <!-- CHANNEL ROW -->
         <div class="channel-row">
           <div class="channel-info">
             <img src="https://via.placeholder.com/36" class="channel-avatar" id="watchAvatar" alt="Avatar">
@@ -532,7 +535,6 @@
           <button class="btn-subscribe" onclick="alert('Berhasil Subskrib!')">Subskrib</button>
         </div>
 
-        <!-- ACTION BUTTONS SCROLLABLE -->
         <div class="action-bar-scroll">
           <div class="action-pill"><i class="fa-regular fa-thumbs-up"></i> 15RB</div>
           <div class="action-pill"><i class="fa-regular fa-thumbs-down"></i></div>
@@ -541,13 +543,11 @@
           <div class="action-pill"><i class="fa-solid fa-download"></i> Download</div>
         </div>
 
-        <!-- RECOMMENDED VIDEOS FEED -->
         <h3 style="font-size: 14px; margin: 16px 0 10px 0;">Berikutnya</h3>
         <div id="recommendedFeed"></div>
       </div>
     </div>
 
-    <!-- 4. BOTTOM NAVIGATION BAR -->
     <nav class="bottom-nav">
       <div class="nav-item active" onclick="switchNav(this, 'beranda')">
         <i class="fa-solid fa-house"></i>
@@ -572,7 +572,6 @@
 
   </div>
 
-  <!-- LOAD YOUTUBE IFRAME API -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
@@ -580,15 +579,37 @@
     let ytPlayer = null;
     let currentVideoId = '';
     let videoList = [];
-    let watchHistory = JSON.parse(localStorage.getItem('yt_app_history')) || [];
-    let savedPlaylist = JSON.parse(localStorage.getItem('yt_app_playlist')) || [];
+    let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
+
+    // FUNGSI KONVERSI DURASI ISO 8601 (PT5S -> 00:05, PT1M20S -> 01:20) AKURAT
+    function parseISO8601Duration(duration) {
+      if (!duration) return '00:00';
+      const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!match) return '00:00';
+      
+      const hours = parseInt(match[1] || 0);
+      const minutes = parseInt(match[2] || 0);
+      const seconds = parseInt(match[3] || 0);
+
+      const pad = (num) => String(num).padStart(2, '0');
+
+      if (hours > 0) {
+        return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+      }
+      return `${pad(minutes)}:${pad(seconds)}`;
+    }
 
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('ytPlayerContainer', {
         height: '100%',
         width: '100%',
         videoId: 'jfKfPfyJRdk',
-        playerVars: { 'autoplay': 1, 'rel': 0, 'modestbranding': 1 }
+        playerVars: { 
+          'autoplay': 1, 
+          'rel': 0, 
+          'modestbranding': 1,
+          'fs': 1
+        }
       });
     }
 
@@ -606,6 +627,7 @@
       document.getElementById('feedContainer').style.display = show ? 'none' : 'flex';
     }
 
+    // MEMUAT TRENDING DENGAN DURASI REAL DARI API
     async function loadTrendingVideos() {
       showLoading(true);
       try {
@@ -616,6 +638,7 @@
             id: item.id,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
+            duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
           renderFeed(videoList);
@@ -627,6 +650,7 @@
       }
     }
 
+    // MEMUAT HASIL PENCARIAN DENGAN DURASI REAL AKURAT
     async function executeSearch() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -637,13 +661,21 @@
       try {
         const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`);
         const data = await res.json();
-        if (data.items) {
-          videoList = data.items.map(item => ({
-            id: item.id.videoId,
+        
+        if (data.items && data.items.length > 0) {
+          const videoIds = data.items.map(item => item.id.videoId).join(',');
+          // Ambil detail durasi presisi via videos.list
+          const detailsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${apiKey}`);
+          const detailsData = await detailsRes.json();
+
+          videoList = detailsData.items.map(item => ({
+            id: item.id,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
+            duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
+          
           renderFeed(videoList);
         }
       } catch (err) {
@@ -663,7 +695,6 @@
       }
 
       items.forEach((v, index) => {
-        // Render Shorts Shelf secara berkala di feed
         if (index === 2) {
           const shortsShelf = document.createElement('div');
           shortsShelf.className = 'shorts-shelf';
@@ -688,7 +719,7 @@
         card.innerHTML = `
           <div class="thumbnail-box">
             <img src="${v.thumb}" alt="thumb">
-            <span class="duration-badge">10:24</span>
+            <span class="duration-badge">${v.duration || '00:00'}</span>
           </div>
           <div class="video-meta">
             <img src="https://picsum.photos/seed/${v.id}/100" class="channel-avatar" alt="avatar">
@@ -713,19 +744,40 @@
         ytPlayer.loadVideoById(id);
       }
 
-      // Tambah ke riwayat
       addToHistory({ id, title, channel });
-
-      // Render Rekomendasi di bawah Player View
       renderRecommended();
-
-      // Buka Player Overlay
       document.getElementById('playerView').classList.add('active');
     }
 
     function closePlayerView() {
       if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
       document.getElementById('playerView').classList.remove('active');
+      if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    }
+
+    // FUNGSI OOTOMATIS ORIENTASI LAYAR KE LANDSCAPE FULLSCREEN
+    async function togglePlayerFullScreen() {
+      const elem = document.getElementById('stickyPlayer');
+      
+      if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        }
+
+        // Kunci Orientasi ke LANDSCAPE jika didukung oleh HP/Browser
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(err => console.log('Rotation note:', err));
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      }
     }
 
     function renderRecommended() {
@@ -738,7 +790,7 @@
         item.innerHTML = `
           <div class="thumbnail-box">
             <img src="${v.thumb}">
-            <span class="duration-badge">08:15</span>
+            <span class="duration-badge">${v.duration || '00:00'}</span>
           </div>
           <div class="video-meta">
             <img src="https://picsum.photos/seed/${v.id}/100" class="channel-avatar">
@@ -776,7 +828,7 @@
         executeSearchQuery('YouTube Shorts Indonesia');
       } else if (tab === 'subscription') {
         document.getElementById('chipsWrapper').style.display = 'none';
-        container.innerHTML = '<div style="padding:30px; text-align:center; color:#aaa;"><h3>Subscription Terikhtisar</h3><p style="font-size:12px; margin-top:8px;">Video terbaru dari channel favorit Anda akan muncul di sini.</p></div>';
+        container.innerHTML = '<div style="padding:30px; text-align:center; color:#aaa;"><h3>Subscription Terikhtisar</h3><p style="font-size:12px; margin-top:8px;">Video terbaru dari channel favorit Anda di HidaTube akan muncul di sini.</p></div>';
       } else if (tab === 'anda') {
         document.getElementById('chipsWrapper').style.display = 'none';
         renderAndaProfile();
@@ -790,8 +842,8 @@
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
             <i class="fa-solid fa-circle-user fa-3x" style="color: var(--yt-text-secondary);"></i>
             <div>
-              <h2 style="font-size:18px;">Pengguna ZenTube</h2>
-              <p style="font-size:12px; color:var(--yt-text-secondary);">@user-zentube • Lihat Channel</p>
+              <h2 style="font-size:18px;">Pengguna HidaTube</h2>
+              <p style="font-size:12px; color:var(--yt-text-secondary);">@user-hidatube • Lihat Channel</p>
             </div>
           </div>
           <h3 style="font-size:15px; margin-bottom:10px;"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat Tontonan</h3>
@@ -815,11 +867,11 @@
     function addToHistory(item) {
       watchHistory = watchHistory.filter(v => v.id !== item.id);
       watchHistory.unshift(item);
-      localStorage.setItem('yt_app_history', JSON.stringify(watchHistory));
+      localStorage.setItem('hidatube_history', JSON.stringify(watchHistory));
     }
 
     function addToPlaylist() {
-      alert('Tersimpan di Playlist / Koleksi Anda!');
+      alert('Tersimpan di Playlist HidaTube Anda!');
     }
 
     function copyCurrentLink() {
