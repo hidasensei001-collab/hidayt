@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZenTube - Premium YouTube Player</title>
+  <title>ZenTube - Premium YouTube Player & Search</title>
   
   <!-- Google Fonts & FontAwesome -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,6 +48,7 @@
       margin-bottom: 24px;
       backdrop-filter: blur(12px);
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      gap: 16px;
     }
 
     .brand {
@@ -59,16 +60,16 @@
       background: linear-gradient(135deg, #fff, var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      white-space: nowrap;
     }
     .brand i { color: #ef4444; -webkit-text-fill-color: initial; }
 
-    /* Input Link Bar */
+    /* Search Bar */
     .search-box {
       display: flex;
       gap: 10px;
       flex: 1;
-      max-width: 550px;
-      margin: 0 20px;
+      max-width: 600px;
     }
 
     .search-input-wrapper {
@@ -101,7 +102,7 @@
       box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
     }
 
-    .btn-add {
+    .btn-action {
       padding: 12px 20px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       border: none;
@@ -115,12 +116,12 @@
       box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
 
-    .btn-add:hover { transform: translateY(-2px); opacity: 0.95; }
+    .btn-action:hover { transform: translateY(-2px); opacity: 0.95; }
 
     /* Main Layout Grid */
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 360px;
+      grid-template-columns: 1fr 380px;
       gap: 24px;
       transition: all 0.3s ease;
     }
@@ -146,7 +147,7 @@
     .video-wrapper {
       position: relative;
       width: 100%;
-      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      padding-top: 56.25%;
       background: #000;
       border-radius: 16px;
       overflow: hidden;
@@ -211,7 +212,7 @@
       border-color: var(--primary);
     }
 
-    /* Playlist Sidebar */
+    /* Sidebar Tabs & Lists */
     .sidebar-card {
       background: var(--glass-card);
       border: 1px solid var(--glass-border);
@@ -225,36 +226,47 @@
       flex-direction: column;
     }
 
-    .sidebar-header {
+    .tab-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    .sidebar-header h3 {
-      font-size: 15px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
       gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 12px;
     }
 
-    .playlist-items {
+    .tab-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--glass-border);
+      color: var(--text-sub);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .video-list {
       display: flex;
       flex-direction: column;
       gap: 12px;
       overflow-y: auto;
       padding-right: 4px;
-      max-height: 580px;
+      max-height: 560px;
     }
 
-    .playlist-items::-webkit-scrollbar { width: 4px; }
-    .playlist-items::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+    .video-list::-webkit-scrollbar { width: 4px; }
+    .video-list::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
 
-    .playlist-item {
+    .video-item {
       display: flex;
       gap: 12px;
       background: rgba(15, 23, 42, 0.5);
@@ -266,12 +278,12 @@
       position: relative;
     }
 
-    .playlist-item:hover {
+    .video-item:hover {
       background: rgba(255, 255, 255, 0.08);
       transform: translateX(3px);
     }
 
-    .playlist-item.active {
+    .video-item.active {
       border-color: var(--accent);
       background: rgba(6, 182, 212, 0.12);
     }
@@ -282,7 +294,6 @@
       border-radius: 8px;
       overflow: hidden;
       flex-shrink: 0;
-      position: relative;
     }
 
     .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -299,10 +310,12 @@
       font-size: 12px;
       font-weight: 600;
       color: #fff;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
       margin-bottom: 4px;
+      line-height: 1.3;
     }
 
     .item-author {
@@ -310,13 +323,13 @@
       color: var(--text-sub);
     }
 
-    .btn-delete {
+    .btn-add-playlist {
       position: absolute;
       top: 6px;
       right: 6px;
-      background: rgba(239, 68, 68, 0.2);
+      background: rgba(6, 182, 212, 0.2);
       border: none;
-      color: #ef4444;
+      color: var(--accent);
       width: 22px;
       height: 22px;
       border-radius: 6px;
@@ -327,63 +340,49 @@
       justify-content: center;
     }
 
-    .playlist-item:hover .btn-delete { display: flex; }
-    .btn-delete:hover { background: #ef4444; color: #fff; }
+    .video-item:hover .btn-add-playlist { display: flex; }
+    .btn-add-playlist:hover { background: var(--accent); color: #fff; }
 
-    /* Preset Showcase Grid */
-    .preset-section {
-      margin-top: 32px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 16px;
+    /* Modal API Key */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 8px;
+      padding: 20px;
     }
+    .modal-overlay.hidden { display: none; }
 
-    .preset-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .preset-card {
-      background: var(--glass-card);
+    .modal-card {
+      background: rgba(30, 41, 59, 0.95);
       border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .preset-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--primary);
-      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
-    }
-
-    .preset-card img {
+      border-radius: 20px;
+      padding: 24px;
       width: 100%;
-      height: 120px;
-      object-fit: cover;
+      max-width: 420px;
+    }
+
+    .modal-card h3 { font-size: 16px; margin-bottom: 8px; color: #fff; }
+    .modal-card p { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5; }
+    .modal-card input {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--glass-border);
       border-radius: 10px;
-      margin-bottom: 10px;
-    }
-
-    .preset-card h4 {
-      font-size: 13px;
-      font-weight: 700;
       color: #fff;
-      margin-bottom: 4px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      outline: none;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 900px) {
       .main-grid { grid-template-columns: 1fr; }
-      .search-box { margin: 12px 0 0 0; width: 100%; max-width: 100%; }
+      .search-box { width: 100%; max-width: 100%; }
       .nav-bar { flex-direction: column; align-items: flex-start; }
     }
   </style>
@@ -399,29 +398,33 @@
       
       <div class="search-box">
         <div class="search-input-wrapper">
-          <i class="fa-solid fa-link"></i>
-          <input type="text" id="videoUrlInput" placeholder="Paste link video YouTube di sini..." autocomplete="off">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Cari judul video atau paste link YouTube..." onkeyup="handleKeyPress(event)">
         </div>
-        <button class="btn-add" onclick="handleAddVideo()">
-          <i class="fa-solid fa-plus"></i> Putar
+        <button class="btn-action" onclick="executeSearch()">
+          <i class="fa-solid fa-magnifying-glass"></i> Cari
         </button>
       </div>
+
+      <button class="btn-icon" onclick="openApiModal()">
+        <i class="fa-solid fa-key"></i> API Key
+      </button>
     </div>
 
-    <!-- MAIN PLAYER & PLAYLIST AREA -->
+    <!-- MAIN GRID -->
     <div class="main-grid" id="mainGrid">
       
-      <!-- LEFT: VIDEO PLAYER -->
+      <!-- PLAYER -->
       <div class="player-section">
         <div class="player-card">
           <div class="video-wrapper">
-            <iframe id="mainPlayer" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&enablejsapi=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe id="mainPlayer" src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
           </div>
           
           <div class="player-controls">
             <div class="video-info">
               <h2 id="currentVideoTitle">Lofi Hip Hop Radio - Beats to Relax/Study to</h2>
-              <p id="currentVideoSubtitle">Sedang Diputar • Auto-Save Enabled</p>
+              <p id="currentVideoSubtitle">Sedang Diputar • Playback Active</p>
             </div>
             <div class="action-btns">
               <button class="btn-icon" id="theaterBtn" onclick="toggleTheaterMode()">
@@ -435,176 +438,204 @@
         </div>
       </div>
 
-      <!-- RIGHT: PLAYLIST SIDEBAR -->
+      <!-- SIDEBAR -->
       <div class="sidebar-section">
         <div class="sidebar-card">
-          <div class="sidebar-header">
-            <h3><i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Playlist Kamu</h3>
-            <span style="font-size: 11px; color: var(--text-sub);" id="playlistCount">0 Video</span>
+          <div class="tab-header">
+            <button class="tab-btn active" id="tabSearchResults" onclick="switchTab('search')">
+              <i class="fa-solid fa-magnifying-glass"></i> Hasil Cari
+            </button>
+            <button class="tab-btn" id="tabPlaylist" onclick="switchTab('playlist')">
+              <i class="fa-solid fa-list"></i> Playlist Saya
+            </button>
           </div>
 
-          <div class="playlist-items" id="playlistContainer">
-            <!-- Item Playlist dirender via Javascript -->
+          <div class="video-list" id="sidebarContainer">
+            <!-- Item dirender via JS -->
           </div>
         </div>
       </div>
 
     </div>
+  </div>
 
-    <!-- PRESET REKOMENDASI -->
-    <div class="preset-section">
-      <div class="section-title">
-        <i class="fa-solid fa-fire" style="color: #f59e0b;"></i> Rekomendasi Pilihan
-      </div>
-      <div class="preset-grid">
-        
-        <div class="preset-card" onclick="playVideo('jfKfPfyJRdk', 'Lofi Girl - Beats to Study To', 'Lofi Girl')">
-          <img src="https://img.youtube.com/vi/jfKfPfyJRdk/hqdefault.jpg" alt="Lofi">
-          <h4>Lofi Girl - Relax & Study</h4>
-          <p style="font-size: 11px; color: var(--text-sub);">Lofi Hip Hop</p>
-        </div>
-
-        <div class="preset-card" onclick="playVideo('5qap5aO4i9A', 'Lofi Hip Hop Radio - Chill Beats', 'Lofi Girl')">
-          <img src="https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg" alt="Chill">
-          <h4>Chill Radio Beats</h4>
-          <p style="font-size: 11px; color: var(--text-sub);">Sleep & Relax</p>
-        </div>
-
-        <div class="preset-card" onclick="playVideo('TURbeVR03HQ', 'Synthwave Radio - Chill synth / Retro', 'Lofi Girl')">
-          <img src="https://img.youtube.com/vi/TURbeVR03HQ/hqdefault.jpg" alt="Synthwave">
-          <h4>Synthwave Retro Radio</h4>
-          <p style="font-size: 11px; color: var(--text-sub);">Retro Vibes</p>
-        </div>
-
-        <div class="preset-card" onclick="playVideo('4xDzrJKXOOY', 'synthwave radio - chill / retro beats', 'Lofi Girl')">
-          <img src="https://img.youtube.com/vi/4xDzrJKXOOY/hqdefault.jpg" alt="Chill synth">
-          <h4>Chill Synthwave Beats</h4>
-          <p style="font-size: 11px; color: var(--text-sub);">Midnight Chill</p>
-        </div>
-
+  <!-- MODAL API KEY -->
+  <div class="modal-overlay hidden" id="apiModal">
+    <div class="modal-card">
+      <h3><i class="fa-solid fa-key" style="color: var(--accent);"></i> YouTube Data API Key</h3>
+      <p>Masukkan API Key dari Google Cloud Console agar hasil pencarian langsung menampilkan gambar thumbnail & judul resmi di sidebar.</p>
+      <input type="text" id="apiKeyInput" placeholder="Paste API Key kamu di sini...">
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn-icon" onclick="closeApiModal()">Batal</button>
+        <button class="btn-action" onclick="saveApiKey()">Simpan Key</button>
       </div>
     </div>
-
   </div>
 
   <script>
-    // Initial Playlist Data
-    let defaultPlaylist = [
+    let apiKey = localStorage.getItem('zentube_api_key') || '';
+    let currentVideoId = 'jfKfPfyJRdk';
+    let activeTab = 'search';
+    
+    let searchResults = [];
+    let savedPlaylist = JSON.parse(localStorage.getItem('zentube_playlist')) || [
       { id: 'jfKfPfyJRdk', title: 'Lofi Girl - Beats to Study To', author: 'Lofi Girl' },
-      { id: '5qap5aO4i9A', title: 'Lofi Hip Hop Radio - Sleep Beats', author: 'Lofi Girl' },
-      { id: 'TURbeVR03HQ', title: 'Synthwave Radio - Chill synth / Retro', author: 'Lofi Girl' }
+      { id: '5qap5aO4i9A', title: 'Lofi Hip Hop Radio - Sleep Beats', author: 'Lofi Girl' }
     ];
 
-    let playlist = JSON.parse(localStorage.getItem('zentube_playlist')) || defaultPlaylist;
-    let currentVideoId = playlist[0] ? playlist[0].id : 'jfKfPfyJRdk';
-
-    // Helper: Ekstrak YouTube ID dari berbagai format link
     function extractYouTubeID(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
       return (match && match[2].length === 11) ? match[2] : (url.length === 11 ? url : null);
     }
 
-    // Render daftar playlist
-    function renderPlaylist() {
-      const container = document.getElementById('playlistContainer');
-      const countEl = document.getElementById('playlistCount');
-      container.innerHTML = '';
-      countEl.innerText = `${playlist.length} Video`;
-
-      playlist.forEach((item, index) => {
-        const activeClass = item.id === currentVideoId ? 'active' : '';
-        const itemEl = document.createElement('div');
-        itemEl.className = `playlist-item ${activeClass}`;
-        itemEl.onclick = (e) => {
-          if (!e.target.closest('.btn-delete')) {
-            playVideo(item.id, item.title, item.author);
-          }
-        };
-
-        itemEl.innerHTML = `
-          <div class="item-thumb">
-            <img src="https://img.youtube.com/vi/${item.id}/hqdefault.jpg" alt="thumb">
-          </div>
-          <div class="item-details">
-            <div class="item-title">${item.title}</div>
-            <div class="item-author">${item.author || 'YouTube Video'}</div>
-          </div>
-          <button class="btn-delete" onclick="deleteFromPlaylist(${index})">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
-        `;
-        container.appendChild(itemEl);
-      });
-
-      localStorage.setItem('zentube_playlist', JSON.stringify(playlist));
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') executeSearch();
     }
 
-    // Fungsi Putar Video
-    function playVideo(id, title = 'YouTube Video', author = 'Custom Input') {
+    async function executeSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+
+      const directId = extractYouTubeID(query);
+
+      // Jika input adalah Link URL / ID
+      if (directId) {
+        playVideo(directId, `Video (${directId})`, 'Direct Link');
+        return;
+      }
+
+      // Jika ada API Key -> Cari via YouTube Data API v3
+      if (apiKey) {
+        try {
+          const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`);
+          const data = await res.json();
+          
+          if (data.items && data.items.length > 0) {
+            searchResults = data.items.map(item => ({
+              id: item.id.videoId,
+              title: item.snippet.title,
+              author: item.snippet.channelTitle
+            }));
+
+            switchTab('search');
+            playVideo(searchResults[0].id, searchResults[0].title, searchResults[0].author);
+            return;
+          }
+        } catch (err) {
+          console.warn('API Key Error/Expired, fallback ke Player Search mode.', err);
+        }
+      }
+
+      // Fallback tanpa API Key: Putar langsung via Embed Search Playlist
+      const iframe = document.getElementById('mainPlayer');
+      iframe.src = `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}&autoplay=1`;
+      document.getElementById('currentVideoTitle').innerText = `Hasil Pencarian: "${query}"`;
+      document.getElementById('currentVideoSubtitle').innerText = 'Mode Pencarian Langsung YouTube';
+      
+      searchResults = [{
+        id: 'search_mode',
+        title: `Pencarian: ${query}`,
+        author: 'YouTube Search Mode'
+      }];
+      switchTab('search');
+    }
+
+    function playVideo(id, title = 'YouTube Video', author = 'YouTube') {
       currentVideoId = id;
       const iframe = document.getElementById('mainPlayer');
-      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&enablejsapi=1`;
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1`;
 
       document.getElementById('currentVideoTitle').innerText = title;
       document.getElementById('currentVideoSubtitle').innerText = `${author} • Sedang Diputar`;
 
-      renderPlaylist();
+      renderSidebar();
     }
 
-    // Handle Input Tambah Video Baru
-    function handleAddVideo() {
-      const input = document.getElementById('videoUrlInput');
-      const rawValue = input.value.trim();
-
-      if (!rawValue) return;
-
-      const videoId = extractYouTubeID(rawValue);
-
-      if (videoId) {
-        const newVideo = {
-          id: videoId,
-          title: `Video YouTube (${videoId})`,
-          author: 'User Added'
-        };
-
-        // Cek jika sudah ada
-        if (!playlist.some(v => v.id === videoId)) {
-          playlist.unshift(newVideo);
-        }
-
-        playVideo(videoId, newVideo.title, newVideo.author);
-        input.value = '';
-      } else {
-        alert('Format URL YouTube tidak valid! Masukkan link video yang sesuai.');
+    function addToPlaylist(item) {
+      if (!savedPlaylist.some(v => v.id === item.id)) {
+        savedPlaylist.unshift(item);
+        localStorage.setItem('zentube_playlist', JSON.stringify(savedPlaylist));
+        alert('Video dimasukkan ke Playlist Saya!');
       }
     }
 
-    // Hapus dari Playlist
-    function deleteFromPlaylist(index) {
-      playlist.splice(index, 1);
-      renderPlaylist();
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabSearchResults').classList.toggle('active', tab === 'search');
+      document.getElementById('tabPlaylist').classList.toggle('active', tab === 'playlist');
+      renderSidebar();
     }
 
-    // Toggle Mode Teater
-    function toggleTheaterMode() {
-      const mainGrid = document.getElementById('mainGrid');
-      const theaterBtn = document.getElementById('theaterBtn');
-      mainGrid.classList.toggle('theater-mode');
-      theaterBtn.classList.toggle('active');
-    }
+    function renderSidebar() {
+      const container = document.getElementById('sidebarContainer');
+      container.innerHTML = '';
 
-    // Copy Link Video Saat Ini
-    function copyCurrentLink() {
-      const url = `https://www.youtube.com/watch?v=${currentVideoId}`;
-      navigator.clipboard.writeText(url).then(() => {
-        alert('Link video berhasil disalin ke clipboard!');
+      const list = activeTab === 'search' ? searchResults : savedPlaylist;
+
+      if (list.length === 0) {
+        container.innerHTML = `<p style="font-size:12px; color:var(--text-sub); text-align:center; padding:20px;">
+          ${activeTab === 'search' ? 'Ketik kata kunci di atas untuk mencari video.' : 'Belum ada video tersimpan.'}
+        </p>`;
+        return;
+      }
+
+      list.forEach((item) => {
+        const activeClass = item.id === currentVideoId ? 'active' : '';
+        const itemEl = document.createElement('div');
+        itemEl.className = `video-item ${activeClass}`;
+        itemEl.onclick = () => playVideo(item.id, item.title, item.author);
+
+        const thumb = item.id !== 'search_mode' 
+          ? `https://img.youtube.com/vi/${item.id}/hqdefault.jpg` 
+          : 'https://via.placeholder.com/100x58/0f172a/06b6d4?text=Search';
+
+        itemEl.innerHTML = `
+          <div class="item-thumb">
+            <img src="${thumb}" alt="thumb">
+          </div>
+          <div class="item-details">
+            <div class="item-title">${item.title}</div>
+            <div class="item-author">${item.author}</div>
+          </div>
+          ${activeTab === 'search' && item.id !== 'search_mode' ? `
+            <button class="btn-add-playlist" title="Simpan ke Playlist" onclick="event.stopPropagation(); addToPlaylist(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          ` : ''}
+        `;
+        container.appendChild(itemEl);
       });
     }
 
-    // Init Render
+    function toggleTheaterMode() {
+      document.getElementById('mainGrid').classList.toggle('theater-mode');
+      document.getElementById('theaterBtn').classList.toggle('active');
+    }
+
+    function copyCurrentLink() {
+      const url = `https://www.youtube.com/watch?v=${currentVideoId}`;
+      navigator.clipboard.writeText(url).then(() => alert('Link disalin!'));
+    }
+
+    function openApiModal() {
+      document.getElementById('apiModal').classList.remove('hidden');
+      document.getElementById('apiKeyInput').value = apiKey;
+    }
+
+    function closeApiModal() {
+      document.getElementById('apiModal').classList.add('hidden');
+    }
+
+    function saveApiKey() {
+      apiKey = document.getElementById('apiKeyInput').value.trim();
+      localStorage.setItem('zentube_api_key', apiKey);
+      closeApiModal();
+      alert('API Key berhasil disimpan!');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-      renderPlaylist();
+      renderSidebar();
     });
   </script>
 </body>
