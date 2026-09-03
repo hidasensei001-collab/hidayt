@@ -604,21 +604,49 @@
       display: inline-block;
     }
 
-    /* KOTAK KOMENTAR YOUTUBE TERLENGKAP */
+    /* KOTAK KOMENTAR YOUTUBE TERLENGKAP DENGAN AKSESIBILITAS COLLAPSIBLE */
     .comments-container {
       background: var(--yt-paper);
       border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 20px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      transition: background 0.2s;
+    }
+
+    .comments-toggle-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
     }
 
     .comments-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      margin-bottom: 10px;
       display: flex;
       align-items: center;
       gap: 8px;
+      color: #fff;
+    }
+
+    .comments-toggle-btn-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--yt-red);
+      background: rgba(255,0,0,0.12);
+      padding: 4px 10px;
+      border-radius: 14px;
+    }
+
+    .comments-body {
+      display: none;
+      margin-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
     }
 
     /* BAR FILTER PENGURUTAN KOMENTAR */
@@ -950,33 +978,42 @@
           <div class="desc-toggle-btn" id="descToggleBtn">...selengkapnya</div>
         </div>
 
-        <!-- KOTAK KOMENTAR YOUTUBE TERLENGKAP -->
+        <!-- KOTAK RINGKAS KOMENTAR (COLLAPSIBLE / RINGKAS) -->
         <div class="comments-container">
-          <div class="comments-title">
-            <i class="fa-regular fa-comments"></i> Komentar Publik
+          <div class="comments-toggle-header" onclick="toggleCommentsSection()">
+            <div class="comments-title">
+              <i class="fa-regular fa-comments"></i> Komentar
+            </div>
+            <div class="comments-toggle-btn-badge">
+              <span id="commentsToggleLabel">Lihat Komentar</span>
+              <i class="fa-solid fa-chevron-down" id="commentsToggleIcon"></i>
+            </div>
           </div>
 
-          <!-- FILTER URUTAN KOMENTAR -->
-          <div class="comment-filter-bar">
-            <span style="font-size:11px; color:var(--yt-text-secondary);"><i class="fa-solid fa-arrow-down-wide-short"></i> Urutkan:</span>
-            <button class="comment-filter-btn active" id="cmtFilterRelevance" onclick="changeCommentFilter('relevance', this)">🔥 Terpopuler</button>
-            <button class="comment-filter-btn" id="cmtFilterTime" onclick="changeCommentFilter('time', this)">⚡ Terbaru</button>
-          </div>
+          <!-- CONTAINER ISI KOMENTAR (TERSEMBUNYI SECARA DEFAULT) -->
+          <div class="comments-body" id="commentsBody">
+            <!-- FILTER URUTAN KOMENTAR -->
+            <div class="comment-filter-bar">
+              <span style="font-size:11px; color:var(--yt-text-secondary);"><i class="fa-solid fa-arrow-down-wide-short"></i> Urutkan:</span>
+              <button class="comment-filter-btn active" id="cmtFilterRelevance" onclick="changeCommentFilter('relevance', this)">🔥 Terpopuler</button>
+              <button class="comment-filter-btn" id="cmtFilterTime" onclick="changeCommentFilter('time', this)">⚡ Terbaru</button>
+            </div>
 
-          <div class="comment-input-form">
-            <input type="text" id="customCommentInput" placeholder="Beri komentar publik...">
-            <button class="btn-send-comment" onclick="postCustomComment()">Kirim</button>
-          </div>
+            <div class="comment-input-form">
+              <input type="text" id="customCommentInput" placeholder="Beri komentar publik...">
+              <button class="btn-send-comment" onclick="postCustomComment()">Kirim</button>
+            </div>
 
-          <div id="commentsList">
-            <p style="font-size:12px; color:var(--yt-text-secondary);">Memuat komentar...</p>
-          </div>
+            <div id="commentsList">
+              <p style="font-size:12px; color:var(--yt-text-secondary);">Memuat komentar...</p>
+            </div>
 
-          <!-- TOMBOL LOAD MORE KOMENTAR -->
-          <button class="btn-load-more-comments" id="btnLoadMoreComments" onclick="loadMoreComments()" style="display:none;">
-            <i class="fa-solid fa-spinner fa-spin" id="cmtSpinner" style="display:none; margin-right:6px;"></i>
-            <span>Tampilkan lebih banyak komentar...</span>
-          </button>
+            <!-- TOMBOL LOAD MORE KOMENTAR -->
+            <button class="btn-load-more-comments" id="btnLoadMoreComments" onclick="loadMoreComments()" style="display:none;">
+              <i class="fa-solid fa-spinner fa-spin" id="cmtSpinner" style="display:none; margin-right:6px;"></i>
+              <span>Tampilkan lebih banyak komentar...</span>
+            </button>
+          </div>
         </div>
 
         <!-- RECOMMENDED FEED DENGAN UNLIMITED SCROLLING -->
@@ -1040,6 +1077,7 @@
     let currentCommentOrder = 'relevance'; // 'relevance', 'time'
     let commentNextPageToken = '';
     let isLoadingComments = false;
+    let isCommentsSectionOpen = false;
 
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
@@ -1703,11 +1741,8 @@
         ytPlayer.loadVideoById(id);
       }
 
-      // RESET ORDER KOMENTAR & AMBIL KOMENTAR VIDEO PERTAMA KALI
-      currentCommentOrder = 'relevance';
-      document.querySelectorAll('.comment-filter-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('cmtFilterRelevance').classList.add('active');
-      fetchVideoComments(id, false);
+      // SEMBUNYIKAN SECARA DEFAULT KOTAK KOMENTAR AGAR HANYA MUNCUL KARTU RINGKAS
+      toggleCommentsSection(false);
 
       recommendedList = videoList.filter(v => v.id !== currentVideoId);
       recNextPageToken = '';
@@ -1810,8 +1845,39 @@
     }
 
     // ==========================================
-    // MENGAMBIL KOMENTAR DENGAN WAKTU, FILTER & TOMBOL TAMPILKAN LEBIH BANYAK
+    // TOGGLE BUKA / TUTUP SEKSI KOMENTAR (COLLAPSIBLE)
     // ==========================================
+    function toggleCommentsSection(forceState = null) {
+      const body = document.getElementById('commentsBody');
+      const label = document.getElementById('commentsToggleLabel');
+      const icon = document.getElementById('commentsToggleIcon');
+
+      if (forceState !== null) {
+        isCommentsSectionOpen = forceState;
+      } else {
+        isCommentsSectionOpen = !isCommentsSectionOpen;
+      }
+
+      if (isCommentsSectionOpen) {
+        body.style.display = 'block';
+        if (label) label.innerText = 'Sembunyikan Komentar';
+        if (icon) icon.className = 'fa-solid fa-chevron-up';
+
+        // Tarik data komentar jika belum pernah di-load untuk video saat ini
+        if (currentVideoId && (document.getElementById('commentsList').innerText.includes('Memuat komentar') || document.getElementById('commentsList').innerHTML === '')) {
+          currentCommentOrder = 'relevance';
+          document.querySelectorAll('.comment-filter-btn').forEach(b => b.classList.remove('active'));
+          document.getElementById('cmtFilterRelevance').classList.add('active');
+          fetchVideoComments(currentVideoId, false);
+        }
+      } else {
+        body.style.display = 'none';
+        if (label) label.innerText = 'Lihat Komentar';
+        if (icon) icon.className = 'fa-solid fa-chevron-down';
+      }
+    }
+
+    // MENGAMBIL KOMENTAR DENGAN WAKTU, FILTER & TOMBOL TAMPILKAN LEBIH BANYAK
     async function fetchVideoComments(videoId, isAppend = false) {
       const listContainer = document.getElementById('commentsList');
       const btnMore = document.getElementById('btnLoadMoreComments');
