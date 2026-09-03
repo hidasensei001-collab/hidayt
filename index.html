@@ -133,7 +133,7 @@
       font-size: 14px;
     }
 
-    /* 2. CATEGORY PILLS CHIPS */
+    /* 2. CATEGORY PILLS CHIPS & SORT BAR */
     .chips-wrapper {
       display: flex;
       align-items: center;
@@ -173,6 +173,38 @@
     .chip.active {
       background: #ffffff;
       color: #0f0f0f;
+    }
+
+    /* BAR FILTER PENGURUTAN (SORT FILTER BAR) */
+    .sort-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #181818;
+      border-bottom: 1px solid var(--yt-border);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .sort-filter-bar::-webkit-scrollbar { display: none; }
+
+    .sort-chip {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--yt-text-secondary);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .sort-chip.active {
+      background: var(--yt-paper-hover);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
     }
 
     /* 3. FEED UNTUK VIDEO CARDS */
@@ -259,6 +291,7 @@
     .meta-sub {
       font-size: 12px;
       color: var(--yt-text-secondary);
+      line-height: 1.4;
     }
 
     .meta-sub span.channel-click {
@@ -428,7 +461,7 @@
       cursor: pointer;
     }
 
-    /* HEADER PEMUTAR DIBUAT STICKY DEGNAN DRAG HANDLE */
+    /* HEADER PEMUTAR DIBUAT STICKY DENGAN DRAG HANDLE */
     .player-header-bar {
       position: sticky;
       top: 0;
@@ -775,6 +808,15 @@
       <div class="chip" onclick="filterCategory(this, 'Gaming Indonesia')">Gaming</div>
     </nav>
 
+    <!-- SORT & FILTER BAR (UNTUK PENCARIAN DAN CHANNEL) -->
+    <div class="sort-filter-bar" id="sortFilterBar" style="display: none;">
+      <span style="font-size: 11px; color: var(--yt-text-secondary); margin-right: 4px;"><i class="fa-solid fa-sliders"></i> Urutkan:</span>
+      <div class="sort-chip active" id="sortChipRelevance" onclick="applySortFilter('relevance', this)">✨ Relevansi</div>
+      <div class="sort-chip" id="sortChipNewest" onclick="applySortFilter('date', this)">⚡ Terbaru</div>
+      <div class="sort-chip" id="sortChipPopular" onclick="applySortFilter('viewCount', this)">🔥 Terpopuler</div>
+      <div class="sort-chip" id="sortChipOldest" onclick="applySortFilter('oldest', this)">⏳ Terlama</div>
+    </div>
+
     <!-- MAIN FEED CONTAINER -->
     <main id="mainContent">
       <div class="loading-spinner" id="loadingSpinner">
@@ -929,10 +971,44 @@
     
     let currentMode = 'trending'; // 'trending', 'search', 'channel'
     let currentSearchQuery = '';
+    let currentSortOrder = 'relevance'; // 'relevance', 'date', 'viewCount', 'oldest'
     let isLoadingMore = false;
     let isLoadingRecMore = false;
 
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
+
+    // ==========================================
+    // UTILITY: KONVERSI TANGGAL ISO KE KETERANGAN RELATIF (x HARI/BULAN LALU)
+    // ==========================================
+    function formatTimeAgo(isoDateStr) {
+      if (!isoDateStr) return 'Baru saja';
+      const date = new Date(isoDateStr);
+      if (isNaN(date.getTime())) return 'Baru saja';
+
+      const now = new Date();
+      const diffSecs = Math.floor((now - date) / 1000);
+
+      if (diffSecs < 60) return 'Baru saja';
+      const mins = Math.floor(diffSecs / 60);
+      if (mins < 60) return `${mins} menit yang lalu`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours} jam yang lalu`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `${days} hari yang lalu`;
+      const weeks = Math.floor(days / 7);
+      if (weeks < 4) return `${weeks} minggu yang lalu`;
+      const months = Math.floor(days / 30);
+      if (months < 12) return `${months} bulan yang lalu`;
+      const years = Math.floor(days / 365);
+      return `${years} tahun yang lalu`;
+    }
+
+    function formatDateIndonesian(isoDateStr) {
+      if (!isoDateStr) return '';
+      const date = new Date(isoDateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
 
     // ==========================================
     // INTEGRASI GESTUR USAP LAYAR KEBAWAH (SWIPE DOWN)
@@ -982,7 +1058,6 @@
         currentY = 0;
       };
 
-      // Terapkan event listener di header bar & area atas pemutar
       headerBar.addEventListener('touchstart', handleTouchStart, { passive: true });
       headerBar.addEventListener('touchmove', handleTouchMove, { passive: false });
       headerBar.addEventListener('touchend', handleTouchEnd);
@@ -1008,7 +1083,6 @@
       }
     });
 
-    // FUNGSI UNTUK MEMINIMALKAN VIDEO (PICTURE-IN-PICTURE)
     function minimizePlayer() {
       const pv = document.getElementById('playerView');
       if (pv.classList.contains('active')) {
@@ -1019,7 +1093,6 @@
       }
     }
 
-    // FUNGSI UNTUK MEMBUKA KEMBALI PEMUTAR DARI MINIPLAYER
     function expandPlayer() {
       const pv = document.getElementById('playerView');
       if (pv.classList.contains('minimized')) {
@@ -1031,7 +1104,6 @@
       }
     }
 
-    // FUNGSI UNTUK MENGHENTIKAN DAN MENUTUP VIDEO SECARA TOTAL
     function stopAndClosePlayer() {
       if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
       const pv = document.getElementById('playerView');
@@ -1041,7 +1113,6 @@
       if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
     }
 
-    // TOGGLE PLAY / PAUSE DARI MINIPLAYER
     function togglePlayPause() {
       if (!ytPlayer) return;
       const state = ytPlayer.getPlayerState();
@@ -1168,15 +1239,33 @@
 
     function resetToHome() {
       document.getElementById('channelHeaderContainer').innerHTML = '';
+      document.getElementById('sortFilterBar').style.display = 'none';
       switchNav(document.querySelector('.nav-item'), 'beranda');
     }
 
+    // ==========================================
+    // TERAPKAN FILTER PENGURUTAN (TERBARU, TERPOPULER, TERLAMA)
+    // ==========================================
+    function applySortFilter(sortOrder, el) {
+      document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      currentSortOrder = sortOrder;
+
+      if (currentMode === 'search') {
+        executeSearch(currentSearchQuery, false, sortOrder);
+      } else if (currentMode === 'channel') {
+        openChannelPage(currentChannelId, currentChannelTitle, false, sortOrder);
+      }
+    }
+
+    // MEMUAT VIDEO TRENDING
     async function loadTrendingVideos(showRankBadge = false, chipEl = null, isAppend = false) {
       if (!isAppend) {
         showLoading(true);
         videoList = [];
         nextPageToken = '';
         document.getElementById('channelHeaderContainer').innerHTML = '';
+        document.getElementById('sortFilterBar').style.display = 'none';
       }
       
       currentMode = 'trending';
@@ -1205,6 +1294,8 @@
             channelId: item.snippet.channelId,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
+            publishedAt: item.snippet.publishedAt,
+            publishedRelative: formatTimeAgo(item.snippet.publishedAt),
             description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '12.000',
@@ -1223,25 +1314,32 @@
       }
     }
 
-    async function executeSearch(customQuery = null, isAppend = false) {
+    // HASIL PENCARIAN DENGAN OPSI FILTER DUKUNGAN
+    async function executeSearch(customQuery = null, isAppend = false, sortOrder = currentSortOrder) {
       const query = customQuery || document.getElementById('searchInput').value.trim();
       if (!query) return;
 
       currentSearchQuery = query;
       currentMode = 'search';
       isTrendingMode = false;
+      currentSortOrder = sortOrder;
 
       if (!isAppend) {
         showLoading(true);
         videoList = [];
         nextPageToken = '';
         document.getElementById('channelHeaderContainer').innerHTML = '';
+        document.getElementById('sortFilterBar').style.display = 'flex';
       }
 
       toggleSearchOverlay(false);
 
       try {
-        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
+        let apiOrder = 'relevance';
+        if (sortOrder === 'date' || sortOrder === 'oldest') apiOrder = 'date';
+        else if (sortOrder === 'viewCount') apiOrder = 'viewCount';
+
+        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&order=${apiOrder}&key=${apiKey}`;
         if (isAppend && nextPageToken) {
           searchUrl += `&pageToken=${nextPageToken}`;
         }
@@ -1261,11 +1359,17 @@
             channelId: item.snippet.channelId,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
+            publishedAt: item.snippet.publishedAt,
+            publishedRelative: formatTimeAgo(item.snippet.publishedAt),
             description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '10.000',
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
+
+          if (sortOrder === 'oldest') {
+            newItems.reverse();
+          }
 
           newItems = await fetchChannelAvatars(newItems);
           videoList = isAppend ? videoList.concat(newItems) : newItems;
@@ -1279,7 +1383,8 @@
       }
     }
 
-    async function openChannelPage(chId, chTitle, isAppend = false) {
+    // HALAMAN CHANNEL DENGAN FILTER & TANGGAL DUKUNGAN
+    async function openChannelPage(chId, chTitle, isAppend = false, sortOrder = currentSortOrder) {
       if (!isAppend) {
         minimizePlayer();
         if (!history.state || history.state.page !== 'channel' || history.state.chId !== chId) {
@@ -1289,8 +1394,10 @@
         currentMode = 'channel';
         currentChannelId = chId;
         currentChannelTitle = chTitle;
+        currentSortOrder = sortOrder;
         videoList = [];
         nextPageToken = '';
+        document.getElementById('sortFilterBar').style.display = 'flex';
 
         try {
           const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${chId}&key=${apiKey}`);
@@ -1319,7 +1426,11 @@
       }
 
       try {
-        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=15&order=date&type=video&key=${apiKey}`;
+        let apiOrder = 'date';
+        if (sortOrder === 'viewCount') apiOrder = 'viewCount';
+        else if (sortOrder === 'relevance') apiOrder = 'relevance';
+
+        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=15&order=${apiOrder}&type=video&key=${apiKey}`;
         if (isAppend && nextPageToken) {
           searchUrl += `&pageToken=${nextPageToken}`;
         }
@@ -1339,11 +1450,17 @@
             channelId: chId,
             title: item.snippet.title,
             channel: chTitle,
+            publishedAt: item.snippet.publishedAt,
+            publishedRelative: formatTimeAgo(item.snippet.publishedAt),
             description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '15.000',
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
+
+          if (sortOrder === 'oldest') {
+            newItems.reverse();
+          }
 
           newItems = await fetchChannelAvatars(newItems);
           videoList = isAppend ? videoList.concat(newItems) : newItems;
@@ -1407,7 +1524,7 @@
             <div class="meta-details">
               <div class="meta-title">${v.title}</div>
               <div class="meta-sub">
-                <span class="channel-click" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}', false)">${v.channel}</span> • ${v.views} x ditonton
+                <span class="channel-click" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}', false)">${v.channel}</span> • ${v.views} x ditonton • <b>${v.publishedRelative || 'Baru saja'}</b>
               </div>
             </div>
             <i class="fa-solid fa-ellipsis-vertical" style="color: var(--yt-text-secondary); font-size:14px;"></i>
@@ -1426,9 +1543,9 @@
       if (currentMode === 'trending') {
         await loadTrendingVideos(isTrendingMode, null, true);
       } else if (currentMode === 'search') {
-        await executeSearch(currentSearchQuery, true);
+        await executeSearch(currentSearchQuery, true, currentSortOrder);
       } else if (currentMode === 'channel') {
-        await openChannelPage(currentChannelId, currentChannelTitle, true);
+        await openChannelPage(currentChannelId, currentChannelTitle, true, currentSortOrder);
       }
 
       isLoadingMore = false;
@@ -1452,16 +1569,43 @@
       }
     });
 
-    // MEMUTAR VIDEO & UPDATE TAMPILAN PEMUTAR
+    // MEMUTAR VIDEO & UPDATE TAMPILAN PEMUTAR DENGAN INFORMASI TANGGAL LENGKAP
     async function playVideo(id) {
-      const video = videoList.find(v => v.id === id) || {
-        id: id,
-        channelId: '',
-        title: 'Video Pilihan',
-        channel: 'HidaTube Content',
-        description: 'Deskripsi tidak tersedia.',
-        views: '12.000'
-      };
+      let video = videoList.find(v => v.id === id);
+
+      // Jika video berasal dari rekomendasi / belum ada data detail tanggalnya
+      if (!video) {
+        try {
+          const vRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${id}&key=${apiKey}`);
+          const vData = await vRes.json();
+          if (vData.items && vData.items.length > 0) {
+            const item = vData.items[0];
+            video = {
+              id: id,
+              channelId: item.snippet.channelId,
+              title: item.snippet.title,
+              channel: item.snippet.channelTitle,
+              publishedAt: item.snippet.publishedAt,
+              publishedRelative: formatTimeAgo(item.snippet.publishedAt),
+              description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
+              views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '12.000'
+            };
+          }
+        } catch(e) {}
+      }
+
+      if (!video) {
+        video = {
+          id: id,
+          channelId: '',
+          title: 'Video Pilihan HidaTube',
+          channel: 'HidaTube Content',
+          publishedAt: new Date().toISOString(),
+          publishedRelative: 'Baru saja',
+          description: 'Deskripsi tidak tersedia.',
+          views: '12.000'
+        };
+      }
 
       currentVideoId = video.id;
       currentChannelId = video.channelId;
@@ -1470,7 +1614,7 @@
       document.getElementById('watchTitle').innerText = video.title;
       document.getElementById('watchChannel').innerText = video.channel;
       document.getElementById('miniTitle').innerText = video.title;
-      document.getElementById('miniChannel').innerText = video.channel;
+      document.getElementById('miniChannel').innerText = `${video.channel} • ${video.publishedRelative}`;
       
       const watchAvatarEl = document.getElementById('watchAvatar');
       watchAvatarEl.src = video.channelAvatar || `https://picsum.photos/seed/${video.channelId || id}/100`;
@@ -1487,7 +1631,9 @@
         } catch (e) {}
       }
 
-      document.getElementById('descHeaderStats').innerText = `${video.views} x ditonton • HidaTube Player`;
+      const exactDateStr = formatDateIndonesian(video.publishedAt);
+      const dateDisplay = exactDateStr ? `${exactDateStr} (${video.publishedRelative})` : video.publishedRelative;
+      document.getElementById('descHeaderStats').innerText = `${video.views} x ditonton • Diunggah ${dateDisplay}`;
       document.getElementById('watchDescription').innerText = video.description;
 
       const descBox = document.getElementById('descriptionBox');
@@ -1543,6 +1689,8 @@
             channelId: item.snippet.channelId,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
+            publishedAt: item.snippet.publishedAt,
+            publishedRelative: formatTimeAgo(item.snippet.publishedAt),
             description: item.snippet.description || '',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '12.000',
@@ -1590,7 +1738,7 @@
             <img src="${avatarImg}" class="channel-avatar">
             <div class="meta-details">
               <div class="meta-title">${v.title}</div>
-              <div class="meta-sub">${v.channel} • ${v.views} x ditonton</div>
+              <div class="meta-sub">${v.channel} • ${v.views} x ditonton • ${v.publishedRelative || 'Baru saja'}</div>
             </div>
           </div>
         `;
@@ -1699,17 +1847,21 @@
 
       if (tab === 'beranda') {
         document.getElementById('chipsWrapper').style.display = 'flex';
+        document.getElementById('sortFilterBar').style.display = 'none';
         loadTrendingVideos(false, document.getElementById('chipSemua'), false);
       } else if (tab === 'shorts') {
         document.getElementById('chipsWrapper').style.display = 'none';
+        document.getElementById('sortFilterBar').style.display = 'none';
         const randomQuery = getRandomShortsQuery();
         executeSearch(randomQuery, false);
       } else if (tab === 'subscription') {
         document.getElementById('chipsWrapper').style.display = 'none';
+        document.getElementById('sortFilterBar').style.display = 'none';
         container.innerHTML = '<div style="padding:30px; text-align:center; color:#aaa;"><h3>Subscription Terikhtisar</h3><p style="font-size:12px; margin-top:8px;">Video terbaru dari channel favorit Anda di HidaTube akan muncul di sini.</p></div>';
         document.getElementById('btnLoadMore').style.display = 'none';
       } else if (tab === 'anda') {
         document.getElementById('chipsWrapper').style.display = 'none';
+        document.getElementById('sortFilterBar').style.display = 'none';
         renderAndaProfile();
         document.getElementById('btnLoadMore').style.display = 'none';
       }
