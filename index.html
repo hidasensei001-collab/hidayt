@@ -321,7 +321,7 @@
       overflow: hidden;
     }
 
-    /* 4. PLAYER VIEW & DESKRIPSI & KOMENTAR */
+    /* 4. PLAYER VIEW & MINIPLAYER STYLES */
     .player-view {
       display: none;
       position: fixed;
@@ -331,11 +331,97 @@
       overflow-y: auto;
       max-width: 480px;
       margin: 0 auto;
+      transition: all 0.25s ease-in-out;
     }
 
     .player-view.active { display: block; }
 
-    /* HEADER PEMUTAR DIBUAT STICKY / SELALU MENEMPEL DI ATAS */
+    /* STATE MINIPLAYER / PICTURE-IN-PICTURE */
+    .player-view.minimized {
+      top: auto !important;
+      bottom: var(--bottom-nav-height) !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: 100% !important;
+      max-width: 480px !important;
+      height: 60px !important;
+      display: flex !important;
+      align-items: center !important;
+      background: #212121 !important;
+      border-top: 1px solid var(--yt-border);
+      z-index: 150 !important;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.7);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .player-view.minimized .player-header-bar,
+    .player-view.minimized .watch-details {
+      display: none !important;
+    }
+
+    .player-view.minimized .sticky-player {
+      position: relative !important;
+      top: 0 !important;
+      width: 106px !important;
+      height: 60px !important;
+      aspect-ratio: auto !important;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .mini-player-controls {
+      display: none;
+    }
+
+    .player-view.minimized .mini-player-controls {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      overflow: hidden;
+    }
+
+    .mini-info {
+      flex: 1;
+      margin-right: 10px;
+      overflow: hidden;
+    }
+
+    .mini-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mini-channel {
+      font-size: 11px;
+      color: var(--yt-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .mini-btns {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mini-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* HEADER PEMUTAR DIBUAT STICKY */
     .player-header-bar {
       position: sticky;
       top: 0;
@@ -349,7 +435,6 @@
       border-bottom: 1px solid var(--yt-border);
     }
 
-    /* STICKY IFRAME PLAYER MENEMPEL TEPAT DI BAWAH HEADER BAR */
     .sticky-player {
       position: sticky;
       top: 44px;
@@ -688,8 +773,8 @@
     <div class="player-view" id="playerView">
       <div class="player-header-bar">
         <div style="display:flex; align-items:center; gap:12px;">
-          <button class="icon-btn" onclick="closePlayerView()">
-            <i class="fa-solid fa-arrow-left"></i>
+          <button class="icon-btn" onclick="minimizePlayer()" title="Minimalkan Video">
+            <i class="fa-solid fa-chevron-down"></i>
           </button>
           <span style="font-weight: 500; font-size: 14px;">Pemutar Video</span>
         </div>
@@ -701,6 +786,22 @@
       <!-- STICKY IFRAME PLAYER -->
       <div class="sticky-player" id="stickyPlayer">
         <div id="ytPlayerContainer"></div>
+      </div>
+
+      <!-- CONTROLS MINI PLAYER (HANYA MUNCUL SAAT MINIMIZED) -->
+      <div class="mini-player-controls" id="miniPlayerControls" onclick="expandPlayer()">
+        <div class="mini-info">
+          <div class="mini-title" id="miniTitle">Judul Video</div>
+          <div class="mini-channel" id="miniChannel">Nama Channel</div>
+        </div>
+        <div class="mini-btns">
+          <button class="mini-btn" onclick="event.stopPropagation(); togglePlayPause();" title="Putar / Jeda">
+            <i class="fa-solid fa-pause" id="miniPlayPauseIcon"></i>
+          </button>
+          <button class="mini-btn" onclick="event.stopPropagation(); stopAndClosePlayer();" title="Tutup Pemutar">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
 
       <!-- WATCH DETAILS -->
@@ -808,20 +909,63 @@
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
     // ==========================================
-    // INTEGRASI BROWSER & TOMBOL KEMBALI HP (POPSTATE)
+    // INTEGRASI TOMBOL KEMBALI HP (POPSTATE -> MINIMIZE)
     // ==========================================
     window.addEventListener('popstate', (e) => {
       const playerView = document.getElementById('playerView');
       const searchOverlay = document.getElementById('searchOverlay');
 
-      if (playerView && playerView.classList.contains('active')) {
-        closePlayerUI();
+      if (playerView && playerView.classList.contains('active') && !playerView.classList.contains('minimized')) {
+        // Jika sedang full screen watch view, tekan Back HP akan meminimalkan video
+        minimizePlayer();
       } else if (searchOverlay && searchOverlay.classList.contains('active')) {
         searchOverlay.classList.remove('active');
       } else if (currentMode === 'channel') {
         resetToHome();
       }
     });
+
+    // FUNGSI UNTUK MEMINIMALKAN VIDEO (PICTURE-IN-PICTURE)
+    function minimizePlayer() {
+      const pv = document.getElementById('playerView');
+      if (pv.classList.contains('active')) {
+        pv.classList.add('minimized');
+      }
+    }
+
+    // FUNGSI UNTUK MEMBUKA KEMBALI PEMUTAR DARI MINIPLAYER
+    function expandPlayer() {
+      const pv = document.getElementById('playerView');
+      if (pv.classList.contains('minimized')) {
+        pv.classList.remove('minimized');
+        pv.scrollTop = 0;
+        if (!history.state || history.state.page !== 'player') {
+          history.pushState({ page: 'player', id: currentVideoId }, '', '#watch');
+        }
+      }
+    }
+
+    // FUNGSI UNTUK MENGHENTIKAN DAN MENUTUP VIDEO SECARA TOTAL
+    function stopAndClosePlayer() {
+      if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+      const pv = document.getElementById('playerView');
+      pv.classList.remove('active', 'minimized');
+      if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    }
+
+    // TOGGLE PLAY / PAUSE DARI MINIPLAYER
+    function togglePlayPause() {
+      if (!ytPlayer) return;
+      const state = ytPlayer.getPlayerState();
+      const icon = document.getElementById('miniPlayPauseIcon');
+      if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+        if (icon) icon.className = 'fa-solid fa-play';
+      } else {
+        ytPlayer.playVideo();
+        if (icon) icon.className = 'fa-solid fa-pause';
+      }
+    }
 
     const shortsKeywords = [
       'YouTube Shorts Indonesia',
@@ -894,7 +1038,18 @@
         height: '100%',
         width: '100%',
         videoId: 'jfKfPfyJRdk',
-        playerVars: { 'autoplay': 1, 'rel': 0, 'modestbranding': 1, 'fs': 1 }
+        playerVars: { 'autoplay': 1, 'rel': 0, 'modestbranding': 1, 'fs': 1 },
+        events: {
+          'onStateChange': (event) => {
+            const icon = document.getElementById('miniPlayPauseIcon');
+            if (!icon) return;
+            if (event.data === YT.PlayerState.PLAYING) {
+              icon.className = 'fa-solid fa-pause';
+            } else if (event.data === YT.PlayerState.PAUSED) {
+              icon.className = 'fa-solid fa-play';
+            }
+          }
+        }
       });
     }
 
@@ -1038,7 +1193,7 @@
 
     async function openChannelPage(chId, chTitle, isAppend = false) {
       if (!isAppend) {
-        closePlayerUI();
+        minimizePlayer(); // Minimalkan video agar tetap berputar saat membuka channel
         if (!history.state || history.state.page !== 'channel' || history.state.chId !== chId) {
           history.pushState({ page: 'channel', chId: chId }, '', '#channel');
         }
@@ -1209,7 +1364,7 @@
       }
     });
 
-    // MEMUTAR VIDEO & PUSH STATE PADA BROWSER HISTORY
+    // MEMUTAR VIDEO & UPDATE TAMPILAN PEMUTAR
     async function playVideo(id) {
       const video = videoList.find(v => v.id === id) || {
         id: id,
@@ -1226,6 +1381,8 @@
 
       document.getElementById('watchTitle').innerText = video.title;
       document.getElementById('watchChannel').innerText = video.channel;
+      document.getElementById('miniTitle').innerText = video.title;
+      document.getElementById('miniChannel').innerText = video.channel;
       
       const watchAvatarEl = document.getElementById('watchAvatar');
       watchAvatarEl.src = video.channelAvatar || `https://picsum.photos/seed/${video.channelId || id}/100`;
@@ -1261,14 +1418,14 @@
 
       addToHistory({ id: video.id, title: video.title, channel: video.channel });
       
-      // Push State ke Browser History agar tombol Back HP berfungsi sempurna
       if (!history.state || history.state.page !== 'player' || history.state.id !== id) {
         history.pushState({ page: 'player', id: id }, '', '#watch');
       }
 
       const playerView = document.getElementById('playerView');
+      playerView.classList.remove('minimized');
       playerView.classList.add('active');
-      playerView.scrollTop = 0; // Pastikan posisi scroll kembali ke paling atas saat video baru diputar
+      playerView.scrollTop = 0;
     }
 
     async function loadMoreRecommendedVideos() {
@@ -1317,7 +1474,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const pv = document.getElementById('playerView');
       pv.addEventListener('scroll', () => {
-        if (pv.scrollTop + pv.clientHeight >= pv.scrollHeight - 300) {
+        if (!pv.classList.contains('minimized') && (pv.scrollTop + pv.clientHeight >= pv.scrollHeight - 300)) {
           loadMoreRecommendedVideos();
         }
       });
@@ -1405,22 +1562,6 @@
       const toggleBtn = document.getElementById('descToggleBtn');
       descBox.classList.toggle('expanded');
       toggleBtn.innerText = descBox.classList.contains('expanded') ? 'Tampilkan lebih sedikit' : '...selengkapnya';
-    }
-
-    // FUNGSI PENUTUP ELEMEN PEMUTAR VIDEO
-    function closePlayerUI() {
-      if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
-      document.getElementById('playerView').classList.remove('active');
-      if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-    }
-
-    // FUNGSI TOMBOL KEMBALI DI ATAS KIRI PEMUTAR VIDEO
-    function closePlayerView() {
-      if (history.state && history.state.page === 'player') {
-        history.back(); // Panggil history.back agar memicu popstate
-      } else {
-        closePlayerUI();
-      }
     }
 
     async function togglePlayerFullScreen() {
