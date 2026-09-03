@@ -331,17 +331,23 @@
       overflow-y: auto;
       max-width: 480px;
       margin: 0 auto;
-      transition: all 0.25s ease-in-out;
+      transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+      will-change: transform;
     }
 
     .player-view.active { display: block; }
+
+    /* EFEK DRAGGING (INTERAKTIF SAAT DIUSAP) */
+    .player-view.dragging {
+      transition: none !important;
+    }
 
     /* STATE MINIPLAYER / PICTURE-IN-PICTURE */
     .player-view.minimized {
       top: auto !important;
       bottom: var(--bottom-nav-height) !important;
       left: 50% !important;
-      transform: translateX(-50%) !important;
+      transform: translateX(-50%) translateY(0) !important;
       width: 100% !important;
       max-width: 480px !important;
       height: 60px !important;
@@ -353,6 +359,7 @@
       box-shadow: 0 -4px 15px rgba(0,0,0,0.7);
       overflow: hidden;
       cursor: pointer;
+      opacity: 1 !important;
     }
 
     .player-view.minimized .player-header-bar,
@@ -421,23 +428,39 @@
       cursor: pointer;
     }
 
-    /* HEADER PEMUTAR DIBUAT STICKY */
+    /* HEADER PEMUTAR DIBUAT STICKY DEGNAN DRAG HANDLE */
     .player-header-bar {
       position: sticky;
       top: 0;
-      height: 44px;
+      height: 48px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      justify-content: center;
       padding: 0 12px;
       background: var(--yt-black);
       z-index: 30;
       border-bottom: 1px solid var(--yt-border);
+      touch-action: none;
+    }
+
+    .drag-handle-pill {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      margin: 2px auto 4px auto;
+    }
+
+    .player-header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
 
     .sticky-player {
       position: sticky;
-      top: 44px;
+      top: 48px;
       width: 100%;
       aspect-ratio: 16/9;
       background: #000;
@@ -771,16 +794,19 @@
 
     <!-- WATCH PLAYER VIEW -->
     <div class="player-view" id="playerView">
-      <div class="player-header-bar">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <button class="icon-btn" onclick="minimizePlayer()" title="Minimalkan Video">
-            <i class="fa-solid fa-chevron-down"></i>
+      <div class="player-header-bar" id="playerHeaderBar">
+        <div class="drag-handle-pill"></div>
+        <div class="player-header-content">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="icon-btn" onclick="minimizePlayer()" title="Minimalkan Video">
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <span style="font-weight: 500; font-size: 14px;">Pemutar Video</span>
+          </div>
+          <button class="icon-btn" onclick="togglePlayerFullScreen()" title="Layar Penuh Landscape">
+            <i class="fa-solid fa-expand"></i>
           </button>
-          <span style="font-weight: 500; font-size: 14px;">Pemutar Video</span>
         </div>
-        <button class="icon-btn" onclick="togglePlayerFullScreen()" title="Layar Penuh Landscape">
-          <i class="fa-solid fa-expand"></i>
-        </button>
       </div>
 
       <!-- STICKY IFRAME PLAYER -->
@@ -909,6 +935,64 @@
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
     // ==========================================
+    // INTEGRASI GESTUR USAP LAYAR KEBAWAH (SWIPE DOWN)
+    // ==========================================
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+
+    function initSwipeGesture() {
+      const pv = document.getElementById('playerView');
+      const headerBar = document.getElementById('playerHeaderBar');
+
+      const handleTouchStart = (e) => {
+        if (pv.classList.contains('minimized')) return;
+        if (pv.scrollTop <= 0) {
+          startY = e.touches[0].clientY;
+          isDragging = true;
+        }
+      };
+
+      const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+
+        if (deltaY > 0 && pv.scrollTop <= 0) {
+          pv.classList.add('dragging');
+          pv.style.transform = `translateY(${deltaY}px)`;
+          pv.style.opacity = `${Math.max(0.4, 1 - (deltaY / 400))}`;
+          if (e.cancelable) e.preventDefault();
+        }
+      };
+
+      const handleTouchEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        pv.classList.remove('dragging');
+
+        const deltaY = currentY - startY;
+        pv.style.transform = '';
+        pv.style.opacity = '';
+
+        if (deltaY > 100 && pv.scrollTop <= 0) {
+          minimizePlayer();
+        }
+        startY = 0;
+        currentY = 0;
+      };
+
+      // Terapkan event listener di header bar & area atas pemutar
+      headerBar.addEventListener('touchstart', handleTouchStart, { passive: true });
+      headerBar.addEventListener('touchmove', handleTouchMove, { passive: false });
+      headerBar.addEventListener('touchend', handleTouchEnd);
+
+      pv.addEventListener('touchstart', handleTouchStart, { passive: true });
+      pv.addEventListener('touchmove', handleTouchMove, { passive: false });
+      pv.addEventListener('touchend', handleTouchEnd);
+    }
+
+    // ==========================================
     // INTEGRASI TOMBOL KEMBALI HP (POPSTATE -> MINIMIZE)
     // ==========================================
     window.addEventListener('popstate', (e) => {
@@ -916,7 +1000,6 @@
       const searchOverlay = document.getElementById('searchOverlay');
 
       if (playerView && playerView.classList.contains('active') && !playerView.classList.contains('minimized')) {
-        // Jika sedang full screen watch view, tekan Back HP akan meminimalkan video
         minimizePlayer();
       } else if (searchOverlay && searchOverlay.classList.contains('active')) {
         searchOverlay.classList.remove('active');
@@ -929,6 +1012,9 @@
     function minimizePlayer() {
       const pv = document.getElementById('playerView');
       if (pv.classList.contains('active')) {
+        pv.style.transform = '';
+        pv.style.opacity = '';
+        pv.classList.remove('dragging');
         pv.classList.add('minimized');
       }
     }
@@ -949,7 +1035,9 @@
     function stopAndClosePlayer() {
       if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
       const pv = document.getElementById('playerView');
-      pv.classList.remove('active', 'minimized');
+      pv.style.transform = '';
+      pv.style.opacity = '';
+      pv.classList.remove('active', 'minimized', 'dragging');
       if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
     }
 
@@ -1193,7 +1281,7 @@
 
     async function openChannelPage(chId, chTitle, isAppend = false) {
       if (!isAppend) {
-        minimizePlayer(); // Minimalkan video agar tetap berputar saat membuka channel
+        minimizePlayer();
         if (!history.state || history.state.page !== 'channel' || history.state.chId !== chId) {
           history.pushState({ page: 'channel', chId: chId }, '', '#channel');
         }
@@ -1423,7 +1511,9 @@
       }
 
       const playerView = document.getElementById('playerView');
-      playerView.classList.remove('minimized');
+      playerView.style.transform = '';
+      playerView.style.opacity = '';
+      playerView.classList.remove('minimized', 'dragging');
       playerView.classList.add('active');
       playerView.scrollTop = 0;
     }
@@ -1472,6 +1562,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      initSwipeGesture();
+
       const pv = document.getElementById('playerView');
       pv.addEventListener('scroll', () => {
         if (!pv.classList.contains('minimized') && (pv.scrollTop + pv.clientHeight >= pv.scrollHeight - 300)) {
