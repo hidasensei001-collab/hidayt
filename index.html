@@ -335,22 +335,28 @@
 
     .player-view.active { display: block; }
 
+    /* HEADER PEMUTAR DIBUAT STICKY / SELALU MENEMPEL DI ATAS */
     .player-header-bar {
+      position: sticky;
+      top: 0;
       height: 44px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 12px;
       background: var(--yt-black);
+      z-index: 30;
+      border-bottom: 1px solid var(--yt-border);
     }
 
+    /* STICKY IFRAME PLAYER MENEMPEL TEPAT DI BAWAH HEADER BAR */
     .sticky-player {
       position: sticky;
-      top: 0;
+      top: 44px;
       width: 100%;
       aspect-ratio: 16/9;
       background: #000;
-      z-index: 10;
+      z-index: 20;
     }
 
     .sticky-player iframe { width: 100%; height: 100%; border: none; }
@@ -801,6 +807,22 @@
 
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
+    // ==========================================
+    // INTEGRASI BROWSER & TOMBOL KEMBALI HP (POPSTATE)
+    // ==========================================
+    window.addEventListener('popstate', (e) => {
+      const playerView = document.getElementById('playerView');
+      const searchOverlay = document.getElementById('searchOverlay');
+
+      if (playerView && playerView.classList.contains('active')) {
+        closePlayerUI();
+      } else if (searchOverlay && searchOverlay.classList.contains('active')) {
+        searchOverlay.classList.remove('active');
+      } else if (currentMode === 'channel') {
+        resetToHome();
+      }
+    });
+
     const shortsKeywords = [
       'YouTube Shorts Indonesia',
       'Shorts Lucu Viral',
@@ -815,7 +837,6 @@
       return shortsKeywords[Math.floor(Math.random() * shortsKeywords.length)];
     }
 
-    // FORMAT ANGKA SUBSCRIBER RESMI
     function formatSubscribers(count) {
       if (!count) return 'Channel Resmi';
       const num = parseInt(count);
@@ -842,7 +863,6 @@
       return `${pad(minutes)}:${pad(seconds)}`;
     }
 
-    // MEMANGGIL FOTO PROFIL RESMI / AVATAR DARI API YOUTUBE
     async function fetchChannelAvatars(items) {
       const channelIds = [...new Set(items.map(v => v.channelId).filter(Boolean))];
       if (channelIds.length === 0) return items;
@@ -879,8 +899,14 @@
     }
 
     function toggleSearchOverlay(show) {
-      document.getElementById('searchOverlay').classList.toggle('active', show);
-      if (show) document.getElementById('searchInput').focus();
+      const overlay = document.getElementById('searchOverlay');
+      overlay.classList.toggle('active', show);
+      if (show) {
+        document.getElementById('searchInput').focus();
+        if (!history.state || history.state.page !== 'search') {
+          history.pushState({ page: 'search' }, '', '#search');
+        }
+      }
     }
 
     function handleSearchKey(e) {
@@ -902,7 +928,6 @@
       switchNav(document.querySelector('.nav-item'), 'beranda');
     }
 
-    // MEMUAT VIDEO TRENDING
     async function loadTrendingVideos(showRankBadge = false, chipEl = null, isAppend = false) {
       if (!isAppend) {
         showLoading(true);
@@ -955,7 +980,6 @@
       }
     }
 
-    // HASIL PENCARIAN
     async function executeSearch(customQuery = null, isAppend = false) {
       const query = customQuery || document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -1012,10 +1036,12 @@
       }
     }
 
-    // HALAMAN CHANNEL DENGAN FOTO PROFIL, SUBSCRIBER ASLI & DENGAN INFINITE SCROLLING
     async function openChannelPage(chId, chTitle, isAppend = false) {
       if (!isAppend) {
-        closePlayerView();
+        closePlayerUI();
+        if (!history.state || history.state.page !== 'channel' || history.state.chId !== chId) {
+          history.pushState({ page: 'channel', chId: chId }, '', '#channel');
+        }
         showLoading(true);
         currentMode = 'channel';
         currentChannelId = chId;
@@ -1023,7 +1049,6 @@
         videoList = [];
         nextPageToken = '';
 
-        // Panggil data profil & subscriber asli dari YouTube Data API
         try {
           const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${chId}&key=${apiKey}`);
           const chData = await chRes.json();
@@ -1050,7 +1075,6 @@
         }
       }
 
-      // Ambil daftar video channel dengan paginasi
       try {
         let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=15&order=date&type=video&key=${apiKey}`;
         if (isAppend && nextPageToken) {
@@ -1096,7 +1120,6 @@
       }
     }
 
-    // RENDER METODE FEED VIDEO
     function renderFeed(items) {
       const container = document.getElementById('feedContainer');
       container.innerHTML = '';
@@ -1151,7 +1174,6 @@
       });
     }
 
-    // FUNGSI SCROLL KETIKA MENCAPAI BAWAH HALAMAN
     async function loadMoreVideos() {
       if (isLoadingMore || !nextPageToken) return;
       isLoadingMore = true;
@@ -1179,7 +1201,6 @@
       }
     }
 
-    // DETEKSI SCROLL DI UTAMA (BERANDA / PENCARIAN / CHANNEL)
     window.addEventListener('scroll', () => {
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
         if (!isLoadingMore && nextPageToken) {
@@ -1188,7 +1209,7 @@
       }
     });
 
-    // PLAY VIDEO
+    // MEMUTAR VIDEO & PUSH STATE PADA BROWSER HISTORY
     async function playVideo(id) {
       const video = videoList.find(v => v.id === id) || {
         id: id,
@@ -1209,7 +1230,6 @@
       const watchAvatarEl = document.getElementById('watchAvatar');
       watchAvatarEl.src = video.channelAvatar || `https://picsum.photos/seed/${video.channelId || id}/100`;
 
-      // Ambil foto profil & subscriber real untuk halaman pemutar
       if (video.channelId) {
         try {
           const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${video.channelId}&key=${apiKey}`);
@@ -1233,19 +1253,24 @@
         ytPlayer.loadVideoById(id);
       }
 
-      // Ambil Komentar Asli dari YouTube API
       fetchVideoComments(id);
 
-      // Siapkan Daftar Rekomendasi di Pemutar
       recommendedList = videoList.filter(v => v.id !== currentVideoId);
       recNextPageToken = '';
       renderRecommended();
 
       addToHistory({ id: video.id, title: video.title, channel: video.channel });
-      document.getElementById('playerView').classList.add('active');
+      
+      // Push State ke Browser History agar tombol Back HP berfungsi sempurna
+      if (!history.state || history.state.page !== 'player' || history.state.id !== id) {
+        history.pushState({ page: 'player', id: id }, '', '#watch');
+      }
+
+      const playerView = document.getElementById('playerView');
+      playerView.classList.add('active');
+      playerView.scrollTop = 0; // Pastikan posisi scroll kembali ke paling atas saat video baru diputar
     }
 
-    // SCROLL REKOMENDASI UNLIMITED DI HALAMAN PEMUTAR VIDEO
     async function loadMoreRecommendedVideos() {
       if (isLoadingRecMore) return;
       isLoadingRecMore = true;
@@ -1289,7 +1314,6 @@
       }
     }
 
-    // DETEKSI SCROLL DI HALAMAN PEMUTAR VIDEO
     document.addEventListener('DOMContentLoaded', () => {
       const pv = document.getElementById('playerView');
       pv.addEventListener('scroll', () => {
@@ -1325,7 +1349,6 @@
       });
     }
 
-    // AMBIL KOMENTAR REAL DARI API YOUTUBE
     async function fetchVideoComments(videoId) {
       const listContainer = document.getElementById('commentsList');
       listContainer.innerHTML = '<p style="font-size:12px; color:var(--yt-text-secondary);">Memuat komentar...</p>';
@@ -1384,10 +1407,20 @@
       toggleBtn.innerText = descBox.classList.contains('expanded') ? 'Tampilkan lebih sedikit' : '...selengkapnya';
     }
 
-    function closePlayerView() {
+    // FUNGSI PENUTUP ELEMEN PEMUTAR VIDEO
+    function closePlayerUI() {
       if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
       document.getElementById('playerView').classList.remove('active');
       if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    }
+
+    // FUNGSI TOMBOL KEMBALI DI ATAS KIRI PEMUTAR VIDEO
+    function closePlayerView() {
+      if (history.state && history.state.page === 'player') {
+        history.back(); // Panggil history.back agar memicu popstate
+      } else {
+        closePlayerUI();
+      }
     }
 
     async function togglePlayerFullScreen() {
