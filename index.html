@@ -224,7 +224,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between;
+  justify-space-between;
 
   padding:
     0 14px
@@ -3989,11 +3989,27 @@ input:focus-visible {
 
 
 /* =========================================================
-   CONFIGURATION
+   CONFIGURATION & MULTI API KEYS (MANUAL ROTATION)
    ========================================================= */
 
-const apiKey = 'AIzaSyBc1XBpSqaAa9lOIlpLQDICfITMsc0Mfww';
+const apiKeys = [
+  'AIzaSyBc1XBpSqaAa9lOIlpLQDICfITMsc0Mfww', // API 1
+  'AIzaSyAauADZplh7UvUUtieOej_BulfAkT1cwZE', // API 2
+  'AIzaSyA2b3B-yedWF13_hzp8ynhq4b68mqcHdKw'  // API 3
+];
 
+// Ambil index API Key aktif dari penyimpanan lokal (Default: API 1 / Index 0)
+let activeApiKeyIndex = Number(localStorage.getItem('hidatube_active_api_index') || 0);
+
+function getActiveApiKey() {
+  return apiKeys[activeApiKeyIndex] || apiKeys[0];
+}
+
+function setActiveApiKey(index) {
+  activeApiKeyIndex = index;
+  localStorage.setItem('hidatube_active_api_index', index);
+  showToast(`Berhasil pindah ke Server API #${index + 1}`);
+}
 
 const CONFIG = {
 
@@ -4417,13 +4433,23 @@ function setCached(key,data) {
 
 
 /* =========================================================
-   API REQUEST
+   API REQUEST (DENGAN DUKUNGAN PILIHAN API KEY MANUAL)
    ========================================================= */
 
-async function apiFetch(url,cacheKey=null) {
+async function apiFetch(baseUrl, cacheKey = null) {
 
-  if (!apiKey || apiKey.includes('MASUKKAN_API_KEY')) {
-    throw new Error('API key YouTube belum dikonfigurasi.');
+  if (!apiKeys.length) {
+    throw new Error('Daftar API key belum diisi.');
+  }
+
+  const activeKey = getActiveApiKey();
+
+  // Selalu pastikan parameter key= menggunakan API Key aktif saat ini
+  let fullUrl = baseUrl;
+  if (fullUrl.includes('key=')) {
+    fullUrl = fullUrl.replace(/key=[^&]+/, `key=${encodeURIComponent(activeKey)}`);
+  } else {
+    fullUrl += (fullUrl.includes('?') ? '&' : '?') + `key=${encodeURIComponent(activeKey)}`;
   }
 
   if (cacheKey) {
@@ -4431,10 +4457,20 @@ async function apiFetch(url,cacheKey=null) {
     if (cached) return cached;
   }
 
-  const response = await fetch(url);
+  const response = await fetch(fullUrl);
   const data = await response.json();
 
   if (!response.ok || data.error) {
+    const errors = data.error?.errors || [];
+    const isQuotaExceeded = response.status === 403 && errors.some(e => 
+      e.reason === 'quotaExceeded' || e.reason === 'dailyLimitExceeded'
+    );
+
+    if (isQuotaExceeded) {
+      showToast(`Kuota API #${activeApiKeyIndex + 1} habis! Silakan pindah API di menu Pengaturan.`, 'error');
+      throw new Error(`Kuota API Key #${activeApiKeyIndex + 1} habis.`);
+    }
+
     throw new Error(data?.error?.message || 'API request gagal.');
   }
 
@@ -4470,7 +4506,7 @@ async function fetchChannelAvatars(items) {
     for (const chunk of chunks) {
 
       const idString = chunk.join(',');
-      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${encodeURIComponent(idString)}&key=${encodeURIComponent(apiKey)}`;
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${encodeURIComponent(idString)}`;
 
       const data = await apiFetch(url, `avatars:${idString}`);
 
@@ -4600,7 +4636,7 @@ async function loadTrendingVideos(
 
   try {
 
-    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&chart=mostPopular&regionCode=${CONFIG.regionCode}&maxResults=${CONFIG.maxResults}&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&chart=mostPopular&regionCode=${CONFIG.regionCode}&maxResults=${CONFIG.maxResults}`;
 
     if (isAppend && nextPageToken) {
       url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
@@ -4632,7 +4668,7 @@ async function loadTrendingVideos(
       <div class="empty-state">
         <i class="fa-solid fa-cloud-exclamation"></i>
         <h3>Gagal memuat video</h3>
-        <p>Periksa koneksi internet dan konfigurasi YouTube API.</p>
+        <p>Periksa koneksi internet atau coba pindah API Key di menu Pengaturan.</p>
         <button class="btn-load-more" onclick="loadTrendingVideos(false,null,false)" style="margin-top:15px;">
           Coba Lagi
         </button>
@@ -4805,7 +4841,7 @@ async function executeSearch(
     if (sortOrder === 'date' || sortOrder === 'oldest') apiOrder = 'date';
     if (sortOrder === 'viewCount') apiOrder = 'viewCount';
 
-    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${CONFIG.maxResults}&q=${encodeURIComponent(query)}&type=video&order=${apiOrder}&regionCode=${CONFIG.regionCode}&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${CONFIG.maxResults}&q=${encodeURIComponent(query)}&type=video&order=${apiOrder}&regionCode=${CONFIG.regionCode}`;
 
     if (isAppend && nextPageToken) {
       url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
@@ -4823,7 +4859,7 @@ async function executeSearch(
       return;
     }
 
-    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}`;
     const detailData = await apiFetch(detailUrl, `videoDetails:${ids.join(',')}`);
 
     let newItems = (detailData.items || []).map(normalizeVideo);
@@ -4889,7 +4925,7 @@ async function openChannelPage(
     showLoading(true);
 
     try {
-      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${encodeURIComponent(chId)}&key=${encodeURIComponent(apiKey)}`;
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${encodeURIComponent(chId)}`;
       const data = await apiFetch(url, `channel:${chId}`);
 
       if (data.items && data.items.length) {
@@ -4906,7 +4942,7 @@ async function openChannelPage(
     if (sortOrder === 'viewCount') apiOrder = 'viewCount';
     if (sortOrder === 'relevance') apiOrder = 'relevance';
 
-    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(chId)}&maxResults=${CONFIG.maxResults}&order=${apiOrder}&type=video&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(chId)}&maxResults=${CONFIG.maxResults}&order=${apiOrder}&type=video`;
 
     if (isAppend && nextPageToken) {
       url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
@@ -4923,7 +4959,7 @@ async function openChannelPage(
       return;
     }
 
-    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}`;
     const detailData = await apiFetch(detailsUrl, `channelDetails:${ids.join(',')}`);
 
     let newItems = (detailData.items || []).map(normalizeVideo);
@@ -5250,7 +5286,7 @@ async function playVideo(id) {
 
   if (!video) {
     try {
-      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${encodeURIComponent(id)}&key=${encodeURIComponent(apiKey)}`;
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${encodeURIComponent(id)}`;
       const data = await apiFetch(url, `video:${id}`);
 
       if (data.items && data.items.length) {
@@ -5868,7 +5904,7 @@ async function loadMoreRecommendedVideos() {
 
     const query = currentChannelTitle || 'YouTube Trending Indonesia';
 
-    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&type=video&q=${encodeURIComponent(query)}&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&type=video&q=${encodeURIComponent(query)}`;
 
     if (recNextPageToken) {
       url += `&pageToken=${encodeURIComponent(recNextPageToken)}`;
@@ -5885,7 +5921,7 @@ async function loadMoreRecommendedVideos() {
 
     if (!ids.length) return;
 
-    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}`;
     const detailData = await apiFetch(detailUrl);
 
     let newItems = (detailData.items || [])
@@ -5970,7 +6006,7 @@ async function fetchVideoComments(videoId, isAppend=false) {
 
   try {
 
-    let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${encodeURIComponent(videoId)}&maxResults=15&order=${currentCommentOrder}&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${encodeURIComponent(videoId)}&maxResults=15&order=${currentCommentOrder}`;
 
     if (isAppend && commentNextPageToken) {
       url += `&pageToken=${encodeURIComponent(commentNextPageToken)}`;
@@ -6429,12 +6465,12 @@ async function loadSubscriptionVideos() {
     const results = await Promise.all(
       targets.map(async subscription => {
         try {
-          const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(subscription.channelId)}&maxResults=5&order=date&type=video&key=${encodeURIComponent(apiKey)}`;
+          const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(subscription.channelId)}&maxResults=5&order=date&type=video`;
           const data = await apiFetch(url, `subscription:${subscription.channelId}`);
           const ids = (data.items || []).map(i => i.id.videoId).filter(Boolean);
           if (!ids.length) return [];
 
-          const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+          const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}`;
           const detail = await apiFetch(detailsUrl);
           return (detail.items || []).map(normalizeVideo);
         } catch(e) {
@@ -6530,7 +6566,7 @@ function renderAndaProfile() {
       <div class="library-card" onclick="showSettings()">
         <i class="fa-solid fa-gear"></i>
         <div class="library-card-title">Pengaturan</div>
-        <div class="library-card-count">Tampilan & Data</div>
+        <div class="library-card-count">Tampilan & Server API</div>
       </div>
 
       <div class="library-card" onclick="showDataCenter()">
@@ -6833,7 +6869,7 @@ function showPlaylistDetail(playlistId) {
 
 
 /* =========================================================
-   SETTINGS
+   SETTINGS (DENGAN PILIHAN API KEY MANUAL)
    ========================================================= */
 
 function showSettings() {
@@ -6841,6 +6877,21 @@ function showSettings() {
   openModal(
     'Pengaturan HidaTube',
     `
+    <!-- MENU PILIHAN MANUAL API KEY -->
+    <div class="settings-section">
+      <div class="settings-section-title">Pilihan Server API Key</div>
+      <div class="theme-options">
+        ${apiKeys.map((key, index) => `
+          <div class="theme-option ${activeApiKeyIndex === index ? 'active' : ''}" 
+               onclick="setActiveApiKey(${index}); showSettings();">
+            <i class="fa-solid fa-key"></i><br>
+            API #${index + 1}
+            ${activeApiKeyIndex === index ? '<br><small style="color:var(--yt-red);font-weight:bold;">(Aktif)</small>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
     <div class="settings-section">
       <div class="settings-section-title">Tampilan</div>
       <div class="theme-options">
