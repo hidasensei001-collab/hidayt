@@ -3992,13 +3992,6 @@ input:focus-visible {
    CONFIGURATION
    ========================================================= */
 
-/*
-  MASUKKAN API KEY YOUTUBE YANG SAMA DENGAN VERSI LAMA
-  PADA SATU BARIS INI.
-
-  Jangan membuat API key baru setiap kali mengubah aplikasi.
-*/
-
 const apiKey = 'AIzaSyBc1XBpSqaAa9lOIlpLQDICfITMsc0Mfww';
 
 
@@ -4038,6 +4031,8 @@ let currentVideoData = null;
 let videoList = [];
 
 let recommendedList = [];
+
+let currentSuggestions = [];
 
 let nextPageToken = '';
 
@@ -4142,82 +4137,25 @@ function writeStorage(key,value) {
 }
 
 
-let watchHistory =
-  readStorage(
-    STORAGE.history,
-    []
-  );
+let watchHistory = readStorage(STORAGE.history, []);
+let watchProgress = readStorage(STORAGE.progress, {});
+let searchHistory = readStorage(STORAGE.search, []);
+let watchLater = readStorage(STORAGE.watchLater, []);
+let playlists = readStorage(STORAGE.playlists, []);
+let subscriptions = readStorage(STORAGE.subscriptions, []);
+let likedVideos = readStorage(STORAGE.likes, []);
+let dislikedVideos = readStorage(STORAGE.dislikes, []);
+let notInterested = readStorage(STORAGE.notInterested, []);
 
-
-let watchProgress =
-  readStorage(
-    STORAGE.progress,
-    {}
-  );
-
-
-let searchHistory =
-  readStorage(
-    STORAGE.search,
-    []
-  );
-
-
-let watchLater =
-  readStorage(
-    STORAGE.watchLater,
-    []
-  );
-
-
-let playlists =
-  readStorage(
-    STORAGE.playlists,
-    []
-  );
-
-
-let subscriptions =
-  readStorage(
-    STORAGE.subscriptions,
-    []
-  );
-
-
-let likedVideos =
-  readStorage(
-    STORAGE.likes,
-    []
-  );
-
-
-let dislikedVideos =
-  readStorage(
-    STORAGE.dislikes,
-    []
-  );
-
-
-let notInterested =
-  readStorage(
-    STORAGE.notInterested,
-    []
-  );
-
-
-let appSettings =
-  readStorage(
-    STORAGE.settings,
-    {
-      theme:'dark',
-      accent:'#ff0000',
-      dataSaver:false,
-      autoplayNext:false,
-      saveHistory:true,
-      saveSearchHistory:true,
-      animations:true
-    }
-  );
+let appSettings = readStorage(STORAGE.settings, {
+  theme:'dark',
+  accent:'#ff0000',
+  dataSaver:false,
+  autoplayNext:false,
+  saveHistory:true,
+  saveSearchHistory:true,
+  animations:true
+});
 
 
 /* =========================================================
@@ -4230,11 +4168,8 @@ function escapeHTML(value) {
     return '';
   }
 
-  const div =
-    document.createElement('div');
-
-  div.textContent =
-    String(value);
+  const div = document.createElement('div');
+  div.textContent = String(value);
 
   return div.innerHTML;
 }
@@ -4288,77 +4223,39 @@ function formatSubscribers(count) {
     return 'Channel Resmi';
   }
 
-  return (
-    formatNumber(count)
-    + ' subscriber'
-  );
+  return formatNumber(count) + ' subscriber';
 
 }
 
 
 function formatTimeAgo(dateString) {
 
-  if (!dateString) {
-    return 'Baru saja';
-  }
+  if (!dateString) return 'Baru saja';
 
-  const date =
-    new Date(dateString);
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Baru saja';
 
-  if (isNaN(date.getTime())) {
-    return 'Baru saja';
-  }
+  const now = new Date();
+  const diff = Math.floor((now - date) / 1000);
 
-  const now =
-    new Date();
+  if (diff < 60) return 'Baru saja';
 
-  const diff =
-    Math.floor(
-      (now - date) / 1000
-    );
+  const mins = Math.floor(diff / 60);
+  if (mins < 60) return `${mins} menit yang lalu`;
 
-  if (diff < 60) {
-    return 'Baru saja';
-  }
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} jam yang lalu`;
 
-  const mins =
-    Math.floor(diff / 60);
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} hari yang lalu`;
 
-  if (mins < 60) {
-    return `${mins} menit yang lalu`;
-  }
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks} minggu yang lalu`;
 
-  const hours =
-    Math.floor(mins / 60);
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} bulan yang lalu`;
 
-  if (hours < 24) {
-    return `${hours} jam yang lalu`;
-  }
-
-  const days =
-    Math.floor(hours / 24);
-
-  if (days < 7) {
-    return `${days} hari yang lalu`;
-  }
-
-  const weeks =
-    Math.floor(days / 7);
-
-  if (weeks < 4) {
-    return `${weeks} minggu yang lalu`;
-  }
-
-  const months =
-    Math.floor(days / 30);
-
-  if (months < 12) {
-    return `${months} bulan yang lalu`;
-  }
-
-  const years =
-    Math.floor(days / 365);
-
+  const years = Math.floor(days / 365);
   return `${years} tahun yang lalu`;
 
 }
@@ -4368,12 +4265,8 @@ function formatDateIndonesian(dateString) {
 
   if (!dateString) return '';
 
-  const date =
-    new Date(dateString);
-
-  if (isNaN(date.getTime())) {
-    return '';
-  }
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
 
   return date.toLocaleDateString(
     'id-ID',
@@ -4389,45 +4282,22 @@ function formatDateIndonesian(dateString) {
 
 function parseISO8601Duration(duration) {
 
-  if (!duration) {
-    return '00:00';
-  }
+  if (!duration) return '00:00';
 
-  const match =
-    duration.match(
-      /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
-    );
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return '00:00';
 
-  if (!match) {
-    return '00:00';
-  }
+  const hours = parseInt(match[1] || 0);
+  const minutes = parseInt(match[2] || 0);
+  const seconds = parseInt(match[3] || 0);
 
-  const hours =
-    parseInt(match[1] || 0);
-
-  const minutes =
-    parseInt(match[2] || 0);
-
-  const seconds =
-    parseInt(match[3] || 0);
-
-  const pad =
-    n => String(n).padStart(2,'0');
+  const pad = n => String(n).padStart(2,'0');
 
   if (hours > 0) {
-
-    return (
-      `${hours}:`
-      + `${pad(minutes)}:`
-      + `${pad(seconds)}`
-    );
-
+    return `${hours}:${pad(minutes)}:${pad(seconds)}`;
   }
 
-  return (
-    `${pad(minutes)}:`
-    + `${pad(seconds)}`
-  );
+  return `${pad(minutes)}:${pad(seconds)}`;
 
 }
 
@@ -4436,18 +4306,12 @@ function parseDurationSeconds(duration) {
 
   if (!duration) return 0;
 
-  const match =
-    duration.match(
-      /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/
-    );
-
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return 0;
 
   return (
-    Number(match[1] || 0) * 3600
-    +
-    Number(match[2] || 0) * 60
-    +
+    Number(match[1] || 0) * 3600 +
+    Number(match[2] || 0) * 60 +
     Number(match[3] || 0)
   );
 
@@ -4456,33 +4320,54 @@ function parseDurationSeconds(duration) {
 
 function showToast(message,type='success') {
 
-  const container =
-    document.getElementById(
-      'toastContainer'
-    );
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
 
-  const toast =
-    document.createElement('div');
+  toast.className = `toast ${type}`;
 
-  toast.className =
-    `toast ${type}`;
+  const icon = type === 'error'
+    ? 'fa-circle-exclamation'
+    : 'fa-circle-check';
 
-  const icon =
-    type === 'error'
-      ? 'fa-circle-exclamation'
-      : 'fa-circle-check';
-
-  toast.innerHTML =
-    `<i class="fa-solid ${icon}"></i>
-     <span>${escapeHTML(message)}</span>`;
+  toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${escapeHTML(message)}</span>`;
 
   container.appendChild(toast);
 
-  setTimeout(
-    () => toast.remove(),
-    3100
-  );
+  setTimeout(() => toast.remove(), 3100);
 
+}
+
+
+/* =========================================================
+   HELPER UTILS FOR VIDEO FINDING
+   ========================================================= */
+
+function findVideoById(id) {
+  return videoList.find(v => v.id === id) ||
+         recommendedList.find(v => v.id === id) ||
+         watchHistory.find(v => v.id === id) ||
+         watchLater.find(v => v.id === id) ||
+         (currentVideoData && currentVideoData.id === id ? currentVideoData : null);
+}
+
+function toggleWatchLaterById(id) {
+  const video = findVideoById(id);
+  if (video) toggleWatchLater(video);
+}
+
+function showPlaylistSelectorById(id) {
+  const video = findVideoById(id);
+  if (video) showPlaylistSelector(video);
+}
+
+function shareVideoById(id) {
+  const video = findVideoById(id);
+  if (video) shareVideo(video);
+}
+
+function markNotInterestedById(id) {
+  const video = findVideoById(id);
+  if (video) markNotInterested(video);
 }
 
 
@@ -4492,36 +4377,16 @@ function showToast(message,type='success') {
 
 function getCached(key) {
 
-  if (!CONFIG.enableCache) {
-    return null;
-  }
+  if (!CONFIG.enableCache) return null;
 
-  const cache =
-    readStorage(
-      STORAGE.cache,
-      {}
-    );
+  const cache = readStorage(STORAGE.cache, {});
+  const item = cache[key];
 
-  const item =
-    cache[key];
+  if (!item) return null;
 
-  if (!item) {
-    return null;
-  }
-
-  if (
-    Date.now() - item.time
-    >
-    CONFIG.cacheTTL
-  ) {
-
+  if (Date.now() - item.time > CONFIG.cacheTTL) {
     delete cache[key];
-
-    writeStorage(
-      STORAGE.cache,
-      cache
-    );
-
+    writeStorage(STORAGE.cache, cache);
     return null;
   }
 
@@ -4532,37 +4397,21 @@ function getCached(key) {
 
 function setCached(key,data) {
 
-  if (!CONFIG.enableCache) {
-    return;
-  }
+  if (!CONFIG.enableCache) return;
 
-  const cache =
-    readStorage(
-      STORAGE.cache,
-      {}
-    );
+  const cache = readStorage(STORAGE.cache, {});
 
   cache[key] = {
-
     time:Date.now(),
-
     data:data
-
   };
 
-  const keys =
-    Object.keys(cache);
-
+  const keys = Object.keys(cache);
   if (keys.length > 100) {
-
     delete cache[keys[0]];
-
   }
 
-  writeStorage(
-    STORAGE.cache,
-    cache
-  );
+  writeStorage(STORAGE.cache, cache);
 
 }
 
@@ -4573,50 +4422,24 @@ function setCached(key,data) {
 
 async function apiFetch(url,cacheKey=null) {
 
-  if (!apiKey ||
-      apiKey.includes('MASUKKAN_API_KEY')) {
-
-    throw new Error(
-      'API key YouTube belum dikonfigurasi.'
-    );
-
+  if (!apiKey || apiKey.includes('MASUKKAN_API_KEY')) {
+    throw new Error('API key YouTube belum dikonfigurasi.');
   }
 
   if (cacheKey) {
-
-    const cached =
-      getCached(cacheKey);
-
-    if (cached) {
-      return cached;
-    }
-
+    const cached = getCached(cacheKey);
+    if (cached) return cached;
   }
 
-  const response =
-    await fetch(url);
+  const response = await fetch(url);
+  const data = await response.json();
 
-  const data =
-    await response.json();
-
-  if (!response.ok ||
-      data.error) {
-
-    throw new Error(
-      data?.error?.message
-      ||
-      'API request gagal.'
-    );
-
+  if (!response.ok || data.error) {
+    throw new Error(data?.error?.message || 'API request gagal.');
   }
 
   if (cacheKey) {
-
-    setCached(
-      cacheKey,
-      data
-    );
-
+    setCached(cacheKey, data);
   }
 
   return data;
@@ -4630,31 +4453,14 @@ async function apiFetch(url,cacheKey=null) {
 
 async function fetchChannelAvatars(items) {
 
-  const ids =
-    [
-      ...new Set(
-        items
-          .map(v => v.channelId)
-          .filter(Boolean)
-      )
-    ];
+  const ids = [...new Set(items.map(v => v.channelId).filter(Boolean))];
 
-  if (!ids.length) {
-    return items;
-  }
+  if (!ids.length) return items;
 
   const chunks = [];
 
-  for (
-    let i=0;
-    i<ids.length;
-    i+=50
-  ) {
-
-    chunks.push(
-      ids.slice(i,i+50)
-    );
-
+  for (let i=0; i<ids.length; i+=50) {
+    chunks.push(ids.slice(i,i+50));
   }
 
   const avatarMap = {};
@@ -4663,76 +4469,30 @@ async function fetchChannelAvatars(items) {
 
     for (const chunk of chunks) {
 
-      const idString =
-        chunk.join(',');
+      const idString = chunk.join(',');
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${encodeURIComponent(idString)}&key=${encodeURIComponent(apiKey)}`;
 
-      const url =
-        `https://www.googleapis.com/youtube/v3/channels`
-        +
-        `?part=snippet`
-        +
-        `&id=${encodeURIComponent(idString)}`
-        +
-        `&key=${encodeURIComponent(apiKey)}`;
-
-      const data =
-        await apiFetch(
-          url,
-          `avatars:${idString}`
-        );
+      const data = await apiFetch(url, `avatars:${idString}`);
 
       if (data.items) {
-
-        data.items.forEach(
-          channel => {
-
-            avatarMap[channel.id] =
-              channel.snippet
-                .thumbnails
-                ?.default
-                ?.url
-              ||
-              channel.snippet
-                .thumbnails
-                ?.medium
-                ?.url
-              ||
-              '';
-
-          }
-        );
-
+        data.items.forEach(channel => {
+          avatarMap[channel.id] =
+            channel.snippet.thumbnails?.default?.url ||
+            channel.snippet.thumbnails?.medium?.url || '';
+        });
       }
 
     }
 
   } catch(e) {
-
-    console.warn(
-      'Avatar error',
-      e
-    );
-
+    console.warn('Avatar error', e);
   }
 
-
-  items.forEach(
-    video => {
-
-      if (
-        video.channelId &&
-        avatarMap[video.channelId]
-      ) {
-
-        video.channelAvatar =
-          avatarMap[
-            video.channelId
-          ];
-
-      }
-
+  items.forEach(video => {
+    if (video.channelId && avatarMap[video.channelId]) {
+      video.channelAvatar = avatarMap[video.channelId];
     }
-  );
+  });
 
   return items;
 
@@ -4745,69 +4505,27 @@ async function fetchChannelAvatars(items) {
 
 function normalizeVideo(item) {
 
-  const snippet =
-    item.snippet || {};
-
-  const stats =
-    item.statistics || {};
-
-  const details =
-    item.contentDetails || {};
-
-  const id =
-    item.id?.videoId ||
-    item.id;
+  const snippet = item.snippet || {};
+  const stats = item.statistics || {};
+  const details = item.contentDetails || {};
+  const id = item.id?.videoId || item.id;
 
   return {
-
     id:id,
-
-    channelId:
-      snippet.channelId || '',
-
-    title:
-      snippet.title || 'Tanpa Judul',
-
-    channel:
-      snippet.channelTitle || 'Unknown Channel',
-
-    publishedAt:
-      snippet.publishedAt || '',
-
-    publishedRelative:
-      formatTimeAgo(
-        snippet.publishedAt
-      ),
-
-    description:
-      snippet.description
-      ||
-      'Tidak ada deskripsi tersedia.',
-
-    duration:
-      parseISO8601Duration(
-        details.duration
-      ),
-
-    durationSeconds:
-      parseDurationSeconds(
-        details.duration
-      ),
-
-    views:
-      stats.viewCount
-        ? Number(stats.viewCount)
-        : 0,
-
-    thumb:
-      snippet.thumbnails?.high?.url
-      ||
-      snippet.thumbnails?.medium?.url
-      ||
-      snippet.thumbnails?.default?.url
-      ||
-      `https://img.youtube.com/vi/${id}/hqdefault.jpg`
-
+    channelId: snippet.channelId || '',
+    title: snippet.title || 'Tanpa Judul',
+    channel: snippet.channelTitle || 'Unknown Channel',
+    publishedAt: snippet.publishedAt || '',
+    publishedRelative: formatTimeAgo(snippet.publishedAt),
+    description: snippet.description || 'Tidak ada deskripsi tersedia.',
+    duration: parseISO8601Duration(details.duration),
+    durationSeconds: parseDurationSeconds(details.duration),
+    views: stats.viewCount ? Number(stats.viewCount) : 0,
+    likes: stats.likeCount ? Number(stats.likeCount) : 0,
+    thumb: snippet.thumbnails?.high?.url ||
+           snippet.thumbnails?.medium?.url ||
+           snippet.thumbnails?.default?.url ||
+           `https://img.youtube.com/vi/${id}/hqdefault.jpg`
   };
 
 }
@@ -4819,29 +4537,14 @@ function normalizeVideo(item) {
 
 function showLoading(show) {
 
-  const spinner =
-    document.getElementById(
-      'loadingSpinner'
-    );
-
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
+  const spinner = document.getElementById('loadingSpinner');
+  const feed = document.getElementById('feedContainer');
 
   if (show) {
-
-    spinner.style.display =
-      'block';
-
-    feed.innerHTML =
-      createSkeletons();
-
+    spinner.style.display = 'block';
+    feed.innerHTML = createSkeletons();
   } else {
-
-    spinner.style.display =
-      'none';
-
+    spinner.style.display = 'none';
   }
 
 }
@@ -4852,27 +4555,16 @@ function createSkeletons() {
   return Array.from(
     {length:5},
     () => `
-
       <div class="skeleton-card">
-
         <div class="skeleton-thumb"></div>
-
         <div class="skeleton-meta">
-
           <div class="skeleton-avatar"></div>
-
           <div class="skeleton-lines">
-
             <div class="skeleton-line"></div>
-
             <div class="skeleton-line short"></div>
-
           </div>
-
         </div>
-
       </div>
-
     `
   ).join('');
 
@@ -4890,174 +4582,65 @@ async function loadTrendingVideos(
 ) {
 
   if (!isAppend) {
-
-    currentMode =
-      'trending';
-
-    isTrendingMode =
-      showRankBadge;
-
+    currentMode = 'trending';
+    isTrendingMode = showRankBadge;
     videoList = [];
-
     nextPageToken = '';
 
-    document.getElementById(
-      'channelHeaderContainer'
-    ).innerHTML = '';
-
-    document.getElementById(
-      'sortFilterBar'
-    ).style.display = 'none';
+    document.getElementById('channelHeaderContainer').innerHTML = '';
+    document.getElementById('sortFilterBar').style.display = 'none';
 
     showLoading(true);
-
   }
-
 
   if (chipEl) {
-
-    document.querySelectorAll(
-      '.chip'
-    ).forEach(
-      c => c.classList.remove(
-        'active'
-      )
-    );
-
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     chipEl.classList.add('active');
-
   }
-
 
   try {
 
-    let url =
-      `https://www.googleapis.com/youtube/v3/videos`
-      +
-      `?part=snippet,contentDetails,statistics`
-      +
-      `&chart=mostPopular`
-      +
-      `&regionCode=${CONFIG.regionCode}`
-      +
-      `&maxResults=${CONFIG.maxResults}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&chart=mostPopular&regionCode=${CONFIG.regionCode}&maxResults=${CONFIG.maxResults}&key=${encodeURIComponent(apiKey)}`;
 
-
-    if (
-      isAppend &&
-      nextPageToken
-    ) {
-
-      url +=
-        `&pageToken=${encodeURIComponent(nextPageToken)}`;
-
+    if (isAppend && nextPageToken) {
+      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
     }
 
-
-    const data =
-      await apiFetch(
-        url,
-        isAppend
-          ? null
-          : `trending:${CONFIG.regionCode}`
-      );
-
-
-    if (!isAppend) {
-
-      nextPageToken =
-        data.nextPageToken || '';
-
-    } else {
-
-      nextPageToken =
-        data.nextPageToken || '';
-
-    }
-
-
-    let newItems =
-      (data.items || [])
-        .map(normalizeVideo);
-
-
-    newItems =
-      newItems.filter(
-        v =>
-          !notInterested.includes(
-            v.id
-          )
-      );
-
-
-    newItems =
-      await fetchChannelAvatars(
-        newItems
-      );
-
-
-    newItems.forEach(
-      (v,i) => {
-
-        v.rank =
-          (isAppend
-            ? videoList.length
-            : 0)
-          + i + 1;
-
-      }
+    const data = await apiFetch(
+      url,
+      isAppend ? null : `trending:${CONFIG.regionCode}`
     );
 
+    nextPageToken = data.nextPageToken || '';
 
-    videoList =
-      isAppend
-        ? videoList.concat(newItems)
-        : newItems;
+    let newItems = (data.items || []).map(normalizeVideo);
+    newItems = newItems.filter(v => !notInterested.includes(v.id));
+    newItems = await fetchChannelAvatars(newItems);
 
+    newItems.forEach((v,i) => {
+      v.rank = (isAppend ? videoList.length : 0) + i + 1;
+    });
+
+    videoList = isAppend ? videoList.concat(newItems) : newItems;
 
     renderFeed(videoList);
-
     renderContinueWatching();
 
   } catch(error) {
-
     console.error(error);
-
-    document.getElementById(
-      'feedContainer'
-    ).innerHTML =
-      `
+    document.getElementById('feedContainer').innerHTML = `
       <div class="empty-state">
-
         <i class="fa-solid fa-cloud-exclamation"></i>
-
         <h3>Gagal memuat video</h3>
-
-        <p>
-          Periksa koneksi internet
-          dan konfigurasi YouTube API.
-        </p>
-
-        <button
-          class="btn-load-more"
-          onclick="loadTrendingVideos(false,null,false)"
-          style="margin-top:15px;">
-
+        <p>Periksa koneksi internet dan konfigurasi YouTube API.</p>
+        <button class="btn-load-more" onclick="loadTrendingVideos(false,null,false)" style="margin-top:15px;">
           Coba Lagi
-
         </button>
-
       </div>
-      `;
-
+    `;
   } finally {
-
     showLoading(false);
-
     checkLoadMoreVisibility();
-
   }
 
 }
@@ -5069,64 +4652,33 @@ async function loadTrendingVideos(
 
 function handleSearchInput(value) {
 
-  const clear =
-    document.getElementById(
-      'clearSearchBtn'
-    );
-
-  clear.classList.toggle(
-    'hidden',
-    !value.trim()
-  );
-
+  const clear = document.getElementById('clearSearchBtn');
+  clear.classList.toggle('hidden', !value.trim());
 
   if (!value.trim()) {
-
     renderSearchSuggestions();
-
     return;
-
   }
 
-
-  renderSearchSuggestions(
-    value
-  );
+  renderSearchSuggestions(value);
 
 }
 
 
 function handleSearchKey(event) {
-
-  if (
-    event.key === 'Enter'
-  ) {
-
-    executeSearch(
-      null,
-      false
-    );
-
+  if (event.key === 'Enter') {
+    executeSearch(null, false);
   }
-
 }
 
 
 function clearSearchInput() {
 
-  const input =
-    document.getElementById(
-      'searchInput'
-    );
-
+  const input = document.getElementById('searchInput');
   input.value = '';
-
   input.focus();
 
-  document.getElementById(
-    'clearSearchBtn'
-  ).classList.add('hidden');
-
+  document.getElementById('clearSearchBtn').classList.add('hidden');
   renderSearchSuggestions();
 
 }
@@ -5134,183 +4686,85 @@ function clearSearchInput() {
 
 function saveSearchHistory(query) {
 
-  if (
-    !appSettings.saveSearchHistory
-  ) {
+  if (!appSettings.saveSearchHistory) return;
 
-    return;
+  query = query.trim();
+  if (!query) return;
 
-  }
-
-  query =
-    query.trim();
-
-  if (!query) {
-    return;
-  }
-
-  searchHistory =
-    searchHistory.filter(
-      q =>
-        q.toLowerCase()
-        !==
-        query.toLowerCase()
-    );
-
+  searchHistory = searchHistory.filter(q => q.toLowerCase() !== query.toLowerCase());
   searchHistory.unshift(query);
+  searchHistory = searchHistory.slice(0, CONFIG.searchHistoryLimit);
 
-  searchHistory =
-    searchHistory.slice(
-      0,
-      CONFIG.searchHistoryLimit
-    );
-
-  writeStorage(
-    STORAGE.search,
-    searchHistory
-  );
+  writeStorage(STORAGE.search, searchHistory);
 
 }
 
 
 function renderSearchSuggestions(value='') {
 
-  const panel =
-    document.getElementById(
-      'searchSuggestions'
-    );
+  const panel = document.getElementById('searchSuggestions');
 
-  if (!document.getElementById(
-    'searchOverlay'
-  ).classList.contains('active')) {
-
-    panel.classList.remove(
-      'active'
-    );
-
+  if (!document.getElementById('searchOverlay').classList.contains('active')) {
+    panel.classList.remove('active');
     return;
-
   }
 
-
-  let list =
-    searchHistory.slice(
-      0,
-      7
-    );
-
+  let list = searchHistory.slice(0, 7);
 
   if (value.trim()) {
-
-    list =
-      list.filter(
-        q =>
-          q.toLowerCase()
-           .includes(
-             value.toLowerCase()
-           )
-      );
-
+    list = list.filter(q => q.toLowerCase().includes(value.toLowerCase()));
   }
-
 
   if (!list.length) {
-
-    panel.classList.remove(
-      'active'
-    );
-
+    panel.classList.remove('active');
     panel.innerHTML = '';
-
     return;
-
   }
 
+  currentSuggestions = list;
 
-  panel.innerHTML =
-    `
-    <div
-      class="suggestion-item"
-      style="font-weight:700;">
-
-      <i
-        class="fa-solid fa-clock-rotate-left suggestion-icon">
-      </i>
-
+  panel.innerHTML = `
+    <div class="suggestion-item" style="font-weight:700;">
+      <i class="fa-solid fa-clock-rotate-left suggestion-icon"></i>
       <span>Riwayat Pencarian</span>
-
     </div>
-
     `
     +
-    list.map(
-      query => `
-
-        <div
-          class="suggestion-item"
-          onclick="selectSearchSuggestion(${JSON.stringify(query)})">
-
-          <i
-            class="fa-solid fa-magnifying-glass suggestion-icon">
-          </i>
-
+    list.map((query, index) => `
+        <div class="suggestion-item" onclick="selectSearchSuggestionByIndex(${index})">
+          <i class="fa-solid fa-magnifying-glass suggestion-icon"></i>
           <span>${escapeHTML(query)}</span>
-
         </div>
-
       `
     ).join('')
     +
     `
-      <div
-        class="suggestion-item"
-        onclick="clearSearchHistory()">
-
-        <i
-          class="fa-solid fa-trash suggestion-icon">
-        </i>
-
+      <div class="suggestion-item" onclick="clearSearchHistory()">
+        <i class="fa-solid fa-trash suggestion-icon"></i>
         <span>Hapus riwayat pencarian</span>
-
       </div>
     `;
 
-
-  panel.classList.add(
-    'active'
-  );
+  panel.classList.add('active');
 
 }
 
 
-function selectSearchSuggestion(query) {
-
-  document.getElementById(
-    'searchInput'
-  ).value = query;
-
-  executeSearch(
-    query,
-    false
-  );
-
+function selectSearchSuggestionByIndex(index) {
+  const query = currentSuggestions[index];
+  if (query) {
+    document.getElementById('searchInput').value = query;
+    executeSearch(query, false);
+  }
 }
 
 
 function clearSearchHistory() {
 
   searchHistory = [];
-
-  writeStorage(
-    STORAGE.search,
-    []
-  );
-
+  writeStorage(STORAGE.search, []);
   renderSearchSuggestions();
-
-  showToast(
-    'Riwayat pencarian dihapus'
-  );
+  showToast('Riwayat pencarian dihapus');
 
 }
 
@@ -5321,238 +4775,96 @@ async function executeSearch(
   sortOrder=currentSortOrder
 ) {
 
-  const query =
-    (
-      customQuery
-      ||
-      document.getElementById(
-        'searchInput'
-      ).value
-    ).trim();
-
+  const query = (customQuery || document.getElementById('searchInput').value).trim();
 
   if (!query) {
-
-    showToast(
-      'Masukkan kata pencarian',
-      'error'
-    );
-
+    showToast('Masukkan kata pencarian', 'error');
     return;
-
   }
 
-
-  currentSearchQuery =
-    query;
-
-  currentMode =
-    'search';
-
-  currentSortOrder =
-    sortOrder;
-
-  isTrendingMode =
-    false;
-
+  currentSearchQuery = query;
+  currentMode = 'search';
+  currentSortOrder = sortOrder;
+  isTrendingMode = false;
 
   saveSearchHistory(query);
 
-
   if (!isAppend) {
-
     videoList = [];
-
     nextPageToken = '';
-
-    document.getElementById(
-      'channelHeaderContainer'
-    ).innerHTML = '';
-
-    document.getElementById(
-      'sortFilterBar'
-    ).style.display = 'flex';
-
+    document.getElementById('channelHeaderContainer').innerHTML = '';
+    document.getElementById('sortFilterBar').style.display = 'flex';
     showLoading(true);
-
   }
-
 
   toggleSearchOverlay(false);
 
-
   try {
 
-    let apiOrder =
-      'relevance';
+    let apiOrder = 'relevance';
+    if (sortOrder === 'date' || sortOrder === 'oldest') apiOrder = 'date';
+    if (sortOrder === 'viewCount') apiOrder = 'viewCount';
 
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${CONFIG.maxResults}&q=${encodeURIComponent(query)}&type=video&order=${apiOrder}&regionCode=${CONFIG.regionCode}&key=${encodeURIComponent(apiKey)}`;
 
-    if (
-      sortOrder === 'date'
-      ||
-      sortOrder === 'oldest'
-    ) {
-
-      apiOrder =
-        'date';
-
+    if (isAppend && nextPageToken) {
+      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
     }
 
+    const data = await apiFetch(url, isAppend ? null : `search:${query}:${apiOrder}`);
 
-    if (
-      sortOrder === 'viewCount'
-    ) {
+    nextPageToken = data.nextPageToken || '';
 
-      apiOrder =
-        'viewCount';
-
-    }
-
-
-    let url =
-      `https://www.googleapis.com/youtube/v3/search`
-      +
-      `?part=snippet`
-      +
-      `&maxResults=${CONFIG.maxResults}`
-      +
-      `&q=${encodeURIComponent(query)}`
-      +
-      `&type=video`
-      +
-      `&order=${apiOrder}`
-      +
-      `&regionCode=${CONFIG.regionCode}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
-
-
-    if (
-      isAppend &&
-      nextPageToken
-    ) {
-
-      url +=
-        `&pageToken=${encodeURIComponent(nextPageToken)}`;
-
-    }
-
-
-    const data =
-      await apiFetch(
-        url,
-        isAppend
-          ? null
-          : `search:${query}:${apiOrder}`
-      );
-
-
-    nextPageToken =
-      data.nextPageToken || '';
-
-
-    const ids =
-      (data.items || [])
-        .map(
-          item =>
-            item.id.videoId
-        )
-        .filter(Boolean);
-
+    const ids = (data.items || []).map(item => item.id.videoId).filter(Boolean);
 
     if (!ids.length) {
-
       videoList = [];
-
       renderFeed([]);
-
       return;
-
     }
 
+    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailData = await apiFetch(detailUrl, `videoDetails:${ids.join(',')}`);
 
-    const detailUrl =
-      `https://www.googleapis.com/youtube/v3/videos`
-      +
-      `?part=snippet,contentDetails,statistics`
-      +
-      `&id=${ids.join(',')}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
+    let newItems = (detailData.items || []).map(normalizeVideo);
 
-
-    const detailData =
-      await apiFetch(
-        detailUrl,
-        `videoDetails:${ids.join(',')}`
-      );
-
-
-    let newItems =
-      (detailData.items || [])
-        .map(normalizeVideo);
-
-
-    if (
-      sortOrder === 'oldest'
-    ) {
-
+    if (sortOrder === 'oldest') {
       newItems.reverse();
-
     }
 
+    newItems = newItems.filter(v => !notInterested.includes(v.id));
+    newItems = await fetchChannelAvatars(newItems);
 
-    newItems =
-      newItems.filter(
-        v =>
-          !notInterested.includes(
-            v.id
-          )
-      );
+    videoList = isAppend ? videoList.concat(newItems) : newItems;
 
-
-    newItems =
-      await fetchChannelAvatars(
-        newItems
-      );
-
-
-    videoList =
-      isAppend
-        ? videoList.concat(newItems)
-        : newItems;
-
-
-    renderFeed(
-      videoList
-    );
-
+    renderFeed(videoList);
     renderContinueWatching();
 
-
   } catch(error) {
-
     console.error(error);
-
-    showToast(
-      'Gagal mengambil hasil pencarian',
-      'error'
-    );
-
+    showToast('Gagal mengambil hasil pencarian', 'error');
   } finally {
-
     showLoading(false);
-
     checkLoadMoreVisibility();
-
   }
 
 }
 
 
 /* =========================================================
-   CHANNEL PAGE
+   CHANNEL PAGE & WATCH VIEW CHANNEL INTEGRATION
    ========================================================= */
+
+function openChannelFromWatchView() {
+  if (!currentChannelId) {
+    showToast('Informasi channel tidak tersedia', 'error');
+    return;
+  }
+
+  minimizePlayer();
+  openChannelPage(currentChannelId, currentChannelTitle, false);
+}
+
 
 async function openChannelPage(
   chId,
@@ -5561,434 +4873,142 @@ async function openChannelPage(
   sortOrder=currentSortOrder
 ) {
 
-  if (!chId) {
-    return;
-  }
-
+  if (!chId) return;
 
   if (!isAppend) {
-
     minimizePlayer();
-
-    currentMode =
-      'channel';
-
-    currentChannelId =
-      chId;
-
-    currentChannelTitle =
-      chTitle;
-
-    currentSortOrder =
-      sortOrder;
+    currentMode = 'channel';
+    currentChannelId = chId;
+    currentChannelTitle = chTitle;
+    currentSortOrder = sortOrder;
 
     videoList = [];
-
     nextPageToken = '';
 
-    document.getElementById(
-      'sortFilterBar'
-    ).style.display = 'flex';
-
+    document.getElementById('sortFilterBar').style.display = 'flex';
     showLoading(true);
 
-
     try {
+      const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${encodeURIComponent(chId)}&key=${encodeURIComponent(apiKey)}`;
+      const data = await apiFetch(url, `channel:${chId}`);
 
-      const url =
-        `https://www.googleapis.com/youtube/v3/channels`
-        +
-        `?part=snippet,statistics,brandingSettings`
-        +
-        `&id=${encodeURIComponent(chId)}`
-        +
-        `&key=${encodeURIComponent(apiKey)}`;
-
-
-      const data =
-        await apiFetch(
-          url,
-          `channel:${chId}`
-        );
-
-
-      if (
-        data.items &&
-        data.items.length
-      ) {
-
-        renderChannelHeader(
-          data.items[0]
-        );
-
+      if (data.items && data.items.length) {
+        renderChannelHeader(data.items[0]);
       }
-
     } catch(error) {
-
-      console.warn(
-        'Channel header error',
-        error
-      );
-
+      console.warn('Channel header error', error);
     }
-
   }
-
 
   try {
 
-    let apiOrder =
-      'date';
+    let apiOrder = 'date';
+    if (sortOrder === 'viewCount') apiOrder = 'viewCount';
+    if (sortOrder === 'relevance') apiOrder = 'relevance';
 
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(chId)}&maxResults=${CONFIG.maxResults}&order=${apiOrder}&type=video&key=${encodeURIComponent(apiKey)}`;
 
-    if (
-      sortOrder === 'viewCount'
-    ) {
-
-      apiOrder =
-        'viewCount';
-
+    if (isAppend && nextPageToken) {
+      url += `&pageToken=${encodeURIComponent(nextPageToken)}`;
     }
 
+    const data = await apiFetch(url, isAppend ? null : `channelVideos:${chId}:${apiOrder}`);
 
-    if (
-      sortOrder === 'relevance'
-    ) {
+    nextPageToken = data.nextPageToken || '';
 
-      apiOrder =
-        'relevance';
-
-    }
-
-
-    let url =
-      `https://www.googleapis.com/youtube/v3/search`
-      +
-      `?part=snippet`
-      +
-      `&channelId=${encodeURIComponent(chId)}`
-      +
-      `&maxResults=${CONFIG.maxResults}`
-      +
-      `&order=${apiOrder}`
-      +
-      `&type=video`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
-
-
-    if (
-      isAppend &&
-      nextPageToken
-    ) {
-
-      url +=
-        `&pageToken=${encodeURIComponent(nextPageToken)}`;
-
-    }
-
-
-    const data =
-      await apiFetch(
-        url,
-        isAppend
-          ? null
-          : `channelVideos:${chId}:${apiOrder}`
-      );
-
-
-    nextPageToken =
-      data.nextPageToken || '';
-
-
-    const ids =
-      (data.items || [])
-        .map(
-          item =>
-            item.id.videoId
-        )
-        .filter(Boolean);
-
+    const ids = (data.items || []).map(item => item.id.videoId).filter(Boolean);
 
     if (!ids.length) {
-
-      if (!isAppend) {
-        renderFeed([]);
-      }
-
+      if (!isAppend) renderFeed([]);
       return;
-
     }
 
+    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailData = await apiFetch(detailsUrl, `channelDetails:${ids.join(',')}`);
 
-    const detailsUrl =
-      `https://www.googleapis.com/youtube/v3/videos`
-      +
-      `?part=snippet,contentDetails,statistics`
-      +
-      `&id=${ids.join(',')}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
+    let newItems = (detailData.items || []).map(normalizeVideo);
 
-
-    const detailData =
-      await apiFetch(
-        detailsUrl,
-        `channelDetails:${ids.join(',')}`
-      );
-
-
-    let newItems =
-      (detailData.items || [])
-        .map(normalizeVideo);
-
-
-    if (
-      sortOrder === 'oldest'
-    ) {
-
+    if (sortOrder === 'oldest') {
       newItems.reverse();
-
     }
 
+    newItems = await fetchChannelAvatars(newItems);
 
-    newItems =
-      await fetchChannelAvatars(
-        newItems
-      );
+    videoList = isAppend ? videoList.concat(newItems) : newItems;
 
-
-    videoList =
-      isAppend
-        ? videoList.concat(newItems)
-        : newItems;
-
-
-    renderFeed(
-      videoList
-    );
-
+    renderFeed(videoList);
 
   } catch(error) {
-
     console.error(error);
-
-    showToast(
-      'Gagal memuat channel',
-      'error'
-    );
-
+    showToast('Gagal memuat channel', 'error');
   } finally {
-
     showLoading(false);
-
     checkLoadMoreVisibility();
-
   }
 
 }
 
 
-function renderChannelHeader(
-  chInfo
-) {
+function renderChannelHeader(chInfo) {
 
-  const avatar =
-    chInfo.snippet
-      ?.thumbnails
-      ?.high
-      ?.url
-    ||
-    chInfo.snippet
-      ?.thumbnails
-      ?.medium
-      ?.url
-    ||
-    'https://via.placeholder.com/80';
+  const avatar = chInfo.snippet?.thumbnails?.high?.url ||
+                 chInfo.snippet?.thumbnails?.medium?.url ||
+                 'https://via.placeholder.com/80';
 
+  const banner = chInfo.brandingSettings?.image?.bannerExternalUrl || '';
+  const subscribed = subscriptions.some(s => s.channelId === chInfo.id);
 
-  const banner =
-    chInfo.brandingSettings
-      ?.image
-      ?.bannerExternalUrl
-    ||
-    '';
+  const container = document.getElementById('channelHeaderContainer');
 
-
-  const subscribed =
-    subscriptions.some(
-      s =>
-        s.channelId === chInfo.id
-    );
-
-
-  const container =
-    document.getElementById(
-      'channelHeaderContainer'
-    );
-
-
-  container.innerHTML =
-    `
-
-    <div
-      class="channel-banner-card"
-      style="
-        ${banner
-          ? `
-          background-image:
-          url('${escapeHTML(banner)}');
-          `
-          : ''}
-      ">
-
+  container.innerHTML = `
+    <div class="channel-banner-card" style="${banner ? `background-image: url('${escapeHTML(banner)}');` : ''}">
       <div class="channel-banner-overlay"></div>
-
       <div class="channel-banner-content">
-
-        <img
-          src="${escapeHTML(avatar)}"
-          class="channel-banner-avatar"
-          alt="Avatar">
-
-        <h2
-          style="
-            font-size:18px;
-            font-weight:700;
-            color:#fff;
-          ">
-
+        <img src="${escapeHTML(avatar)}" class="channel-banner-avatar" alt="Avatar">
+        <h2 style="font-size:18px;font-weight:700;color:#fff;">
           ${escapeHTML(chInfo.snippet.title)}
-
         </h2>
-
-        <p
-          style="
-            font-size:10px;
-            color:#ddd;
-            margin:4px 0 11px;
-          ">
-
-          ${escapeHTML(
-            formatSubscribers(
-              chInfo.statistics?.subscriberCount
-            )
-          )}
-
-          • Channel
-
+        <p style="font-size:10px;color:#ddd;margin:4px 0 11px;">
+          ${escapeHTML(formatSubscribers(chInfo.statistics?.subscriberCount))} • Channel
         </p>
 
-
-        <button
-          class="btn-subscribe ${subscribed ? 'subscribed':''}"
+        <button class="btn-subscribe ${subscribed ? 'subscribed':''}"
           onclick="toggleSubscription(
             '${escapeHTML(chInfo.id)}',
             '${escapeHTML(chInfo.snippet.title)}',
             '${escapeHTML(avatar)}'
           )">
-
-          ${subscribed
-            ? '✓ Disubscribe'
-            : 'Subskrib'}
-
+          ${subscribed ? '✓ Disubscribe' : 'Subskrib'}
         </button>
-
       </div>
-
     </div>
-
 
     <div class="channel-tabs">
-
-      <div
-        class="channel-tab active"
-        onclick="switchChannelTab('videos',this)">
-
-        Video
-
-      </div>
-
-      <div
-        class="channel-tab"
-        onclick="switchChannelTab('shorts',this)">
-
-        Shorts
-
-      </div>
-
-      <div
-        class="channel-tab"
-        onclick="switchChannelTab('popular',this)">
-
-        Populer
-
-      </div>
-
+      <div class="channel-tab active" onclick="switchChannelTab('videos',this)">Video</div>
+      <div class="channel-tab" onclick="switchChannelTab('shorts',this)">Shorts</div>
+      <div class="channel-tab" onclick="switchChannelTab('popular',this)">Populer</div>
     </div>
-
-    `;
+  `;
 
 }
 
 
-function switchChannelTab(
-  tab,
-  element
-) {
+function switchChannelTab(tab, element) {
 
-  currentChannelTab =
-    tab;
+  currentChannelTab = tab;
 
-
-  document.querySelectorAll(
-    '.channel-tab'
-  ).forEach(
-    t =>
-      t.classList.remove(
-        'active'
-      )
-  );
-
+  document.querySelectorAll('.channel-tab').forEach(t => t.classList.remove('active'));
 
   if (element) {
-    element.classList.add(
-      'active'
-    );
+    element.classList.add('active');
   }
-
 
   if (tab === 'videos') {
-
-    openChannelPage(
-      currentChannelId,
-      currentChannelTitle,
-      false,
-      'date'
-    );
-
-  }
-
-  else if (
-    tab === 'popular'
-  ) {
-
-    openChannelPage(
-      currentChannelId,
-      currentChannelTitle,
-      false,
-      'viewCount'
-    );
-
-  }
-
-  else {
-
-    executeSearch(
-      `${currentChannelTitle} Shorts`,
-      false
-    );
-
+    openChannelPage(currentChannelId, currentChannelTitle, false, 'date');
+  } else if (tab === 'popular') {
+    openChannelPage(currentChannelId, currentChannelTitle, false, 'viewCount');
+  } else {
+    executeSearch(`${currentChannelTitle} Shorts`, false);
   }
 
 }
@@ -6000,236 +5020,80 @@ function switchChannelTab(
 
 function renderFeed(items) {
 
-  const container =
-    document.getElementById(
-      'feedContainer'
-    );
-
-
+  const container = document.getElementById('feedContainer');
   container.innerHTML = '';
 
-
-  if (
-    !items ||
-    items.length === 0
-  ) {
-
-    container.innerHTML =
-      `
-
+  if (!items || items.length === 0) {
+    container.innerHTML = `
       <div class="empty-state">
-
         <i class="fa-solid fa-video-slash"></i>
-
         <h3>Tidak ada video</h3>
-
-        <p>
-          Belum ada video yang cocok
-          dengan permintaan ini.
-        </p>
-
+        <p>Belum ada video yang cocok dengan permintaan ini.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
+  items.forEach((v,index) => {
 
-  items.forEach(
-    (v,index) => {
+    if (index === 2 && currentMode !== 'channel') {
+      const shelf = document.createElement('div');
+      shelf.className = 'shorts-shelf';
 
+      shelf.innerHTML = `
+        <div class="shelf-title">
+          <i class="fa-solid fa-bolt"></i> Shorts
+        </div>
+        <div class="shorts-grid">
+          ${items.slice(0,4).map(s => `
+            <div class="short-card" onclick="playVideo('${escapeHTML(s.id)}')">
+              <img src="${escapeHTML(s.thumb)}" class="short-thumb" loading="lazy" alt="Short">
+              <div class="short-title">${escapeHTML(s.title)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
 
-      if (
-        index === 2 &&
-        currentMode !== 'channel'
-      ) {
-
-        const shelf =
-          document.createElement(
-            'div'
-          );
-
-        shelf.className =
-          'shorts-shelf';
-
-
-        shelf.innerHTML =
-          `
-
-          <div class="shelf-title">
-
-            <i class="fa-solid fa-bolt"></i>
-
-            Shorts
-
-          </div>
-
-          <div class="shorts-grid">
-
-            ${items
-              .slice(0,4)
-              .map(
-                s => `
-
-                  <div
-                    class="short-card"
-                    onclick="playVideo('${escapeHTML(s.id)}')">
-
-                    <img
-                      src="${escapeHTML(s.thumb)}"
-                      class="short-thumb"
-                      loading="lazy"
-                      alt="Short">
-
-                    <div class="short-title">
-
-                      ${escapeHTML(s.title)}
-
-                    </div>
-
-                  </div>
-
-                `
-              )
-              .join('')}
-
-          </div>
-
-          `;
-
-
-        container.appendChild(
-          shelf
-        );
-
-      }
-
-
-      const card =
-        createVideoCard(
-          v,
-          isTrendingMode
-        );
-
-
-      container.appendChild(
-        card
-      );
-
+      container.appendChild(shelf);
     }
-  );
+
+    const card = createVideoCard(v, isTrendingMode);
+    container.appendChild(card);
+
+  });
 
 }
 
 
-function createVideoCard(
-  v,
-  showRank=false
-) {
+function createVideoCard(v, showRank=false) {
 
-  const card =
-    document.createElement(
-      'div'
-    );
+  const card = document.createElement('div');
+  card.className = 'video-card';
 
-  card.className =
-    'video-card';
+  card.addEventListener('click', () => playVideo(v.id));
 
+  const avatar = v.channelAvatar || `https://picsum.photos/seed/${encodeURIComponent(v.channelId || v.id)}/100`;
+  const progress = watchProgress[v.id];
 
-  card.addEventListener(
-    'click',
-    () => playVideo(v.id)
-  );
+  const progressPercent = progress && progress.duration
+    ? Math.min(100, (progress.seconds / progress.duration) * 100)
+    : 0;
 
-
-  const avatar =
-    v.channelAvatar
-    ||
-    `https://picsum.photos/seed/${encodeURIComponent(v.channelId || v.id)}/100`;
-
-
-  const progress =
-    watchProgress[v.id];
-
-
-  const progressPercent =
-    progress &&
-    progress.duration
-      ?
-      Math.min(
-        100,
-        (
-          progress.seconds
-          /
-          progress.duration
-        ) * 100
-      )
-      :
-      0;
-
-
-  card.innerHTML =
-    `
-
+  card.innerHTML = `
     <div class="thumbnail-box">
+      ${showRank ? `<div class="trending-rank">#${v.rank} Trending</div>` : ''}
+      <img src="${escapeHTML(v.thumb)}" loading="lazy" alt="${escapeHTML(v.title)}">
+      <span class="duration-badge">${escapeHTML(v.duration || '00:00')}</span>
 
-      ${showRank
-        ?
-        `
-        <div class="trending-rank">
-
-          #${v.rank} Trending
-
-        </div>
-        `
-        :
-        ''
-      }
-
-
-      <img
-        src="${escapeHTML(v.thumb)}"
-        loading="lazy"
-        alt="${escapeHTML(v.title)}">
-
-
-      <span class="duration-badge">
-
-        ${escapeHTML(v.duration || '00:00')}
-
-      </span>
-
-
-      ${
-        progressPercent > 1 &&
-        progressPercent < 98
-        ?
-        `
+      ${progressPercent > 1 && progressPercent < 98 ? `
         <div class="progress-track">
-
-          <div
-            class="progress-value"
-            style="width:${progressPercent}%">
-          </div>
-
+          <div class="progress-value" style="width:${progressPercent}%"></div>
         </div>
-        `
-        :
-        ''
-      }
-
+      ` : ''}
     </div>
 
-
     <div class="video-meta">
-
-      <img
-        src="${escapeHTML(avatar)}"
-        class="channel-avatar"
-        loading="lazy"
-        alt="Avatar"
+      <img src="${escapeHTML(avatar)}" class="channel-avatar" loading="lazy" alt="Avatar"
         onclick="
           event.stopPropagation();
           openChannelPage(
@@ -6239,52 +5103,25 @@ function createVideoCard(
           );
         ">
 
-
       <div class="meta-details">
-
-        <div class="meta-title">
-
-          ${escapeHTML(v.title)}
-
-        </div>
-
-
+        <div class="meta-title">${escapeHTML(v.title)}</div>
         <div class="meta-sub">
-
-          <span class="channel-click">
-
-            ${escapeHTML(v.channel)}
-
-          </span>
-
-          •
-          ${formatNumber(v.views)}
-          x ditonton
-
-          •
-          ${escapeHTML(v.publishedRelative)}
-
+          <span class="channel-click">${escapeHTML(v.channel)}</span>
+          • ${formatNumber(v.views)} x ditonton
+          • ${escapeHTML(v.publishedRelative)}
         </div>
-
       </div>
 
-
-      <button
-        class="video-more-btn"
+      <button class="video-more-btn"
         onclick="
           event.stopPropagation();
           showVideoMenu('${escapeHTML(v.id)}');
         "
         aria-label="Menu">
-
         <i class="fa-solid fa-ellipsis-vertical"></i>
-
       </button>
-
     </div>
-
-    `;
-
+  `;
 
   return card;
 
@@ -6297,152 +5134,47 @@ function createVideoCard(
 
 async function loadMoreVideos() {
 
-  if (
-    isLoadingMore ||
-    !nextPageToken
-  ) {
+  if (isLoadingMore || !nextPageToken) return;
 
-    return;
-
-  }
-
-
-  isLoadingMore =
-    true;
-
-
-  document.getElementById(
-    'loadMoreSpinner'
-  ).style.display =
-    'inline-block';
-
+  isLoadingMore = true;
+  document.getElementById('loadMoreSpinner').style.display = 'inline-block';
 
   try {
-
-    if (
-      currentMode ===
-      'trending'
-    ) {
-
-      await loadTrendingVideos(
-        isTrendingMode,
-        null,
-        true
-      );
-
+    if (currentMode === 'trending') {
+      await loadTrendingVideos(isTrendingMode, null, true);
+    } else if (currentMode === 'search') {
+      await executeSearch(currentSearchQuery, true, currentSortOrder);
+    } else if (currentMode === 'channel') {
+      await openChannelPage(currentChannelId, currentChannelTitle, true, currentSortOrder);
     }
-
-    else if (
-      currentMode ===
-      'search'
-    ) {
-
-      await executeSearch(
-        currentSearchQuery,
-        true,
-        currentSortOrder
-      );
-
-    }
-
-    else if (
-      currentMode ===
-      'channel'
-    ) {
-
-      await openChannelPage(
-        currentChannelId,
-        currentChannelTitle,
-        true,
-        currentSortOrder
-      );
-
-    }
-
   } finally {
-
-    isLoadingMore =
-      false;
-
-    document.getElementById(
-      'loadMoreSpinner'
-    ).style.display =
-      'none';
-
+    isLoadingMore = false;
+    document.getElementById('loadMoreSpinner').style.display = 'none';
   }
 
 }
 
 
 function checkLoadMoreVisibility() {
-
-  const btn =
-    document.getElementById(
-      'btnLoadMore'
-    );
-
-
-  btn.style.display =
-    nextPageToken
-      ? 'block'
-      : 'none';
-
+  const btn = document.getElementById('btnLoadMore');
+  btn.style.display = nextPageToken ? 'block' : 'none';
 }
 
 
-function applySortFilter(
-  sortOrder,
-  element
-) {
+function applySortFilter(sortOrder, element) {
 
-  document.querySelectorAll(
-    '.sort-chip'
-  ).forEach(
-    c =>
-      c.classList.remove(
-        'active'
-      )
-  );
-
+  document.querySelectorAll('.sort-chip').forEach(c => c.classList.remove('active'));
 
   if (element) {
-
-    element.classList.add(
-      'active'
-    );
-
+    element.classList.add('active');
   }
 
+  currentSortOrder = sortOrder;
 
-  currentSortOrder =
-    sortOrder;
-
-
-  if (
-    currentMode ===
-    'search'
-  ) {
-
-    executeSearch(
-      currentSearchQuery,
-      false,
-      sortOrder
-    );
-
-  }
-
-  else if (
-    currentMode ===
-    'channel'
-  ) {
-
-    openChannelPage(
-      currentChannelId,
-      currentChannelTitle,
-      false,
-      sortOrder
-    );
-
+  if (currentMode === 'search') {
+    executeSearch(currentSearchQuery, false, sortOrder);
+  } else if (currentMode === 'channel') {
+    openChannelPage(currentChannelId, currentChannelTitle, false, sortOrder);
   }
 
 }
@@ -6454,131 +5186,57 @@ function applySortFilter(
 
 function onYouTubeIframeAPIReady() {
 
-  ytPlayer =
-    new YT.Player(
-      'ytPlayerContainer',
-      {
-
-        height:'100%',
-
-        width:'100%',
-
-        videoId:'',
-
-        playerVars: {
-
-          autoplay:1,
-
-          rel:0,
-
-          modestbranding:1,
-
-          fs:1,
-
-          playsinline:1
-
-        },
-
-        events: {
-
-          onReady:
-            handlePlayerReady,
-
-          onStateChange:
-            handlePlayerStateChange,
-
-          onError:
-            handlePlayerError
-
-        }
-
+  ytPlayer = new YT.Player(
+    'ytPlayerContainer',
+    {
+      height:'100%',
+      width:'100%',
+      videoId:'',
+      playerVars: {
+        autoplay:1,
+        rel:0,
+        modestbranding:1,
+        fs:1,
+        playsinline:1
+      },
+      events: {
+        onReady: handlePlayerReady,
+        onStateChange: handlePlayerStateChange,
+        onError: handlePlayerError
       }
-    );
+    }
+  );
 
 }
 
 
 function handlePlayerReady() {
-
-  console.log(
-    'HidaTube player ready'
-  );
-
+  console.log('HidaTube player ready');
 }
 
 
 function handlePlayerError(event) {
-
-  console.warn(
-    'YouTube player error',
-    event.data
-  );
-
-  showToast(
-    'Video tidak dapat diputar',
-    'error'
-  );
-
+  console.warn('YouTube player error', event.data);
+  showToast('Video tidak dapat diputar', 'error');
 }
 
 
 function handlePlayerStateChange(event) {
 
-  const icon =
-    document.getElementById(
-      'miniPlayPauseIcon'
-    );
+  const icon = document.getElementById('miniPlayPauseIcon');
+  if (!icon) return;
 
-
-  if (!icon) {
-    return;
-  }
-
-
-  if (
-    event.data ===
-    YT.PlayerState.PLAYING
-  ) {
-
-    icon.className =
-      'fa-solid fa-pause';
-
-
+  if (event.data === YT.PlayerState.PLAYING) {
+    icon.className = 'fa-solid fa-pause';
     saveCurrentProgress();
-
-
-  }
-
-  else if (
-    event.data ===
-    YT.PlayerState.PAUSED
-  ) {
-
-    icon.className =
-      'fa-solid fa-play';
-
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    icon.className = 'fa-solid fa-play';
     saveCurrentProgress();
-
-  }
-
-  else if (
-    event.data ===
-    YT.PlayerState.ENDED
-  ) {
-
-    saveCurrentProgress(
-      true
-    );
-
-
-    if (
-      appSettings.autoplayNext
-    ) {
-
+  } else if (event.data === YT.PlayerState.ENDED) {
+    saveCurrentProgress(true);
+    if (appSettings.autoplayNext) {
       playNextVideo();
-
     }
-
   }
 
 }
@@ -6586,209 +5244,70 @@ function handlePlayerStateChange(event) {
 
 async function playVideo(id) {
 
-  if (!id) {
-    return;
-  }
+  if (!id) return;
 
-
-  let video =
-    videoList.find(
-      v =>
-        v.id === id
-    );
-
+  let video = findVideoById(id);
 
   if (!video) {
-
     try {
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${encodeURIComponent(id)}&key=${encodeURIComponent(apiKey)}`;
+      const data = await apiFetch(url, `video:${id}`);
 
-      const url =
-        `https://www.googleapis.com/youtube/v3/videos`
-        +
-        `?part=snippet,contentDetails,statistics`
-        +
-        `&id=${encodeURIComponent(id)}`
-        +
-        `&key=${encodeURIComponent(apiKey)}`;
-
-
-      const data =
-        await apiFetch(
-          url,
-          `video:${id}`
-        );
-
-
-      if (
-        data.items &&
-        data.items.length
-      ) {
-
-        video =
-          normalizeVideo(
-            data.items[0]
-          );
-
+      if (data.items && data.items.length) {
+        video = normalizeVideo(data.items[0]);
       }
-
     } catch(error) {
-
-      console.warn(
-        error
-      );
-
+      console.warn(error);
     }
-
   }
-
 
   if (!video) {
-
-    showToast(
-      'Video tidak ditemukan',
-      'error'
-    );
-
+    showToast('Video tidak ditemukan', 'error');
     return;
-
   }
 
+  currentVideoData = video;
+  currentVideoId = video.id;
+  currentChannelId = video.channelId;
+  currentChannelTitle = video.channel;
 
-  currentVideoData =
-    video;
+  updateWatchUI(video);
 
-  currentVideoId =
-    video.id;
+  if (ytPlayer && ytPlayer.loadVideoById) {
+    const saved = watchProgress[video.id];
 
-  currentChannelId =
-    video.channelId;
-
-  currentChannelTitle =
-    video.channel;
-
-
-  updateWatchUI(
-    video
-  );
-
-
-  if (
-    ytPlayer &&
-    ytPlayer.loadVideoById
-  ) {
-
-    const saved =
-      watchProgress[
-        video.id
-      ];
-
-
-    if (
-      saved &&
-      saved.seconds > 5 &&
-      saved.duration &&
-      saved.seconds <
-      saved.duration - 5
-    ) {
-
+    if (saved && saved.seconds > 5 && saved.duration && saved.seconds < saved.duration - 5) {
       ytPlayer.loadVideoById({
         videoId:video.id,
-        startSeconds:
-          saved.seconds
+        startSeconds:saved.seconds
       });
-
     } else {
-
-      ytPlayer.loadVideoById(
-        video.id
-      );
-
+      ytPlayer.loadVideoById(video.id);
     }
-
   }
 
+  addToHistory(video);
 
-  addToHistory(
-    video
-  );
-
-
-  recommendedList =
-    videoList.filter(
-      v =>
-        v.id !==
-        currentVideoId
-    );
-
-
-  recNextPageToken =
-    '';
-
+  recommendedList = videoList.filter(v => v.id !== currentVideoId);
+  recNextPageToken = '';
 
   renderRecommended();
+  toggleCommentsSection(false);
 
+  const player = document.getElementById('playerView');
 
-  toggleCommentsSection(
-    false
-  );
+  player.classList.remove('minimized', 'dragging');
+  player.style.transform = '';
+  player.style.opacity = '';
+  player.classList.add('active');
+  player.scrollTop = 0;
 
-
-  const player =
-    document.getElementById(
-      'playerView'
-    );
-
-
-  player.classList.remove(
-    'minimized',
-    'dragging'
-  );
-
-
-  player.style.transform =
-    '';
-
-  player.style.opacity =
-    '';
-
-
-  player.classList.add(
-    'active'
-  );
-
-
-  player.scrollTop =
-    0;
-
-
-  if (
-    !history.state ||
-    history.state.page !==
-    'player' ||
-    history.state.id !==
-    id
-  ) {
-
-    history.pushState(
-      {
-        page:'player',
-        id:id
-      },
-      '',
-      '#watch'
-    );
-
+  if (!history.state || history.state.page !== 'player' || history.state.id !== id) {
+    history.pushState({ page:'player', id:id }, '', '#watch');
   }
 
-
-  if (
-    appSettings.autoplayNext
-  ) {
-
-    showToast(
-      'Autoplay aktif'
-    );
-
+  if (appSettings.autoplayNext) {
+    showToast('Autoplay aktif');
   }
 
 }
@@ -6796,87 +5315,30 @@ async function playVideo(id) {
 
 function updateWatchUI(video) {
 
-  document.getElementById(
-    'watchTitle'
-  ).textContent =
-    video.title;
+  document.getElementById('watchTitle').textContent = video.title;
+  document.getElementById('watchChannel').textContent = video.channel;
 
+  document.getElementById('miniTitle').textContent = video.title;
+  document.getElementById('miniChannel').textContent = `${video.channel} • ${video.publishedRelative}`;
 
-  document.getElementById(
-    'watchChannel'
-  ).textContent =
-    video.channel;
+  const avatar = document.getElementById('watchAvatar');
+  avatar.src = video.channelAvatar || `https://picsum.photos/seed/${encodeURIComponent(video.channelId || video.id)}/100`;
 
+  const exactDate = formatDateIndonesian(video.publishedAt);
 
-  document.getElementById(
-    'miniTitle'
-  ).textContent =
-    video.title;
+  document.getElementById('descHeaderStats').textContent =
+    `${formatNumber(video.views)} x ditonton` +
+    (exactDate ? ` • Diunggah ${exactDate}` : '');
 
+  document.getElementById('watchDescription').textContent = video.description;
 
-  document.getElementById(
-    'miniChannel'
-  ).textContent =
-    `${video.channel} • ${video.publishedRelative}`;
+  const descBox = document.getElementById('descriptionBox');
+  descBox.classList.remove('expanded');
 
-
-  const avatar =
-    document.getElementById(
-      'watchAvatar'
-    );
-
-
-  avatar.src =
-    video.channelAvatar
-    ||
-    `https://picsum.photos/seed/${encodeURIComponent(video.channelId || video.id)}/100`;
-
-
-  const exactDate =
-    formatDateIndonesian(
-      video.publishedAt
-    );
-
-
-  document.getElementById(
-    'descHeaderStats'
-  ).textContent =
-    `${formatNumber(video.views)} x ditonton`
-    +
-    (
-      exactDate
-        ? ` • Diunggah ${exactDate}`
-        : ''
-    );
-
-
-  document.getElementById(
-    'watchDescription'
-  ).textContent =
-    video.description;
-
-
-  const descBox =
-    document.getElementById(
-      'descriptionBox'
-    );
-
-
-  descBox.classList.remove(
-    'expanded'
-  );
-
-
-  document.getElementById(
-    'descToggleBtn'
-  ).textContent =
-    '...selengkapnya';
-
+  document.getElementById('descToggleBtn').textContent = '...selengkapnya';
 
   updateSubscribeButton();
-
   updateLikeButton();
-
   updateWatchLaterButton();
 
 }
@@ -6886,68 +5348,29 @@ function updateWatchUI(video) {
    PLAYER PROGRESS
    ========================================================= */
 
-function saveCurrentProgress(
-  ended=false
-) {
+function saveCurrentProgress(ended=false) {
 
-  if (
-    !currentVideoId ||
-    !ytPlayer ||
-    !ytPlayer.getCurrentTime
-  ) {
-
-    return;
-
-  }
-
+  if (!currentVideoId || !ytPlayer || !ytPlayer.getCurrentTime) return;
 
   try {
+    const seconds = ended ? 0 : ytPlayer.getCurrentTime();
+    const duration = ytPlayer.getDuration();
 
-    const seconds =
-      ended
-        ? 0
-        : ytPlayer.getCurrentTime();
-
-
-    const duration =
-      ytPlayer.getDuration();
-
-
-    if (
-      duration > 0 &&
-      appSettings.saveHistory
-    ) {
-
-      watchProgress[
-        currentVideoId
-      ] = {
-
+    if (duration > 0 && appSettings.saveHistory) {
+      watchProgress[currentVideoId] = {
         seconds:seconds,
-
         duration:duration,
-
-        updatedAt:
-          Date.now()
-
+        updatedAt:Date.now()
       };
 
-
-      writeStorage(
-        STORAGE.progress,
-        watchProgress
-      );
-
+      writeStorage(STORAGE.progress, watchProgress);
     }
-
   } catch(e) {}
 
 }
 
 
-setInterval(
-  saveCurrentProgress,
-  5000
-);
+setInterval(saveCurrentProgress, 5000);
 
 
 /* =========================================================
@@ -6956,54 +5379,22 @@ setInterval(
 
 function addToHistory(video) {
 
-  if (
-    !appSettings.saveHistory
-  ) {
+  if (!appSettings.saveHistory) return;
 
-    return;
-
-  }
-
-
-  watchHistory =
-    watchHistory.filter(
-      v =>
-        v.id !==
-        video.id
-    );
-
+  watchHistory = watchHistory.filter(v => v.id !== video.id);
 
   watchHistory.unshift({
-
     id:video.id,
-
     title:video.title,
-
     channel:video.channel,
-
     channelId:video.channelId,
-
     thumb:video.thumb,
-
-    watchedAt:
-      Date.now()
-
+    watchedAt:Date.now()
   });
 
+  watchHistory = watchHistory.slice(0, CONFIG.historyLimit);
 
-  watchHistory =
-    watchHistory.slice(
-      0,
-      CONFIG.historyLimit
-    );
-
-
-  writeStorage(
-    STORAGE.history,
-    watchHistory
-  );
-
-
+  writeStorage(STORAGE.history, watchHistory);
   renderContinueWatching();
 
 }
@@ -7011,110 +5402,37 @@ function addToHistory(video) {
 
 function renderContinueWatching() {
 
-  const section =
-    document.getElementById(
-      'continueSection'
-    );
+  const section = document.getElementById('continueSection');
+  const list = document.getElementById('continueList');
 
-
-  const list =
-    document.getElementById(
-      'continueList'
-    );
-
-
-  const items =
-    watchHistory
-      .filter(
-        item =>
-          watchProgress[item.id] &&
-          watchProgress[item.id].seconds > 5
-      )
-      .slice(0,8);
-
+  const items = watchHistory.filter(item =>
+    watchProgress[item.id] && watchProgress[item.id].seconds > 5
+  ).slice(0,8);
 
   if (!items.length) {
-
-    section.classList.add(
-      'hidden'
-    );
-
+    section.classList.add('hidden');
     list.innerHTML = '';
-
     return;
-
   }
 
+  section.classList.remove('hidden');
 
-  section.classList.remove(
-    'hidden'
-  );
+  list.innerHTML = items.map(item => {
+    const progress = watchProgress[item.id];
+    const percent = progress.duration
+      ? Math.min(100, (progress.seconds / progress.duration) * 100)
+      : 0;
 
-
-  list.innerHTML =
-    items.map(
-      item => {
-
-        const progress =
-          watchProgress[
-            item.id
-          ];
-
-
-        const percent =
-          progress.duration
-            ?
-            Math.min(
-              100,
-              (
-                progress.seconds /
-                progress.duration
-              ) * 100
-            )
-            :
-            0;
-
-
-        return `
-
-        <div
-          class="continue-card"
-          onclick="playVideo('${escapeHTML(item.id)}')">
-
-          <div
-            style="position:relative;">
-
-            <img
-              class="continue-thumb"
-              src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}"
-              loading="lazy"
-              alt="">
-
-            <div
-              style="
-                position:absolute;
-                bottom:0;
-                left:0;
-                height:3px;
-                width:${percent}%;
-                background:var(--yt-red);
-              ">
-            </div>
-
-          </div>
-
-          <div class="continue-title">
-
-            ${escapeHTML(item.title)}
-
-          </div>
-
+    return `
+      <div class="continue-card" onclick="playVideo('${escapeHTML(item.id)}')">
+        <div style="position:relative;">
+          <img class="continue-thumb" src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}" loading="lazy" alt="">
+          <div style="position:absolute;bottom:0;left:0;height:3px;width:${percent}%;background:var(--yt-red);"></div>
         </div>
-
-        `;
-
-      }
-    ).join('');
+        <div class="continue-title">${escapeHTML(item.title)}</div>
+      </div>
+    `;
+  }).join('');
 
 }
 
@@ -7125,51 +5443,19 @@ function renderContinueWatching() {
 
 function playNextVideo() {
 
-  if (
-    !currentVideoId
-  ) {
+  if (!currentVideoId) return;
+
+  const index = videoList.findIndex(v => v.id === currentVideoId);
+
+  if (index >= 0 && index < videoList.length - 1) {
+    const next = videoList[index + 1];
+    showToast('Memutar video berikutnya');
+    setTimeout(() => playVideo(next.id), 700);
     return;
   }
 
-
-  const index =
-    videoList.findIndex(
-      v =>
-        v.id ===
-        currentVideoId
-    );
-
-
-  if (
-    index >= 0 &&
-    index < videoList.length - 1
-  ) {
-
-    const next =
-      videoList[index + 1];
-
-    showToast(
-      'Memutar video berikutnya'
-    );
-
-    setTimeout(
-      () => playVideo(next.id),
-      700
-    );
-
-    return;
-
-  }
-
-
-  if (
-    recommendedList.length
-  ) {
-
-    playVideo(
-      recommendedList[0].id
-    );
-
+  if (recommendedList.length) {
+    playVideo(recommendedList[0].id);
   }
 
 }
@@ -7181,61 +5467,21 @@ function playNextVideo() {
 
 function toggleLikeCurrentVideo() {
 
-  if (!currentVideoId) {
-    return;
-  }
+  if (!currentVideoId) return;
 
-
-  const index =
-    likedVideos.indexOf(
-      currentVideoId
-    );
-
+  const index = likedVideos.indexOf(currentVideoId);
 
   if (index >= 0) {
-
-    likedVideos.splice(
-      index,
-      1
-    );
-
-    showToast(
-      'Like dibatalkan'
-    );
-
+    likedVideos.splice(index, 1);
+    showToast('Like dibatalkan');
   } else {
-
-    likedVideos.push(
-      currentVideoId
-    );
-
-
-    dislikedVideos =
-      dislikedVideos.filter(
-        id =>
-          id !==
-          currentVideoId
-      );
-
-
-    showToast(
-      'Video disukai'
-    );
-
+    likedVideos.push(currentVideoId);
+    dislikedVideos = dislikedVideos.filter(id => id !== currentVideoId);
+    showToast('Video disukai');
   }
 
-
-  writeStorage(
-    STORAGE.likes,
-    likedVideos
-  );
-
-
-  writeStorage(
-    STORAGE.dislikes,
-    dislikedVideos
-  );
-
+  writeStorage(STORAGE.likes, likedVideos);
+  writeStorage(STORAGE.dislikes, dislikedVideos);
 
   updateLikeButton();
 
@@ -7244,61 +5490,21 @@ function toggleLikeCurrentVideo() {
 
 function toggleDislikeCurrentVideo() {
 
-  if (!currentVideoId) {
-    return;
-  }
+  if (!currentVideoId) return;
 
-
-  const index =
-    dislikedVideos.indexOf(
-      currentVideoId
-    );
-
+  const index = dislikedVideos.indexOf(currentVideoId);
 
   if (index >= 0) {
-
-    dislikedVideos.splice(
-      index,
-      1
-    );
-
-    showToast(
-      'Dislike dibatalkan'
-    );
-
+    dislikedVideos.splice(index, 1);
+    showToast('Dislike dibatalkan');
   } else {
-
-    dislikedVideos.push(
-      currentVideoId
-    );
-
-
-    likedVideos =
-      likedVideos.filter(
-        id =>
-          id !==
-          currentVideoId
-      );
-
-
-    showToast(
-      'Video tidak disukai'
-    );
-
+    dislikedVideos.push(currentVideoId);
+    likedVideos = likedVideos.filter(id => id !== currentVideoId);
+    showToast('Video tidak disukai');
   }
 
-
-  writeStorage(
-    STORAGE.likes,
-    likedVideos
-  );
-
-
-  writeStorage(
-    STORAGE.dislikes,
-    dislikedVideos
-  );
-
+  writeStorage(STORAGE.likes, likedVideos);
+  writeStorage(STORAGE.dislikes, dislikedVideos);
 
   updateLikeButton();
 
@@ -7307,53 +5513,23 @@ function toggleDislikeCurrentVideo() {
 
 function updateLikeButton() {
 
-  const action =
-    document.getElementById(
-      'likeAction'
-    );
+  const action = document.getElementById('likeAction');
+  const icon = document.getElementById('likeIcon');
 
-
-  const icon =
-    document.getElementById(
-      'likeIcon'
-    );
-
-
-  if (
-    likedVideos.includes(
-      currentVideoId
-    )
-  ) {
-
-    action.classList.add(
-      'active'
-    );
-
-    icon.className =
-      'fa-solid fa-thumbs-up';
-
+  if (likedVideos.includes(currentVideoId)) {
+    action.classList.add('active');
+    icon.className = 'fa-solid fa-thumbs-up';
   } else {
-
-    action.classList.remove(
-      'active'
-    );
-
-    icon.className =
-      'fa-regular fa-thumbs-up';
-
+    action.classList.remove('active');
+    icon.className = 'fa-regular fa-thumbs-up';
   }
 
-
-  document.getElementById(
-    'likeCount'
-  ).textContent =
-    currentVideoData
-      ? formatNumber(
-          currentVideoData.views > 0
-            ? 0
-            : 0
-        )
+  const countSpan = document.getElementById('likeCount');
+  if (countSpan) {
+    countSpan.textContent = currentVideoData && currentVideoData.likes
+      ? formatNumber(currentVideoData.likes)
       : '0';
+  }
 
 }
 
@@ -7363,74 +5539,31 @@ function updateLikeButton() {
    ========================================================= */
 
 function toggleWatchLaterCurrentVideo() {
-
-  if (
-    !currentVideoData
-  ) {
-    return;
-  }
-
-
-  toggleWatchLater(
-    currentVideoData
-  );
-
+  if (!currentVideoData) return;
+  toggleWatchLater(currentVideoData);
 }
 
 
 function toggleWatchLater(video) {
 
-  const index =
-    watchLater.findIndex(
-      v =>
-        v.id ===
-        video.id
-    );
-
+  const index = watchLater.findIndex(v => v.id === video.id);
 
   if (index >= 0) {
-
-    watchLater.splice(
-      index,
-      1
-    );
-
-    showToast(
-      'Dihapus dari Tonton Nanti'
-    );
-
+    watchLater.splice(index, 1);
+    showToast('Dihapus dari Tonton Nanti');
   } else {
-
     watchLater.unshift({
-
       id:video.id,
-
       title:video.title,
-
       channel:video.channel,
-
       channelId:video.channelId,
-
       thumb:video.thumb,
-
-      addedAt:
-        Date.now()
-
+      addedAt:Date.now()
     });
-
-    showToast(
-      'Ditambahkan ke Tonton Nanti'
-    );
-
+    showToast('Ditambahkan ke Tonton Nanti');
   }
 
-
-  writeStorage(
-    STORAGE.watchLater,
-    watchLater
-  );
-
-
+  writeStorage(STORAGE.watchLater, watchLater);
   updateWatchLaterButton();
 
 }
@@ -7438,37 +5571,13 @@ function toggleWatchLater(video) {
 
 function updateWatchLaterButton() {
 
-  const button =
-    document.getElementById(
-      'saveAction'
-    );
+  const button = document.getElementById('saveAction');
+  if (!button) return;
 
+  const saved = watchLater.some(v => v.id === currentVideoId);
 
-  if (!button) {
-    return;
-  }
-
-
-  const saved =
-    watchLater.some(
-      v =>
-        v.id ===
-        currentVideoId
-    );
-
-
-  button.classList.toggle(
-    'active',
-    saved
-  );
-
-
-  button.querySelector(
-    'span'
-  ).textContent =
-    saved
-      ? 'Tersimpan'
-      : 'Simpan';
+  button.classList.toggle('active', saved);
+  button.querySelector('span').textContent = saved ? 'Tersimpan' : 'Simpan';
 
 }
 
@@ -7477,67 +5586,28 @@ function updateWatchLaterButton() {
    SUBSCRIPTION
    ========================================================= */
 
-function toggleSubscription(
-  channelId,
-  channel,
-  avatar=''
-) {
+function toggleSubscription(channelId, channel, avatar='') {
 
-  if (!channelId) {
-    return;
-  }
+  if (!channelId) return;
 
-
-  const index =
-    subscriptions.findIndex(
-      s =>
-        s.channelId ===
-        channelId
-    );
-
+  const index = subscriptions.findIndex(s => s.channelId === channelId);
 
   if (index >= 0) {
-
-    subscriptions.splice(
-      index,
-      1
-    );
-
-    showToast(
-      `Berhenti mengikuti ${channel}`
-    );
-
+    subscriptions.splice(index, 1);
+    showToast(`Berhenti mengikuti ${channel}`);
   } else {
-
     subscriptions.unshift({
-
       channelId,
-
       channel,
-
       avatar,
-
-      subscribedAt:
-        Date.now()
-
+      subscribedAt:Date.now()
     });
-
-
-    showToast(
-      `${channel} ditambahkan`
-    );
-
+    showToast(`${channel} ditambahkan`);
   }
 
-
-  writeStorage(
-    STORAGE.subscriptions,
-    subscriptions
-  );
-
+  writeStorage(STORAGE.subscriptions, subscriptions);
 
   updateSubscribeButton();
-
   updateSubscriptionPage();
 
 }
@@ -7548,9 +5618,7 @@ function toggleCurrentSubscription() {
   toggleSubscription(
     currentChannelId,
     currentChannelTitle,
-    document.getElementById(
-      'watchAvatar'
-    ).src
+    document.getElementById('watchAvatar').src
   );
 
 }
@@ -7558,35 +5626,13 @@ function toggleCurrentSubscription() {
 
 function updateSubscribeButton() {
 
-  const button =
-    document.getElementById(
-      'watchSubscribeBtn'
-    );
+  const button = document.getElementById('watchSubscribeBtn');
+  if (!button) return;
 
+  const subscribed = subscriptions.some(s => s.channelId === currentChannelId);
 
-  if (!button) {
-    return;
-  }
-
-
-  const subscribed =
-    subscriptions.some(
-      s =>
-        s.channelId ===
-        currentChannelId
-    );
-
-
-  button.classList.toggle(
-    'subscribed',
-    subscribed
-  );
-
-
-  button.textContent =
-    subscribed
-      ? '✓ Disubscribe'
-      : 'Subskrib';
+  button.classList.toggle('subscribed', subscribed);
+  button.textContent = subscribed ? '✓ Disubscribe' : 'Subskrib';
 
 }
 
@@ -7595,50 +5641,20 @@ function updateSubscribeButton() {
    NOT INTERESTED
    ========================================================= */
 
-function markNotInterested(
-  video
-) {
+function markNotInterested(video) {
 
-  if (!video?.id) {
-    return;
+  if (!video?.id) return;
+
+  if (!notInterested.includes(video.id)) {
+    notInterested.push(video.id);
   }
 
+  writeStorage(STORAGE.notInterested, notInterested);
 
-  if (
-    !notInterested.includes(
-      video.id
-    )
-  ) {
+  videoList = videoList.filter(v => v.id !== video.id);
+  renderFeed(videoList);
 
-    notInterested.push(
-      video.id
-    );
-
-  }
-
-
-  writeStorage(
-    STORAGE.notInterested,
-    notInterested
-  );
-
-
-  videoList =
-    videoList.filter(
-      v =>
-        v.id !==
-        video.id
-    );
-
-
-  renderFeed(
-    videoList
-  );
-
-
-  showToast(
-    'Video disembunyikan'
-  );
+  showToast('Video disembunyikan');
 
 }
 
@@ -7649,99 +5665,31 @@ function markNotInterested(
 
 function showVideoMenu(id) {
 
-  const video =
-    videoList.find(
-      v =>
-        v.id === id
-    );
-
-
-  if (!video) {
-    return;
-  }
-
+  const video = findVideoById(id);
+  if (!video) return;
 
   openBottomSheet(
     'Pilihan Video',
     `
-
-      <button
-        class="sheet-item"
-        onclick="
-          closeBottomSheet();
-          playVideo('${escapeHTML(video.id)}');
-        ">
-
-        <i class="fa-solid fa-play"></i>
-
-        Putar Video
-
+      <button class="sheet-item" onclick="closeBottomSheet();playVideo('${escapeHTML(video.id)}');">
+        <i class="fa-solid fa-play"></i> Putar Video
       </button>
 
-
-      <button
-        class="sheet-item"
-        onclick="
-          closeBottomSheet();
-          toggleWatchLater(
-            ${JSON.stringify(video)}
-          );
-        ">
-
-        <i class="fa-solid fa-bookmark"></i>
-
-        Tonton Nanti
-
+      <button class="sheet-item" onclick="closeBottomSheet();toggleWatchLaterById('${escapeHTML(video.id)}');">
+        <i class="fa-solid fa-bookmark"></i> Tonton Nanti
       </button>
 
-
-      <button
-        class="sheet-item"
-        onclick="
-          closeBottomSheet();
-          showPlaylistSelector(
-            ${JSON.stringify(video)}
-          );
-        ">
-
-        <i class="fa-solid fa-list"></i>
-
-        Tambahkan ke Playlist
-
+      <button class="sheet-item" onclick="closeBottomSheet();showPlaylistSelectorById('${escapeHTML(video.id)}');">
+        <i class="fa-solid fa-list"></i> Tambahkan ke Playlist
       </button>
 
-
-      <button
-        class="sheet-item"
-        onclick="
-          closeBottomSheet();
-          shareVideo(
-            ${JSON.stringify(video)}
-          );
-        ">
-
-        <i class="fa-solid fa-share"></i>
-
-        Bagikan
-
+      <button class="sheet-item" onclick="closeBottomSheet();shareVideoById('${escapeHTML(video.id)}');">
+        <i class="fa-solid fa-share"></i> Bagikan
       </button>
 
-
-      <button
-        class="sheet-item"
-        onclick="
-          closeBottomSheet();
-          markNotInterested(
-            ${JSON.stringify(video)}
-          );
-        ">
-
-        <i class="fa-solid fa-eye-slash"></i>
-
-        Tidak Tertarik
-
+      <button class="sheet-item" onclick="closeBottomSheet();markNotInterestedById('${escapeHTML(video.id)}');">
+        <i class="fa-solid fa-eye-slash"></i> Tidak Tertarik
       </button>
-
     `
   );
 
@@ -7754,83 +5702,40 @@ function showVideoMenu(id) {
 
 async function shareVideo(video) {
 
-  const url =
-    `https://www.youtube.com/watch?v=${video.id}`;
+  const url = `https://www.youtube.com/watch?v=${video.id}`;
 
-
-  if (
-    navigator.share
-  ) {
-
+  if (navigator.share) {
     try {
-
       await navigator.share({
-
         title:video.title,
-
-        text:
-          `${video.title} • ${video.channel}`,
-
+        text:`${video.title} • ${video.channel}`,
         url:url
-
       });
-
       return;
-
     } catch(e) {}
-
   }
 
-
   try {
-
-    await navigator.clipboard.writeText(
-      url
-    );
-
-    showToast(
-      'Link video disalin'
-    );
-
+    await navigator.clipboard.writeText(url);
+    showToast('Link video disalin');
   } catch(e) {
-
-    showToast(
-      'Tidak dapat menyalin link',
-      'error'
-    );
-
+    showToast('Tidak dapat menyalin link', 'error');
   }
 
 }
 
 
 function shareCurrentVideo() {
-
-  if (
-    currentVideoData
-  ) {
-
-    shareVideo(
-      currentVideoData
-    );
-
+  if (currentVideoData) {
+    shareVideo(currentVideoData);
   }
-
 }
 
 
 function copyCurrentLink() {
-
-  if (
-    currentVideoData
-  ) {
-
-    shareVideo(
-      currentVideoData
-    );
-
+  if (currentVideoData) {
+    shareVideo(currentVideoData);
   }
-
 }
 
 
@@ -7838,108 +5743,41 @@ function copyCurrentLink() {
    PLAYLIST
    ========================================================= */
 
-function showPlaylistSelector(
-  video=null
-) {
+function showPlaylistSelector(video=null) {
 
-  const target =
-    video ||
-    currentVideoData;
-
-
-  if (!target) {
-    return;
-  }
-
+  const target = video || currentVideoData;
+  if (!target) return;
 
   let html = '';
 
-
   if (!playlists.length) {
-
-    html +=
-      `
-
-      <div class="empty-state"
-           style="padding:20px 5px;">
-
+    html += `
+      <div class="empty-state" style="padding:20px 5px;">
         <i class="fa-solid fa-list"></i>
-
         <h3>Belum ada playlist</h3>
-
-        <p>
-          Buat playlist pertama Anda.
-        </p>
-
+        <p>Buat playlist pertama Anda.</p>
       </div>
-
-      `;
-
+    `;
   }
 
-
-  html +=
-    playlists.map(
-      playlist => `
-
-        <div
-          class="playlist-item"
-          onclick="
-            addVideoToPlaylist(
-              '${escapeHTML(playlist.id)}',
-              ${JSON.stringify(target)}
-            );
-          ">
-
-          <div class="playlist-icon">
-
-            <i class="fa-solid fa-list"></i>
-
-          </div>
-
-          <div class="playlist-info">
-
-            <div class="playlist-name">
-
-              ${escapeHTML(playlist.name)}
-
-            </div>
-
-            <div class="playlist-count">
-
-              ${playlist.videos.length}
-              video
-
-            </div>
-
-          </div>
-
+  html += playlists.map(playlist => `
+      <div class="playlist-item"
+        onclick="addVideoToPlaylist('${escapeHTML(playlist.id)}', '${escapeHTML(target.id)}');">
+        <div class="playlist-icon"><i class="fa-solid fa-list"></i></div>
+        <div class="playlist-info">
+          <div class="playlist-name">${escapeHTML(playlist.name)}</div>
+          <div class="playlist-count">${playlist.videos.length} video</div>
         </div>
+      </div>
+    `).join('');
 
-      `
-    ).join('');
-
-
-  html +=
-    `
-
-    <button
-      class="sheet-item"
-      onclick="closeBottomSheet();createPlaylist();">
-
-      <i class="fa-solid fa-plus"></i>
-
-      Buat Playlist Baru
-
+  html += `
+    <button class="sheet-item" onclick="closeBottomSheet();createPlaylist();">
+      <i class="fa-solid fa-plus"></i> Buat Playlist Baru
     </button>
+  `;
 
-    `;
-
-
-  openBottomSheet(
-    'Simpan ke Playlist',
-    html
-  );
+  openBottomSheet('Simpan ke Playlist', html);
 
 }
 
@@ -7948,40 +5786,15 @@ function createPlaylist() {
 
   closeBottomSheet();
 
-
   openModal(
     'Buat Playlist',
     `
+    <input id="newPlaylistName" type="text" maxlength="50" placeholder="Nama playlist..."
+      style="width:100%;background:var(--yt-paper-2);color:var(--yt-text-primary);border:1px solid var(--yt-border);border-radius:10px;padding:11px;outline:none;font-size:12px;">
 
-    <input
-      id="newPlaylistName"
-      type="text"
-      maxlength="50"
-      placeholder="Nama playlist..."
-      style="
-        width:100%;
-        background:var(--yt-paper-2);
-        color:var(--yt-text-primary);
-        border:1px solid var(--yt-border);
-        border-radius:10px;
-        padding:11px;
-        outline:none;
-        font-size:12px;
-      ">
-
-
-    <button
-      class="btn-subscribe"
-      style="
-        width:100%;
-        margin-top:12px;
-      "
-      onclick="saveNewPlaylist()">
-
+    <button class="btn-subscribe" style="width:100%;margin-top:12px;" onclick="saveNewPlaylist()">
       Buat Playlist
-
     </button>
-
     `
   );
 
@@ -7990,122 +5803,52 @@ function createPlaylist() {
 
 function saveNewPlaylist() {
 
-  const input =
-    document.getElementById(
-      'newPlaylistName'
-    );
-
-
-  const name =
-    input?.value.trim();
-
+  const input = document.getElementById('newPlaylistName');
+  const name = input?.value.trim();
 
   if (!name) {
-
-    showToast(
-      'Nama playlist belum diisi',
-      'error'
-    );
-
+    showToast('Nama playlist belum diisi', 'error');
     return;
-
   }
 
-
   playlists.push({
-
-    id:
-      'pl_' +
-      Date.now(),
-
+    id:'pl_' + Date.now(),
     name,
-
     videos:[],
-
-    createdAt:
-      Date.now()
-
+    createdAt:Date.now()
   });
 
-
-  writeStorage(
-    STORAGE.playlists,
-    playlists
-  );
-
-
+  writeStorage(STORAGE.playlists, playlists);
   closeModal();
-
-
-  showToast(
-    'Playlist berhasil dibuat'
-  );
+  showToast('Playlist berhasil dibuat');
 
 }
 
 
-function addVideoToPlaylist(
-  playlistId,
-  video
-) {
+function addVideoToPlaylist(playlistId, videoOrId) {
 
-  const playlist =
-    playlists.find(
-      p =>
-        p.id ===
-        playlistId
-    );
+  const playlist = playlists.find(p => p.id === playlistId);
+  if (!playlist) return;
 
+  const video = typeof videoOrId === 'string' ? findVideoById(videoOrId) : videoOrId;
+  if (!video) return;
 
-  if (!playlist) {
-    return;
-  }
-
-
-  if (
-    playlist.videos.some(
-      v =>
-        v.id ===
-        video.id
-    )
-  ) {
-
+  if (playlist.videos.some(v => v.id === video.id)) {
     closeBottomSheet();
-
-    showToast(
-      'Video sudah ada di playlist'
-    );
-
+    showToast('Video sudah ada di playlist');
     return;
-
   }
-
 
   playlist.videos.push({
-
     id:video.id,
-
     title:video.title,
-
     channel:video.channel,
-
     thumb:video.thumb
-
   });
 
-
-  writeStorage(
-    STORAGE.playlists,
-    playlists
-  );
-
-
+  writeStorage(STORAGE.playlists, playlists);
   closeBottomSheet();
-
-
-  showToast(
-    `Ditambahkan ke ${playlist.name}`
-  );
+  showToast(`Ditambahkan ke ${playlist.name}`);
 
 }
 
@@ -8116,141 +5859,49 @@ function addVideoToPlaylist(
 
 async function loadMoreRecommendedVideos() {
 
-  if (
-    isLoadingRecMore
-  ) {
-    return;
-  }
+  if (isLoadingRecMore) return;
 
-
-  isLoadingRecMore =
-    true;
-
-
-  document.getElementById(
-    'recLoadingIndicator'
-  ).style.display =
-    'block';
-
+  isLoadingRecMore = true;
+  document.getElementById('recLoadingIndicator').style.display = 'block';
 
   try {
 
-    const query =
-      currentChannelTitle
-      ||
-      'YouTube Trending Indonesia';
+    const query = currentChannelTitle || 'YouTube Trending Indonesia';
 
+    let url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&type=video&q=${encodeURIComponent(query)}&key=${encodeURIComponent(apiKey)}`;
 
-    let url =
-      `https://www.googleapis.com/youtube/v3/search`
-      +
-      `?part=snippet`
-      +
-      `&maxResults=10`
-      +
-      `&type=video`
-      +
-      `&q=${encodeURIComponent(query)}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
-
-
-    if (
-      recNextPageToken
-    ) {
-
-      url +=
-        `&pageToken=${encodeURIComponent(recNextPageToken)}`;
-
+    if (recNextPageToken) {
+      url += `&pageToken=${encodeURIComponent(recNextPageToken)}`;
     }
 
+    const data = await apiFetch(url);
 
-    const data =
-      await apiFetch(
-        url
-      );
+    recNextPageToken = data.nextPageToken || '';
 
+    const ids = (data.items || [])
+      .map(i => i.id.videoId)
+      .filter(Boolean)
+      .filter(id => id !== currentVideoId);
 
-    recNextPageToken =
-      data.nextPageToken || '';
+    if (!ids.length) return;
 
+    const detailUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+    const detailData = await apiFetch(detailUrl);
 
-    const ids =
-      (data.items || [])
-        .map(
-          i =>
-            i.id.videoId
-        )
-        .filter(Boolean)
-        .filter(
-          id =>
-            id !==
-            currentVideoId
-        );
+    let newItems = (detailData.items || [])
+      .map(normalizeVideo)
+      .filter(v => !notInterested.includes(v.id));
 
-
-    if (!ids.length) {
-      return;
-    }
-
-
-    const detailUrl =
-      `https://www.googleapis.com/youtube/v3/videos`
-      +
-      `?part=snippet,contentDetails,statistics`
-      +
-      `&id=${ids.join(',')}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
-
-
-    const detailData =
-      await apiFetch(
-        detailUrl
-      );
-
-
-    let newItems =
-      (detailData.items || [])
-        .map(normalizeVideo)
-        .filter(
-          v =>
-            !notInterested.includes(
-              v.id
-            )
-        );
-
-
-    newItems =
-      await fetchChannelAvatars(
-        newItems
-      );
-
-
-    recommendedList =
-      recommendedList.concat(
-        newItems
-      );
-
+    newItems = await fetchChannelAvatars(newItems);
+    recommendedList = recommendedList.concat(newItems);
 
     renderRecommended();
 
   } catch(error) {
-
-    console.warn(
-      error
-    );
-
+    console.warn(error);
   } finally {
-
-    isLoadingRecMore =
-      false;
-
-    document.getElementById(
-      'recLoadingIndicator'
-    ).style.display =
-      'none';
-
+    isLoadingRecMore = false;
+    document.getElementById('recLoadingIndicator').style.display = 'none';
   }
 
 }
@@ -8258,31 +5909,13 @@ async function loadMoreRecommendedVideos() {
 
 function renderRecommended() {
 
-  const container =
-    document.getElementById(
-      'recommendedFeed'
-    );
-
-
+  const container = document.getElementById('recommendedFeed');
   container.innerHTML = '';
 
-
-  recommendedList.forEach(
-    video => {
-
-      const card =
-        createVideoCard(
-          video,
-          false
-        );
-
-
-      container.appendChild(
-        card
-      );
-
-    }
-  );
+  recommendedList.forEach(video => {
+    const card = createVideoCard(video, false);
+    container.appendChild(card);
+  });
 
 }
 
@@ -8291,589 +5924,188 @@ function renderRecommended() {
    COMMENTS
    ========================================================= */
 
-function toggleCommentsSection(
-  forceState=null
-) {
+function toggleCommentsSection(forceState=null) {
 
-  const body =
-    document.getElementById(
-      'commentsBody'
-    );
+  const body = document.getElementById('commentsBody');
+  const label = document.getElementById('commentsToggleLabel');
+  const icon = document.getElementById('commentsToggleIcon');
 
-
-  const label =
-    document.getElementById(
-      'commentsToggleLabel'
-    );
-
-
-  const icon =
-    document.getElementById(
-      'commentsToggleIcon'
-    );
-
-
-  if (
-    forceState !== null
-  ) {
-
-    isCommentsSectionOpen =
-      forceState;
-
+  if (forceState !== null) {
+    isCommentsSectionOpen = forceState;
   } else {
-
-    isCommentsSectionOpen =
-      !isCommentsSectionOpen;
-
+    isCommentsSectionOpen = !isCommentsSectionOpen;
   }
 
+  if (isCommentsSectionOpen) {
+    body.style.display = 'block';
+    label.textContent = 'Sembunyikan Komentar';
+    icon.className = 'fa-solid fa-chevron-up';
 
-  if (
-    isCommentsSectionOpen
-  ) {
-
-    body.style.display =
-      'block';
-
-    label.textContent =
-      'Sembunyikan Komentar';
-
-    icon.className =
-      'fa-solid fa-chevron-up';
-
-
-    if (
-      currentVideoId
-    ) {
-
-      currentCommentOrder =
-        'relevance';
-
-      fetchVideoComments(
-        currentVideoId,
-        false
-      );
-
+    if (currentVideoId) {
+      currentCommentOrder = 'relevance';
+      fetchVideoComments(currentVideoId, false);
     }
-
   } else {
-
-    body.style.display =
-      'none';
-
-    label.textContent =
-      'Lihat Komentar';
-
-    icon.className =
-      'fa-solid fa-chevron-down';
-
+    body.style.display = 'none';
+    label.textContent = 'Lihat Komentar';
+    icon.className = 'fa-solid fa-chevron-down';
   }
 
 }
 
 
-async function fetchVideoComments(
-  videoId,
-  isAppend=false
-) {
+async function fetchVideoComments(videoId, isAppend=false) {
 
-  const list =
-    document.getElementById(
-      'commentsList'
-    );
-
-
-  const more =
-    document.getElementById(
-      'btnLoadMoreComments'
-    );
-
-
-  const spinner =
-    document.getElementById(
-      'cmtSpinner'
-    );
-
+  const list = document.getElementById('commentsList');
+  const more = document.getElementById('btnLoadMoreComments');
+  const spinner = document.getElementById('cmtSpinner');
 
   if (!isAppend) {
-
-    list.innerHTML =
-      `
-      <p
-        style="
-          font-size:11px;
-          color:var(--yt-text-secondary);
-        ">
-
-        Memuat komentar...
-
-      </p>
-      `;
-
-    commentNextPageToken =
-      '';
-
-    more.style.display =
-      'none';
-
+    list.innerHTML = `<p style="font-size:11px;color:var(--yt-text-secondary);">Memuat komentar...</p>`;
+    commentNextPageToken = '';
+    more.style.display = 'none';
   }
 
-
-  isLoadingComments =
-    true;
-
+  isLoadingComments = true;
 
   try {
 
-    let url =
-      `https://www.googleapis.com/youtube/v3/commentThreads`
-      +
-      `?part=snippet`
-      +
-      `&videoId=${encodeURIComponent(videoId)}`
-      +
-      `&maxResults=15`
-      +
-      `&order=${currentCommentOrder}`
-      +
-      `&key=${encodeURIComponent(apiKey)}`;
+    let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${encodeURIComponent(videoId)}&maxResults=15&order=${currentCommentOrder}&key=${encodeURIComponent(apiKey)}`;
 
-
-    if (
-      isAppend &&
-      commentNextPageToken
-    ) {
-
-      url +=
-        `&pageToken=${encodeURIComponent(commentNextPageToken)}`;
-
+    if (isAppend && commentNextPageToken) {
+      url += `&pageToken=${encodeURIComponent(commentNextPageToken)}`;
     }
 
-
-    const data =
-      await apiFetch(
-        url
-      );
-
+    const data = await apiFetch(url);
 
     if (!isAppend) {
-
       list.innerHTML = '';
-
     }
 
+    commentNextPageToken = data.nextPageToken || '';
 
-    commentNextPageToken =
-      data.nextPageToken || '';
+    if (data.items && data.items.length) {
+      data.items.forEach(item => {
+        const snippet = item.snippet?.topLevelComment?.snippet;
+        if (!snippet) return;
+        renderComment(snippet, list);
+      });
 
-
-    if (
-      data.items &&
-      data.items.length
-    ) {
-
-      data.items.forEach(
-        item => {
-
-          const snippet =
-            item.snippet
-              ?.topLevelComment
-              ?.snippet;
-
-
-          if (!snippet) {
-            return;
-          }
-
-
-          renderComment(
-            snippet,
-            list
-          );
-
-        }
-      );
-
-
-      more.style.display =
-        commentNextPageToken
-          ? 'block'
-          : 'none';
-
+      more.style.display = commentNextPageToken ? 'block' : 'none';
     } else if (!isAppend) {
-
-      list.innerHTML =
-        `
-        <p
-          style="
-            font-size:11px;
-            color:var(--yt-text-secondary);
-          ">
-
-          Belum ada komentar publik.
-
-        </p>
-        `;
-
+      list.innerHTML = `<p style="font-size:11px;color:var(--yt-text-secondary);">Belum ada komentar publik.</p>`;
     }
 
   } catch(error) {
-
-    console.warn(
-      'Comment error',
-      error
-    );
-
+    console.warn('Comment error', error);
 
     if (!isAppend) {
-
-      list.innerHTML =
-        `
-        <p
-          style="
-            font-size:11px;
-            color:var(--yt-text-secondary);
-          ">
-
-          Komentar ditutup atau
-          tidak tersedia.
-
-        </p>
-        `;
-
+      list.innerHTML = `<p style="font-size:11px;color:var(--yt-text-secondary);">Komentar ditutup atau tidak tersedia.</p>`;
     }
-
   } finally {
-
-    isLoadingComments =
-      false;
-
-    spinner.style.display =
-      'none';
-
+    isLoadingComments = false;
+    spinner.style.display = 'none';
   }
 
 }
 
 
-function renderComment(
-  snippet,
-  container
-) {
+function renderComment(snippet, container) {
 
-  const item =
-    document.createElement(
-      'div'
-    );
+  const item = document.createElement('div');
+  item.className = 'comment-item';
 
+  const avatar = snippet.authorProfileImageUrl || 'https://via.placeholder.com/28';
+  const likes = Number(snippet.likeCount || 0);
 
-  item.className =
-    'comment-item';
-
-
-  const avatar =
-    snippet.authorProfileImageUrl
-    ||
-    'https://via.placeholder.com/28';
-
-
-  const likes =
-    Number(
-      snippet.likeCount || 0
-    );
-
-
-  item.innerHTML =
-    `
-
-    <img
-      src="${escapeHTML(avatar)}"
-      class="comment-avatar"
-      loading="lazy"
-      alt="User">
-
-
+  item.innerHTML = `
+    <img src="${escapeHTML(avatar)}" class="comment-avatar" loading="lazy" alt="User">
     <div class="comment-content">
-
       <div class="comment-author">
-
-        ${escapeHTML(
-          snippet.authorDisplayName
-        )}
-
-        <span
-          style="
-            font-weight:400;
-            margin-left:4px;
-          ">
-
-          •
-          ${escapeHTML(
-            formatTimeAgo(
-              snippet.publishedAt
-            )
-          )}
-
-        </span>
-
+        ${escapeHTML(snippet.authorDisplayName)}
+        <span style="font-weight:400;margin-left:4px;">• ${escapeHTML(formatTimeAgo(snippet.publishedAt))}</span>
       </div>
-
 
       <div class="comment-text"></div>
 
-
       <div class="comment-actions">
-
-        <span>
-
-          <i class="fa-regular fa-thumbs-up"></i>
-
-          ${likes
-            ? formatNumber(likes)
-            : ''}
-
-        </span>
-
-
-        <span>
-
-          <i class="fa-regular fa-thumbs-down"></i>
-
-        </span>
-
-
-        <span>
-
-          Balas
-
-        </span>
-
+        <span><i class="fa-regular fa-thumbs-up"></i> ${likes ? formatNumber(likes) : ''}</span>
+        <span><i class="fa-regular fa-thumbs-down"></i></span>
+        <span>Balas</span>
       </div>
-
     </div>
+  `;
 
-    `;
-
-
-  item.querySelector(
-    '.comment-text'
-  ).textContent =
-    snippet.textDisplay
-    ||
-    '';
-
-
-  container.appendChild(
-    item
-  );
+  item.querySelector('.comment-text').textContent = snippet.textDisplay || '';
+  container.appendChild(item);
 
 }
 
 
-function changeCommentFilter(
-  order,
-  element
-) {
+function changeCommentFilter(order, element) {
 
-  document.querySelectorAll(
-    '.comment-filter-btn'
-  ).forEach(
-    btn =>
-      btn.classList.remove(
-        'active'
-      )
-  );
+  document.querySelectorAll('.comment-filter-btn').forEach(btn => btn.classList.remove('active'));
+  element.classList.add('active');
 
-
-  element.classList.add(
-    'active'
-  );
-
-
-  currentCommentOrder =
-    order;
-
-
-  fetchVideoComments(
-    currentVideoId,
-    false
-  );
+  currentCommentOrder = order;
+  fetchVideoComments(currentVideoId, false);
 
 }
 
 
 function loadMoreComments() {
-
-  if (
-    isLoadingComments ||
-    !commentNextPageToken
-  ) {
-
-    return;
-
-  }
-
-
-  fetchVideoComments(
-    currentVideoId,
-    true
-  );
-
+  if (isLoadingComments || !commentNextPageToken) return;
+  fetchVideoComments(currentVideoId, true);
 }
 
 
 function postCustomComment() {
 
-  const input =
-    document.getElementById(
-      'customCommentInput'
-    );
+  const input = document.getElementById('customCommentInput');
+  const text = input.value.trim();
 
+  if (!text) return;
 
-  const text =
-    input.value.trim();
-
-
-  if (!text) {
-    return;
-  }
-
-
-  /*
-    Komentar ini adalah komentar lokal
-    HidaTube, bukan komentar yang dikirim
-    ke akun YouTube resmi.
-  */
-
-
-  const comments =
-    readStorage(
-      STORAGE.comments,
-      {}
-    );
-
+  const comments = readStorage(STORAGE.comments, {});
 
   if (!comments[currentVideoId]) {
-
-    comments[currentVideoId] =
-      [];
-
+    comments[currentVideoId] = [];
   }
 
-
   comments[currentVideoId].unshift({
-
-    id:
-      'local_' +
-      Date.now(),
-
+    id:'local_' + Date.now(),
     text,
-
-    createdAt:
-      Date.now(),
-
-    author:
-      'Pengguna HidaTube'
-
+    createdAt:Date.now(),
+    author:'Pengguna HidaTube'
   });
 
+  writeStorage(STORAGE.comments, comments);
 
-  writeStorage(
-    STORAGE.comments,
-    comments
-  );
+  const list = document.getElementById('commentsList');
+  const item = document.createElement('div');
+  item.className = 'comment-item';
 
-
-  const list =
-    document.getElementById(
-      'commentsList'
-    );
-
-
-  const item =
-    document.createElement(
-      'div'
-    );
-
-
-  item.className =
-    'comment-item';
-
-
-  item.innerHTML =
-    `
-
-    <img
-      src="https://picsum.photos/seed/hidatube-user/28"
-      class="comment-avatar"
-      alt="Anda">
-
-
+  item.innerHTML = `
+    <img src="https://picsum.photos/seed/hidatube-user/28" class="comment-avatar" alt="Anda">
     <div class="comment-content">
-
       <div class="comment-author">
-
         @Pengguna_HidaTube
-        <span
-          style="
-            font-weight:400;
-            margin-left:4px;
-          ">
-
-          • Baru saja
-
-        </span>
-
+        <span style="font-weight:400;margin-left:4px;">• Baru saja</span>
       </div>
-
-
       <div class="comment-text"></div>
-
-
       <div class="comment-actions">
-
-        <span>
-
-          <i class="fa-regular fa-thumbs-up"></i>
-
-        </span>
-
-        <span>
-
-          <i class="fa-regular fa-thumbs-down"></i>
-
-        </span>
-
-        <span>
-
-          Balas
-
-        </span>
-
+        <span><i class="fa-regular fa-thumbs-up"></i></span>
+        <span><i class="fa-regular fa-thumbs-down"></i></span>
+        <span>Balas</span>
       </div>
-
     </div>
+  `;
 
-    `;
-
-
-  item.querySelector(
-    '.comment-text'
-  ).textContent =
-    text;
-
-
-  list.prepend(
-    item
-  );
-
+  item.querySelector('.comment-text').textContent = text;
+  list.prepend(item);
 
   input.value = '';
-
-
-  showToast(
-    'Komentar disimpan di HidaTube'
-  );
+  showToast('Komentar disimpan di HidaTube');
 
 }
 
@@ -8884,29 +6116,14 @@ function postCustomComment() {
 
 function toggleDescription() {
 
-  const box =
-    document.getElementById(
-      'descriptionBox'
-    );
+  const box = document.getElementById('descriptionBox');
+  const button = document.getElementById('descToggleBtn');
 
+  box.classList.toggle('expanded');
 
-  const button =
-    document.getElementById(
-      'descToggleBtn'
-    );
-
-
-  box.classList.toggle(
-    'expanded'
-  );
-
-
-  button.textContent =
-    box.classList.contains(
-      'expanded'
-    )
-      ? 'Tampilkan lebih sedikit'
-      : '...selengkapnya';
+  button.textContent = box.classList.contains('expanded')
+    ? 'Tampilkan lebih sedikit'
+    : '...selengkapnya';
 
 }
 
@@ -8917,59 +6134,24 @@ function toggleDescription() {
 
 async function togglePlayerFullScreen() {
 
-  const element =
-    document.getElementById(
-      'stickyPlayer'
-    );
-
+  const element = document.getElementById('stickyPlayer');
 
   try {
-
-    if (
-      !document.fullscreenElement
-    ) {
-
-      if (
-        element.requestFullscreen
-      ) {
-
+    if (!document.fullscreenElement) {
+      if (element.requestFullscreen) {
         await element.requestFullscreen();
-
       }
-
-      if (
-        screen.orientation?.lock
-      ) {
-
-        screen.orientation
-          .lock('landscape')
-          .catch(
-            () => {}
-          );
-
+      if (screen.orientation?.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
       }
-
     } else {
-
       await document.exitFullscreen();
-
-      if (
-        screen.orientation?.unlock
-      ) {
-
+      if (screen.orientation?.unlock) {
         screen.orientation.unlock();
-
       }
-
     }
-
   } catch(error) {
-
-    console.warn(
-      'Fullscreen',
-      error
-    );
-
+    console.warn('Fullscreen', error);
   }
 
 }
@@ -8981,76 +6163,30 @@ async function togglePlayerFullScreen() {
 
 function minimizePlayer() {
 
-  const player =
-    document.getElementById(
-      'playerView'
-    );
+  const player = document.getElementById('playerView');
 
-
-  if (
-    !player.classList.contains(
-      'active'
-    )
-  ) {
-
-    return;
-
-  }
-
+  if (!player.classList.contains('active')) return;
 
   saveCurrentProgress();
 
-
-  player.style.transform =
-    '';
-
-  player.style.opacity =
-    '';
-
-  player.classList.remove(
-    'dragging'
-  );
-
-  player.classList.add(
-    'minimized'
-  );
+  player.style.transform = '';
+  player.style.opacity = '';
+  player.classList.remove('dragging');
+  player.classList.add('minimized');
 
 }
 
 
 function expandPlayer() {
 
-  const player =
-    document.getElementById(
-      'playerView'
-    );
+  const player = document.getElementById('playerView');
 
+  if (!player.classList.contains('minimized')) return;
 
-  if (
-    !player.classList.contains(
-      'minimized'
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  player.classList.remove(
-    'minimized'
-  );
-
-
-  player.scrollTop =
-    0;
-
-
-  player.style.transform =
-    '';
-
-  player.style.opacity =
-    '';
+  player.classList.remove('minimized');
+  player.scrollTop = 0;
+  player.style.transform = '';
+  player.style.opacity = '';
 
 }
 
@@ -9059,39 +6195,15 @@ function stopAndClosePlayer() {
 
   saveCurrentProgress();
 
-
-  if (
-    ytPlayer &&
-    ytPlayer.stopVideo
-  ) {
-
+  if (ytPlayer && ytPlayer.stopVideo) {
     ytPlayer.stopVideo();
-
   }
 
+  const player = document.getElementById('playerView');
+  player.classList.remove('active', 'minimized', 'dragging');
 
-  const player =
-    document.getElementById(
-      'playerView'
-    );
-
-
-  player.classList.remove(
-    'active',
-    'minimized',
-    'dragging'
-  );
-
-
-  if (
-    document.fullscreenElement
-  ) {
-
-    document.exitFullscreen()
-      .catch(
-        () => {}
-      );
-
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
   }
 
 }
@@ -9099,30 +6211,14 @@ function stopAndClosePlayer() {
 
 function togglePlayPause() {
 
-  if (
-    !ytPlayer
-  ) {
+  if (!ytPlayer) return;
 
-    return;
+  const state = ytPlayer.getPlayerState();
 
-  }
-
-
-  const state =
-    ytPlayer.getPlayerState();
-
-
-  if (
-    state ===
-    YT.PlayerState.PLAYING
-  ) {
-
+  if (state === YT.PlayerState.PLAYING) {
     ytPlayer.pauseVideo();
-
   } else {
-
     ytPlayer.playVideo();
-
   }
 
 }
@@ -9133,178 +6229,62 @@ function togglePlayPause() {
    ========================================================= */
 
 let touchStartY = 0;
-
 let touchCurrentY = 0;
-
 let draggingPlayer = false;
 
 
 function initSwipeGesture() {
 
-  const player =
-    document.getElementById(
-      'playerView'
-    );
-
-
-  const header =
-    document.getElementById(
-      'playerHeaderBar'
-    );
-
+  const player = document.getElementById('playerView');
+  const header = document.getElementById('playerHeaderBar');
 
   function start(event) {
+    if (player.classList.contains('minimized')) return;
+    if (player.scrollTop > 0) return;
 
-    if (
-      player.classList.contains(
-        'minimized'
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      player.scrollTop > 0
-    ) {
-
-      return;
-
-    }
-
-
-    touchStartY =
-      event.touches[0]
-        .clientY;
-
-
-    touchCurrentY =
-      touchStartY;
-
-
-    draggingPlayer =
-      true;
-
+    touchStartY = event.touches[0].clientY;
+    touchCurrentY = touchStartY;
+    draggingPlayer = true;
   }
-
 
   function move(event) {
+    if (!draggingPlayer) return;
 
-    if (!draggingPlayer) {
-      return;
-    }
+    touchCurrentY = event.touches[0].clientY;
+    const delta = touchCurrentY - touchStartY;
 
+    if (delta > 0 && player.scrollTop <= 0) {
+      player.classList.add('dragging');
+      player.style.transform = `translateY(${delta}px)`;
+      player.style.opacity = Math.max(.45, 1 - delta / 450);
 
-    touchCurrentY =
-      event.touches[0]
-        .clientY;
-
-
-    const delta =
-      touchCurrentY -
-      touchStartY;
-
-
-    if (
-      delta > 0 &&
-      player.scrollTop <= 0
-    ) {
-
-      player.classList.add(
-        'dragging'
-      );
-
-
-      player.style.transform =
-        `translateY(${delta}px)`;
-
-
-      player.style.opacity =
-        Math.max(
-          .45,
-          1 -
-          delta / 450
-        );
-
-
-      if (
-        event.cancelable
-      ) {
-
+      if (event.cancelable) {
         event.preventDefault();
-
       }
-
     }
-
   }
-
 
   function end() {
+    if (!draggingPlayer) return;
 
-    if (!draggingPlayer) {
-      return;
-    }
+    draggingPlayer = false;
+    const delta = touchCurrentY - touchStartY;
 
+    player.classList.remove('dragging');
+    player.style.transform = '';
+    player.style.opacity = '';
 
-    draggingPlayer =
-      false;
-
-
-    const delta =
-      touchCurrentY -
-      touchStartY;
-
-
-    player.classList.remove(
-      'dragging'
-    );
-
-
-    player.style.transform =
-      '';
-
-    player.style.opacity =
-      '';
-
-
-    if (
-      delta > 100
-    ) {
-
+    if (delta > 100) {
       minimizePlayer();
-
     }
 
-
-    touchStartY =
-      0;
-
-    touchCurrentY =
-      0;
-
+    touchStartY = 0;
+    touchCurrentY = 0;
   }
 
-
-  header.addEventListener(
-    'touchstart',
-    start,
-    {passive:true}
-  );
-
-  header.addEventListener(
-    'touchmove',
-    move,
-    {passive:false}
-  );
-
-  header.addEventListener(
-    'touchend',
-    end
-  );
-
+  header.addEventListener('touchstart', start, {passive:true});
+  header.addEventListener('touchmove', move, {passive:false});
+  header.addEventListener('touchend', end);
 
 }
 
@@ -9313,153 +6293,61 @@ function initSwipeGesture() {
    NAVIGATION
    ========================================================= */
 
-function switchNav(
-  element,
-  tab
-) {
+function switchNav(element, tab) {
 
-  document.querySelectorAll(
-    '.nav-item'
-  ).forEach(
-    n =>
-      n.classList.remove(
-        'active'
-      )
-  );
-
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 
   if (element) {
-
-    element.classList.add(
-      'active'
-    );
-
+    element.classList.add('active');
   }
 
+  const chips = document.getElementById('chipsWrapper');
+  const sort = document.getElementById('sortFilterBar');
 
-  const chips =
-    document.getElementById(
-      'chipsWrapper'
-    );
+  if (tab === 'beranda') {
+    chips.style.display = 'flex';
+    sort.style.display = 'none';
 
-
-  const sort =
-    document.getElementById(
-      'sortFilterBar'
-    );
-
-
-  if (
-    tab === 'beranda'
-  ) {
-
-    chips.style.display =
-      'flex';
-
-    sort.style.display =
-      'none';
-
-
-    currentMode =
-      'trending';
-
-
+    currentMode = 'trending';
     loadTrendingVideos(
       false,
-      document.getElementById(
-        'chipSemua'
-      ),
+      document.getElementById('chipSemua'),
       false
     );
+  } else if (tab === 'shorts') {
+    chips.style.display = 'none';
+    sort.style.display = 'none';
 
-  }
-
-
-  else if (
-    tab === 'shorts'
-  ) {
-
-    chips.style.display =
-      'none';
-
-    sort.style.display =
-      'none';
-
-
-    const query =
-      getRandomShortsQuery();
-
-
-    executeSearch(
-      query,
-      false
-    );
-
-  }
-
-
-  else if (
-    tab === 'subscription'
-  ) {
-
-    chips.style.display =
-      'none';
-
-    sort.style.display =
-      'none';
-
+    const query = getRandomShortsQuery();
+    executeSearch(query, false);
+  } else if (tab === 'subscription') {
+    chips.style.display = 'none';
+    sort.style.display = 'none';
 
     renderSubscriptionPage();
-
-  }
-
-
-  else if (
-    tab === 'anda'
-  ) {
-
-    chips.style.display =
-      'none';
-
-    sort.style.display =
-      'none';
-
+  } else if (tab === 'anda') {
+    chips.style.display = 'none';
+    sort.style.display = 'none';
 
     renderAndaProfile();
-
   }
 
 }
 
 
 const shortsKeywords = [
-
   'YouTube Shorts Indonesia',
-
   'Shorts Lucu Viral',
-
   'Shorts Gaming Indonesia',
-
   'Shorts Skill Keren',
-
   'Shorts Culinary Food',
-
   'Shorts Otomotif Indonesia',
-
   'Shorts Music Trending'
-
 ];
 
 
 function getRandomShortsQuery() {
-
-  return shortsKeywords[
-    Math.floor(
-      Math.random() *
-      shortsKeywords.length
-    )
-  ];
-
+  return shortsKeywords[Math.floor(Math.random() * shortsKeywords.length)];
 }
 
 
@@ -9471,41 +6359,15 @@ function resetToHome() {
 
   stopAndClosePlayer();
 
+  document.getElementById('chipsWrapper').style.display = 'flex';
+  document.getElementById('sortFilterBar').style.display = 'none';
 
-  document.getElementById(
-    'chipsWrapper'
-  ).style.display =
-    'flex';
-
-
-  document.getElementById(
-    'sortFilterBar'
-  ).style.display =
-    'none';
-
-
-  document.querySelectorAll(
-    '.nav-item'
-  ).forEach(
-    n =>
-      n.classList.remove(
-        'active'
-      )
-  );
-
-
-  document.getElementById(
-    'navBeranda'
-  ).classList.add(
-    'active'
-  );
-
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('navBeranda').classList.add('active');
 
   loadTrendingVideos(
     false,
-    document.getElementById(
-      'chipSemua'
-    ),
+    document.getElementById('chipSemua'),
     false
   );
 
@@ -9518,135 +6380,42 @@ function resetToHome() {
 
 function renderSubscriptionPage() {
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
-
-
-  document.getElementById(
-    'channelHeaderContainer'
-  ).innerHTML = '';
-
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('channelHeaderContainer').innerHTML = '';
 
   if (!subscriptions.length) {
-
-    feed.innerHTML =
-      `
-
+    feed.innerHTML = `
       <div class="empty-state">
-
         <i class="fa-solid fa-layer-group"></i>
-
         <h3>Belum ada Subscription</h3>
-
-        <p>
-          Channel yang Anda ikuti
-          akan muncul di sini.
-        </p>
-
+        <p>Channel yang Anda ikuti akan muncul di sini.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        padding:14px 12px 5px;
-        font-size:14px;
-        font-weight:700;
-      ">
-
+  feed.innerHTML = `
+    <div style="padding:14px 12px 5px;font-size:14px;font-weight:700;">
       Subscription Anda
-
     </div>
 
-
-    <div
-      style="
-        display:flex;
-        gap:10px;
-        overflow-x:auto;
-        padding:8px 12px 15px;
-      ">
-
-      ${subscriptions.map(
-        s => `
-
-          <div
-            style="
-              min-width:78px;
-              text-align:center;
-              cursor:pointer;
-            "
-            onclick="
-              openChannelPage(
-                '${escapeHTML(s.channelId)}',
-                '${escapeHTML(s.channel)}',
-                false
-              );
-            ">
-
-            <img
-              src="${escapeHTML(s.avatar || 'https://via.placeholder.com/60')}"
-              style="
-                width:52px;
-                height:52px;
-                border-radius:50%;
-                object-fit:cover;
-              "
-              loading="lazy"
-              alt="">
-
-            <div
-              style="
-                font-size:9px;
-                margin-top:5px;
-                overflow:hidden;
-                text-overflow:ellipsis;
-                white-space:nowrap;
-              ">
-
+    <div style="display:flex;gap:10px;overflow-x:auto;padding:8px 12px 15px;">
+      ${subscriptions.map(s => `
+          <div style="min-width:78px;text-align:center;cursor:pointer;"
+            onclick="openChannelPage('${escapeHTML(s.channelId)}', '${escapeHTML(s.channel)}', false);">
+            <img src="${escapeHTML(s.avatar || 'https://via.placeholder.com/60')}"
+              style="width:52px;height:52px;border-radius:50%;object-fit:cover;" loading="lazy" alt="">
+            <div style="font-size:9px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               ${escapeHTML(s.channel)}
-
             </div>
-
           </div>
-
-        `
-      ).join('')}
-
+        `).join('')}
     </div>
 
-
-    <div
-      style="
-        padding:3px 12px 10px;
-        font-size:13px;
-        font-weight:700;
-      ">
-
+    <div style="padding:3px 12px 10px;font-size:13px;font-weight:700;">
       Video Channel Anda
-
     </div>
-
-    `;
-
-
-  /*
-    Karena tanpa OAuth / backend,
-    subscription HidaTube bersifat lokal.
-    Kita tetap bisa mengambil video channel
-    yang diikuti secara publik.
-  */
-
+  `;
 
   loadSubscriptionVideos();
 
@@ -9656,138 +6425,46 @@ function renderSubscriptionPage() {
 async function loadSubscriptionVideos() {
 
   try {
+    const targets = subscriptions.slice(0,8);
+    const results = await Promise.all(
+      targets.map(async subscription => {
+        try {
+          const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${encodeURIComponent(subscription.channelId)}&maxResults=5&order=date&type=video&key=${encodeURIComponent(apiKey)}`;
+          const data = await apiFetch(url, `subscription:${subscription.channelId}`);
+          const ids = (data.items || []).map(i => i.id.videoId).filter(Boolean);
+          if (!ids.length) return [];
 
-    const all = [];
-
-
-    for (
-      const subscription
-      of subscriptions.slice(0,8)
-    ) {
-
-      const url =
-        `https://www.googleapis.com/youtube/v3/search`
-        +
-        `?part=snippet`
-        +
-        `&channelId=${encodeURIComponent(subscription.channelId)}`
-        +
-        `&maxResults=5`
-        +
-        `&order=date`
-        +
-        `&type=video`
-        +
-        `&key=${encodeURIComponent(apiKey)}`;
-
-
-      const data =
-        await apiFetch(
-          url,
-          `subscription:${subscription.channelId}`
-        );
-
-
-      const ids =
-        (data.items || [])
-          .map(
-            i =>
-              i.id.videoId
-          )
-          .filter(Boolean);
-
-
-      if (!ids.length) {
-        continue;
-      }
-
-
-      const detailsUrl =
-        `https://www.googleapis.com/youtube/v3/videos`
-        +
-        `?part=snippet,contentDetails,statistics`
-        +
-        `&id=${ids.join(',')}`
-        +
-        `&key=${encodeURIComponent(apiKey)}`;
-
-
-      const detail =
-        await apiFetch(
-          detailsUrl
-        );
-
-
-      all.push(
-        ...(detail.items || [])
-          .map(normalizeVideo)
-      );
-
-    }
-
-
-    all.sort(
-      (a,b) =>
-        new Date(b.publishedAt)
-        -
-        new Date(a.publishedAt)
+          const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${ids.join(',')}&key=${encodeURIComponent(apiKey)}`;
+          const detail = await apiFetch(detailsUrl);
+          return (detail.items || []).map(normalizeVideo);
+        } catch(e) {
+          return [];
+        }
+      })
     );
 
+    const all = results.flat();
+    all.sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-    const feed =
-      document.getElementById(
-        'feedContainer'
-      );
-
-
-    const header =
-      feed.querySelector(
-        'div'
-      );
-
+    const feed = document.getElementById('feedContainer');
 
     if (!all.length) {
-
-      feed.innerHTML +=
-        `
+      feed.innerHTML += `
         <div class="empty-state">
-
           <i class="fa-solid fa-video"></i>
-
           <h3>Belum ada video baru</h3>
-
-          <p>
-            Channel yang Anda ikuti
-            belum memiliki video baru.
-          </p>
-
+          <p>Channel yang Anda ikuti belum memiliki video baru.</p>
         </div>
-        `;
-
+      `;
       return;
-
     }
 
-
-    all.forEach(
-      video => {
-
-        feed.appendChild(
-          createVideoCard(
-            video,
-            false
-          )
-        );
-
-      }
-    );
+    all.forEach(video => {
+      feed.appendChild(createVideoCard(video, false));
+    });
 
   } catch(error) {
-
-    console.warn(
-      error
-    );
-
+    console.warn(error);
   }
 
 }
@@ -9795,16 +6472,8 @@ async function loadSubscriptionVideos() {
 
 function updateSubscriptionPage() {
 
-  if (
-    document.getElementById(
-      'navSubscription'
-    ).classList.contains(
-      'active'
-    )
-  ) {
-
+  if (document.getElementById('navSubscription').classList.contains('active')) {
     renderSubscriptionPage();
-
   }
 
 }
@@ -9816,286 +6485,90 @@ function updateSubscriptionPage() {
 
 function renderAndaProfile() {
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('channelHeaderContainer').innerHTML = '';
 
+  const historyCount = watchHistory.length;
+  const laterCount = watchLater.length;
+  const playlistCount = playlists.length;
+  const likeCount = likedVideos.length;
 
-  document.getElementById(
-    'channelHeaderContainer'
-  ).innerHTML = '';
-
-
-  const historyCount =
-    watchHistory.length;
-
-
-  const laterCount =
-    watchLater.length;
-
-
-  const playlistCount =
-    playlists.length;
-
-
-  const likeCount =
-    likedVideos.length;
-
-
-  feed.innerHTML =
-    `
-
+  feed.innerHTML = `
     <div class="profile-header">
-
-      <div class="profile-avatar">
-
-        <i class="fa-solid fa-user"></i>
-
-      </div>
-
+      <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
       <div>
-
-        <div class="profile-name">
-
-          Pengguna HidaTube
-
-        </div>
-
-        <div class="profile-handle">
-
-          @user-hidatube
-
-        </div>
-
+        <div class="profile-name">Pengguna HidaTube</div>
+        <div class="profile-handle">@user-hidatube</div>
       </div>
-
     </div>
-
 
     <div class="library-menu">
-
-
-      <div
-        class="library-card"
-        onclick="showHistoryPage()">
-
+      <div class="library-card" onclick="showHistoryPage()">
         <i class="fa-solid fa-clock-rotate-left"></i>
-
-        <div class="library-card-title">
-
-          Riwayat
-
-        </div>
-
-        <div class="library-card-count">
-
-          ${historyCount} video
-
-        </div>
-
+        <div class="library-card-title">Riwayat</div>
+        <div class="library-card-count">${historyCount} video</div>
       </div>
 
-
-      <div
-        class="library-card"
-        onclick="showWatchLaterPage()">
-
+      <div class="library-card" onclick="showWatchLaterPage()">
         <i class="fa-solid fa-bookmark"></i>
-
-        <div class="library-card-title">
-
-          Tonton Nanti
-
-        </div>
-
-        <div class="library-card-count">
-
-          ${laterCount} video
-
-        </div>
-
+        <div class="library-card-title">Tonton Nanti</div>
+        <div class="library-card-count">${laterCount} video</div>
       </div>
 
-
-      <div
-        class="library-card"
-        onclick="showLikedPage()">
-
+      <div class="library-card" onclick="showLikedPage()">
         <i class="fa-solid fa-thumbs-up"></i>
-
-        <div class="library-card-title">
-
-          Disukai
-
-        </div>
-
-        <div class="library-card-count">
-
-          ${likeCount} video
-
-        </div>
-
+        <div class="library-card-title">Disukai</div>
+        <div class="library-card-count">${likeCount} video</div>
       </div>
 
-
-      <div
-        class="library-card"
-        onclick="showPlaylistPage()">
-
+      <div class="library-card" onclick="showPlaylistPage()">
         <i class="fa-solid fa-list"></i>
-
-        <div class="library-card-title">
-
-          Playlist
-
-        </div>
-
-        <div class="library-card-count">
-
-          ${playlistCount} playlist
-
-        </div>
-
+        <div class="library-card-title">Playlist</div>
+        <div class="library-card-count">${playlistCount} playlist</div>
       </div>
 
-
-      <div
-        class="library-card"
-        onclick="showSettings()">
-
+      <div class="library-card" onclick="showSettings()">
         <i class="fa-solid fa-gear"></i>
-
-        <div class="library-card-title">
-
-          Pengaturan
-
-        </div>
-
-        <div class="library-card-count">
-
-          Tampilan & Data
-
-        </div>
-
+        <div class="library-card-title">Pengaturan</div>
+        <div class="library-card-count">Tampilan & Data</div>
       </div>
 
-
-      <div
-        class="library-card"
-        onclick="showDataCenter()">
-
+      <div class="library-card" onclick="showDataCenter()">
         <i class="fa-solid fa-database"></i>
-
-        <div class="library-card-title">
-
-          Data Saya
-
-        </div>
-
-        <div class="library-card-count">
-
-          Backup & Privasi
-
-        </div>
-
+        <div class="library-card-title">Data Saya</div>
+        <div class="library-card-count">Backup & Privasi</div>
       </div>
-
     </div>
 
-
-    ${
-      watchHistory.length
-      ?
-      `
-      <div
-        style="
-          padding:5px 12px 8px;
-          font-size:14px;
-          font-weight:700;
-        ">
-
+    ${watchHistory.length ? `
+      <div style="padding:5px 12px 8px;font-size:14px;font-weight:700;">
         Riwayat Terakhir
-
       </div>
-      `
-      :
-      ''
-    }
+    ` : ''}
+  `;
 
-    `;
+  if (watchHistory.length) {
+    const history = watchHistory.slice(0,8);
 
+    history.forEach(item => {
+      const video = document.createElement('div');
+      video.className = 'video-card';
+      video.onclick = () => playVideo(item.id);
 
-  if (
-    watchHistory.length
-  ) {
-
-    const history =
-      watchHistory
-        .slice(0,8);
-
-
-    history.forEach(
-      item => {
-
-        const video =
-          document.createElement(
-            'div'
-          );
-
-
-        video.className =
-          'video-card';
-
-
-        video.onclick =
-          () =>
-            playVideo(item.id);
-
-
-        video.innerHTML =
-          `
-
-          <div class="thumbnail-box">
-
-            <img
-              src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}"
-              loading="lazy"
-              alt="">
-
+      video.innerHTML = `
+        <div class="thumbnail-box">
+          <img src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}" loading="lazy" alt="">
+        </div>
+        <div class="video-meta">
+          <div class="meta-details">
+            <div class="meta-title">${escapeHTML(item.title)}</div>
+            <div class="meta-sub">${escapeHTML(item.channel)}</div>
           </div>
+        </div>
+      `;
 
-
-          <div class="video-meta">
-
-            <div class="meta-details">
-
-              <div class="meta-title">
-
-                ${escapeHTML(item.title)}
-
-              </div>
-
-              <div class="meta-sub">
-
-                ${escapeHTML(item.channel)}
-
-              </div>
-
-            </div>
-
-          </div>
-
-          `;
-
-
-        feed.appendChild(
-          video
-        );
-
-      }
-    );
-
+      feed.appendChild(video);
+    });
   }
 
 }
@@ -10109,180 +6582,60 @@ function showHistoryPage() {
 
   closeModal();
 
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('channelHeaderContainer').innerHTML = '';
+  document.getElementById('chipsWrapper').style.display = 'none';
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
-
-
-  document.getElementById(
-    'channelHeaderContainer'
-  ).innerHTML = '';
-
-
-  document.getElementById(
-    'chipsWrapper'
-  ).style.display =
-    'none';
-
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        padding:15px 12px;
-      ">
-
-      <h2 style="font-size:16px;">
-
-        Riwayat Tontonan
-
-      </h2>
-
-      <button
-        onclick="clearWatchHistory()"
-        style="
-          background:none;
-          color:var(--yt-red);
-          font-size:10px;
-          cursor:pointer;
-        ">
-
+  feed.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 12px;">
+      <h2 style="font-size:16px;">Riwayat Tontonan</h2>
+      <button onclick="clearWatchHistory()" style="background:none;color:var(--yt-red);font-size:10px;cursor:pointer;">
         Hapus Semua
-
       </button>
-
     </div>
-
-    `;
-
+  `;
 
   if (!watchHistory.length) {
-
-    feed.innerHTML +=
-      `
-
+    feed.innerHTML += `
       <div class="empty-state">
-
         <i class="fa-solid fa-clock-rotate-left"></i>
-
         <h3>Riwayat kosong</h3>
-
-        <p>
-          Video yang Anda tonton
-          akan muncul di sini.
-        </p>
-
+        <p>Video yang Anda tonton akan muncul di sini.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
+  watchHistory.forEach(item => {
+    const video = document.createElement('div');
+    video.className = 'video-card';
+    video.onclick = () => playVideo(item.id);
 
-  watchHistory.forEach(
-    item => {
+    const progress = watchProgress[item.id];
+    const percent = progress?.duration
+      ? Math.min(100, (progress.seconds / progress.duration) * 100)
+      : 0;
 
-      const video =
-        document.createElement(
-          'div'
-        );
-
-
-      video.className =
-        'video-card';
-
-
-      video.onclick =
-        () =>
-          playVideo(item.id);
-
-
-      const progress =
-        watchProgress[
-          item.id
-        ];
-
-
-      const percent =
-        progress?.duration
-          ?
-          Math.min(
-            100,
-            progress.seconds /
-            progress.duration *
-            100
-          )
-          :
-          0;
-
-
-      video.innerHTML =
-        `
-
-        <div class="thumbnail-box">
-
-          <img
-            src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}"
-            loading="lazy"
-            alt="">
-
-          ${
-            percent > 1
-            ?
-            `
-            <div class="progress-track">
-
-              <div
-                class="progress-value"
-                style="width:${percent}%">
-              </div>
-
-            </div>
-            `
-            :
-            ''
-          }
-
-        </div>
-
-
-        <div class="video-meta">
-
-          <div class="meta-details">
-
-            <div class="meta-title">
-
-              ${escapeHTML(item.title)}
-
-            </div>
-
-            <div class="meta-sub">
-
-              ${escapeHTML(item.channel)}
-
-            </div>
-
+    video.innerHTML = `
+      <div class="thumbnail-box">
+        <img src="${escapeHTML(item.thumb || `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`)}" loading="lazy" alt="">
+        ${percent > 1 ? `
+          <div class="progress-track">
+            <div class="progress-value" style="width:${percent}%"></div>
           </div>
+        ` : ''}
+      </div>
 
+      <div class="video-meta">
+        <div class="meta-details">
+          <div class="meta-title">${escapeHTML(item.title)}</div>
+          <div class="meta-sub">${escapeHTML(item.channel)}</div>
         </div>
+      </div>
+    `;
 
-        `;
-
-
-      feed.appendChild(
-        video
-      );
-
-    }
-  );
+    feed.appendChild(video);
+  });
 
 }
 
@@ -10290,28 +6643,13 @@ function showHistoryPage() {
 function clearWatchHistory() {
 
   watchHistory = [];
-
   watchProgress = {};
 
-  writeStorage(
-    STORAGE.history,
-    []
-  );
-
-  writeStorage(
-    STORAGE.progress,
-    {}
-  );
-
+  writeStorage(STORAGE.history, []);
+  writeStorage(STORAGE.progress, {});
 
   renderContinueWatching();
-
-
-  showToast(
-    'Riwayat tontonan dihapus'
-  );
-
-
+  showToast('Riwayat tontonan dihapus');
   showHistoryPage();
 
 }
@@ -10325,121 +6663,45 @@ function showWatchLaterPage() {
 
   closeModal();
 
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('chipsWrapper').style.display = 'none';
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
-
-
-  document.getElementById(
-    'chipsWrapper'
-  ).style.display =
-    'none';
-
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        padding:15px 12px;
-        font-size:16px;
-        font-weight:700;
-      ">
-
+  feed.innerHTML = `
+    <div style="padding:15px 12px;font-size:16px;font-weight:700;">
       Tonton Nanti
-
     </div>
-
-    `;
-
+  `;
 
   if (!watchLater.length) {
-
-    feed.innerHTML +=
-      `
-
+    feed.innerHTML += `
       <div class="empty-state">
-
         <i class="fa-solid fa-bookmark"></i>
-
         <h3>Belum ada video</h3>
-
-        <p>
-          Simpan video untuk
-          ditonton nanti.
-        </p>
-
+        <p>Simpan video untuk ditonton nanti.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
+  watchLater.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.onclick = () => playVideo(item.id);
 
-  watchLater.forEach(
-    item => {
-
-      const card =
-        document.createElement(
-          'div'
-        );
-
-
-      card.className =
-        'video-card';
-
-
-      card.onclick =
-        () =>
-          playVideo(item.id);
-
-
-      card.innerHTML =
-        `
-
-        <div class="thumbnail-box">
-
-          <img
-            src="${escapeHTML(item.thumb)}"
-            loading="lazy"
-            alt="">
-
+    card.innerHTML = `
+      <div class="thumbnail-box">
+        <img src="${escapeHTML(item.thumb)}" loading="lazy" alt="">
+      </div>
+      <div class="video-meta">
+        <div class="meta-details">
+          <div class="meta-title">${escapeHTML(item.title)}</div>
+          <div class="meta-sub">${escapeHTML(item.channel)}</div>
         </div>
+      </div>
+    `;
 
-
-        <div class="video-meta">
-
-          <div class="meta-details">
-
-            <div class="meta-title">
-
-              ${escapeHTML(item.title)}
-
-            </div>
-
-            <div class="meta-sub">
-
-              ${escapeHTML(item.channel)}
-
-            </div>
-
-          </div>
-
-        </div>
-
-        `;
-
-
-      feed.appendChild(
-        card
-      );
-
-    }
-  );
+    feed.appendChild(card);
+  });
 
 }
 
@@ -10450,81 +6712,31 @@ function showWatchLaterPage() {
 
 async function showLikedPage() {
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('chipsWrapper').style.display = 'none';
 
-
-  document.getElementById(
-    'chipsWrapper'
-  ).style.display =
-    'none';
-
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        padding:15px 12px;
-        font-size:16px;
-        font-weight:700;
-      ">
-
+  feed.innerHTML = `
+    <div style="padding:15px 12px;font-size:16px;font-weight:700;">
       Video Disukai
-
     </div>
+  `;
 
-    `;
-
-
-  const known =
-    videoList.filter(
-      v =>
-        likedVideos.includes(
-          v.id
-        )
-    );
-
+  const known = videoList.filter(v => likedVideos.includes(v.id));
 
   if (!known.length) {
-
-    feed.innerHTML +=
-      `
-
+    feed.innerHTML += `
       <div class="empty-state">
-
         <i class="fa-solid fa-thumbs-up"></i>
-
         <h3>Belum ada video disukai</h3>
-
-        <p>
-          Video yang Anda like
-          akan muncul di sini.
-        </p>
-
+        <p>Video yang Anda like akan muncul di sini.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
-
-  known.forEach(
-    video => {
-
-      feed.appendChild(
-        createVideoCard(
-          video,
-          false
-        )
-      );
-
-    }
-  );
+  known.forEach(video => {
+    feed.appendChild(createVideoCard(video, false));
+  });
 
 }
 
@@ -10535,286 +6747,87 @@ async function showLikedPage() {
 
 function showPlaylistPage() {
 
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
+  const feed = document.getElementById('feedContainer');
+  document.getElementById('chipsWrapper').style.display = 'none';
 
-
-  document.getElementById(
-    'chipsWrapper'
-  ).style.display =
-    'none';
-
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        padding:15px 12px;
-      ">
-
-      <div
-        style="
-          font-size:16px;
-          font-weight:700;
-        ">
-
-        Playlist
-
-      </div>
-
-
-      <button
-        onclick="createPlaylist()"
-        style="
-          background:none;
-          color:var(--yt-red);
-          font-size:11px;
-          cursor:pointer;
-        ">
-
+  feed.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:15px 12px;">
+      <div style="font-size:16px;font-weight:700;">Playlist</div>
+      <button onclick="createPlaylist()" style="background:none;color:var(--yt-red);font-size:11px;cursor:pointer;">
         + Buat
-
       </button>
-
     </div>
-
-    `;
-
+  `;
 
   if (!playlists.length) {
-
-    feed.innerHTML +=
-      `
-
+    feed.innerHTML += `
       <div class="empty-state">
-
         <i class="fa-solid fa-list"></i>
-
         <h3>Belum ada playlist</h3>
-
-        <p>
-          Buat playlist untuk
-          mengelompokkan video.
-        </p>
-
+        <p>Buat playlist untuk mengelompokkan video.</p>
       </div>
-
-      `;
-
+    `;
     return;
-
   }
 
+  playlists.forEach(playlist => {
+    const item = document.createElement('div');
+    item.className = 'playlist-item';
 
-  playlists.forEach(
-    playlist => {
+    item.innerHTML = `
+      <div class="playlist-icon"><i class="fa-solid fa-list"></i></div>
+      <div class="playlist-info">
+        <div class="playlist-name">${escapeHTML(playlist.name)}</div>
+        <div class="playlist-count">${playlist.videos.length} video</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="color:var(--yt-text-secondary);font-size:11px;"></i>
+    `;
 
-      const item =
-        document.createElement(
-          'div'
-        );
-
-
-      item.className =
-        'playlist-item';
-
-
-      item.innerHTML =
-        `
-
-        <div class="playlist-icon">
-
-          <i class="fa-solid fa-list"></i>
-
-        </div>
-
-
-        <div class="playlist-info">
-
-          <div class="playlist-name">
-
-            ${escapeHTML(playlist.name)}
-
-          </div>
-
-          <div class="playlist-count">
-
-            ${playlist.videos.length}
-            video
-
-          </div>
-
-        </div>
-
-
-        <i
-          class="fa-solid fa-chevron-right"
-          style="
-            color:var(--yt-text-secondary);
-            font-size:11px;
-          ">
-        </i>
-
-        `;
-
-
-      item.onclick =
-        () =>
-          showPlaylistDetail(
-            playlist.id
-          );
-
-
-      feed.appendChild(
-        item
-      );
-
-    }
-  );
+    item.onclick = () => showPlaylistDetail(playlist.id);
+    feed.appendChild(item);
+  });
 
 }
 
 
-function showPlaylistDetail(
-  playlistId
-) {
+function showPlaylistDetail(playlistId) {
 
-  const playlist =
-    playlists.find(
-      p =>
-        p.id ===
-        playlistId
-    );
+  const playlist = playlists.find(p => p.id === playlistId);
+  if (!playlist) return;
 
+  const feed = document.getElementById('feedContainer');
 
-  if (!playlist) {
-    return;
-  }
-
-
-  const feed =
-    document.getElementById(
-      'feedContainer'
-    );
-
-
-  feed.innerHTML =
-    `
-
-    <div
-      style="
-        display:flex;
-        align-items:center;
-        gap:10px;
-        padding:15px 12px;
-      ">
-
-      <button
-        class="icon-btn"
-        onclick="showPlaylistPage()">
-
+  feed.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:15px 12px;">
+      <button class="icon-btn" onclick="showPlaylistPage()">
         <i class="fa-solid fa-arrow-left"></i>
-
       </button>
-
-
       <div>
-
-        <div
-          style="
-            font-size:16px;
-            font-weight:700;
-          ">
-
-          ${escapeHTML(playlist.name)}
-
-        </div>
-
-        <div
-          style="
-            font-size:10px;
-            color:var(--yt-text-secondary);
-          ">
-
-          ${playlist.videos.length} video
-
-        </div>
-
+        <div style="font-size:16px;font-weight:700;">${escapeHTML(playlist.name)}</div>
+        <div style="font-size:10px;color:var(--yt-text-secondary);">${playlist.videos.length} video</div>
       </div>
-
     </div>
+  `;
 
+  playlist.videos.forEach(video => {
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.onclick = () => playVideo(video.id);
+
+    card.innerHTML = `
+      <div class="thumbnail-box">
+        <img src="${escapeHTML(video.thumb)}" loading="lazy" alt="">
+      </div>
+      <div class="video-meta">
+        <div class="meta-details">
+          <div class="meta-title">${escapeHTML(video.title)}</div>
+          <div class="meta-sub">${escapeHTML(video.channel)}</div>
+        </div>
+      </div>
     `;
 
-
-  playlist.videos.forEach(
-    video => {
-
-      const card =
-        document.createElement(
-          'div'
-        );
-
-
-      card.className =
-        'video-card';
-
-
-      card.onclick =
-        () =>
-          playVideo(
-            video.id
-          );
-
-
-      card.innerHTML =
-        `
-
-        <div class="thumbnail-box">
-
-          <img
-            src="${escapeHTML(video.thumb)}"
-            loading="lazy"
-            alt="">
-
-        </div>
-
-
-        <div class="video-meta">
-
-          <div class="meta-details">
-
-            <div class="meta-title">
-
-              ${escapeHTML(video.title)}
-
-            </div>
-
-            <div class="meta-sub">
-
-              ${escapeHTML(video.channel)}
-
-            </div>
-
-          </div>
-
-        </div>
-
-        `;
-
-
-      feed.appendChild(
-        card
-      );
-
-    }
-  );
+    feed.appendChild(card);
+  });
 
 }
 
@@ -10828,189 +6841,62 @@ function showSettings() {
   openModal(
     'Pengaturan HidaTube',
     `
-
     <div class="settings-section">
-
-      <div class="settings-section-title">
-        Tampilan
-      </div>
-
-
+      <div class="settings-section-title">Tampilan</div>
       <div class="theme-options">
-
-        <div
-          class="theme-option ${appSettings.theme === 'dark' ? 'active':''}"
-          onclick="setTheme('dark')">
-
-          <i class="fa-solid fa-moon"></i>
-
-          <br>
-
-          Gelap
-
+        <div class="theme-option ${appSettings.theme === 'dark' ? 'active':''}" onclick="setTheme('dark')">
+          <i class="fa-solid fa-moon"></i><br>Gelap
         </div>
-
-
-        <div
-          class="theme-option ${appSettings.theme === 'light' ? 'active':''}"
-          onclick="setTheme('light')">
-
-          <i class="fa-solid fa-sun"></i>
-
-          <br>
-
-          Terang
-
+        <div class="theme-option ${appSettings.theme === 'light' ? 'active':''}" onclick="setTheme('light')">
+          <i class="fa-solid fa-sun"></i><br>Terang
         </div>
-
-
-        <div
-          class="theme-option ${appSettings.theme === 'system' ? 'active':''}"
-          onclick="setTheme('system')">
-
-          <i class="fa-solid fa-circle-half-stroke"></i>
-
-          <br>
-
-          Sistem
-
+        <div class="theme-option ${appSettings.theme === 'system' ? 'active':''}" onclick="setTheme('system')">
+          <i class="fa-solid fa-circle-half-stroke"></i><br>Sistem
         </div>
-
       </div>
-
     </div>
 
-
     <div class="settings-section">
-
-      <div class="settings-section-title">
-        Pemutaran
-      </div>
-
-
-      ${settingRow(
-        'Autoplay Video Berikutnya',
-        'Putar video berikutnya secara otomatis',
-        'autoplayNext'
-      )}
-
-
-      ${settingRow(
-        'Hemat Data',
-        'Kurangi beban gambar dan request',
-        'dataSaver'
-      )}
-
+      <div class="settings-section-title">Pemutaran</div>
+      ${settingRow('Autoplay Video Berikutnya', 'Putar video berikutnya secara otomatis', 'autoplayNext')}
+      ${settingRow('Hemat Data', 'Kurangi beban gambar dan request', 'dataSaver')}
     </div>
 
-
     <div class="settings-section">
-
-      <div class="settings-section-title">
-        Riwayat
-      </div>
-
-
-      ${settingRow(
-        'Simpan Riwayat Tontonan',
-        'Simpan video yang Anda tonton di perangkat',
-        'saveHistory'
-      )}
-
-
-      ${settingRow(
-        'Simpan Riwayat Pencarian',
-        'Simpan pencarian terbaru',
-        'saveSearchHistory'
-      )}
-
+      <div class="settings-section-title">Riwayat</div>
+      ${settingRow('Simpan Riwayat Tontonan', 'Simpan video yang Anda tonton di perangkat', 'saveHistory')}
+      ${settingRow('Simpan Riwayat Pencarian', 'Simpan pencarian terbaru', 'saveSearchHistory')}
     </div>
 
-
     <div class="settings-section">
-
-      <div class="settings-section-title">
-        Data
-      </div>
-
-
-      <button
-        class="sheet-item"
-        onclick="showDataCenter()">
-
-        <i class="fa-solid fa-database"></i>
-
-        Pusat Data & Backup
-
+      <div class="settings-section-title">Data</div>
+      <button class="sheet-item" onclick="showDataCenter()">
+        <i class="fa-solid fa-database"></i> Pusat Data & Backup
       </button>
-
-
-      <button
-        class="sheet-item"
-        onclick="clearApiCache()">
-
-        <i class="fa-solid fa-broom"></i>
-
-        Bersihkan Cache
-
+      <button class="sheet-item" onclick="clearApiCache()">
+        <i class="fa-solid fa-broom"></i> Bersihkan Cache
       </button>
-
     </div>
 
-
-    <div
-      style="
-        text-align:center;
-        padding-top:10px;
-        color:var(--yt-text-secondary);
-        font-size:9px;
-      ">
-
+    <div style="text-align:center;padding-top:10px;color:var(--yt-text-secondary);font-size:9px;">
       HidaTube V2 • Local-first
-
     </div>
-
     `
   );
 
 }
 
 
-function settingRow(
-  name,
-  description,
-  key
-) {
+function settingRow(name, description, key) {
 
   return `
-
     <div class="settings-row">
-
       <div class="settings-info">
-
-        <div class="settings-name">
-
-          ${escapeHTML(name)}
-
-        </div>
-
-        <div class="settings-description">
-
-          ${escapeHTML(description)}
-
-        </div>
-
+        <div class="settings-name">${escapeHTML(name)}</div>
+        <div class="settings-description">${escapeHTML(description)}</div>
       </div>
-
-
-      <div
-        class="switch ${appSettings[key] ? 'active':''}"
-        onclick="toggleSetting('${key}')">
-
-      </div>
-
+      <div class="switch ${appSettings[key] ? 'active':''}" onclick="toggleSetting('${key}')"></div>
     </div>
-
   `;
 
 }
@@ -11018,90 +6904,35 @@ function settingRow(
 
 function toggleSetting(key) {
 
-  appSettings[key] =
-    !appSettings[key];
+  appSettings[key] = !appSettings[key];
 
-
-  writeStorage(
-    STORAGE.settings,
-    appSettings
-  );
-
-
+  writeStorage(STORAGE.settings, appSettings);
   applySettings();
 
-
-  const modal =
-    document.getElementById(
-      'modalBackdrop'
-    );
-
-
-  if (
-    modal.classList.contains(
-      'active'
-    )
-  ) {
-
+  const modal = document.getElementById('modalBackdrop');
+  if (modal.classList.contains('active')) {
     showSettings();
-
   }
 
-
-  showToast(
-    `${key} ${appSettings[key] ? 'aktif' : 'nonaktif'}`
-  );
+  showToast(`${key} ${appSettings[key] ? 'aktif' : 'nonaktif'}`);
 
 }
 
 
 function applySettings() {
 
-  let theme =
-    appSettings.theme;
+  let theme = appSettings.theme;
 
-
-  if (
-    theme === 'system'
-  ) {
-
-    theme =
-      window.matchMedia(
-        '(prefers-color-scheme: light)'
-      ).matches
-        ? 'light'
-        : 'dark';
-
+  if (theme === 'system') {
+    theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 
+  document.body.classList.toggle('light-theme', theme === 'light');
+  document.documentElement.style.setProperty('--accent', appSettings.accent);
 
-  document.body.classList.toggle(
-    'light-theme',
-    theme === 'light'
-  );
-
-
-  document.documentElement
-    .style
-    .setProperty(
-      '--accent',
-      appSettings.accent
-    );
-
-
-  const switchElement =
-    document.getElementById(
-      'autoplayMiniSwitch'
-    );
-
-
+  const switchElement = document.getElementById('autoplayMiniSwitch');
   if (switchElement) {
-
-    switchElement.classList.toggle(
-      'active',
-      appSettings.autoplayNext
-    );
-
+    switchElement.classList.toggle('active', appSettings.autoplayNext);
   }
 
 }
@@ -11109,18 +6940,10 @@ function applySettings() {
 
 function setTheme(theme) {
 
-  appSettings.theme =
-    theme;
-
-
-  writeStorage(
-    STORAGE.settings,
-    appSettings
-  );
-
+  appSettings.theme = theme;
+  writeStorage(STORAGE.settings, appSettings);
 
   applySettings();
-
   showSettings();
 
 }
@@ -11134,98 +6957,36 @@ function showDataCenter() {
 
   closeModal();
 
-
   openModal(
     'Data & Privasi',
     `
-
     <div class="settings-section">
-
-      <div class="settings-section-title">
-        Data Lokal
+      <div class="settings-section-title">Data Lokal</div>
+      <div style="background:var(--yt-paper-2);border-radius:12px;padding:12px;font-size:10px;line-height:1.6;color:var(--yt-text-secondary);">
+        HidaTube menyimpan history, playlist, subscription dan pengaturan secara lokal di perangkat ini.
       </div>
-
-
-      <div
-        style="
-          background:var(--yt-paper-2);
-          border-radius:12px;
-          padding:12px;
-          font-size:10px;
-          line-height:1.6;
-          color:var(--yt-text-secondary);
-        ">
-
-        HidaTube menyimpan history,
-        playlist, subscription dan
-        pengaturan secara lokal
-        di perangkat ini.
-
-      </div>
-
     </div>
 
-
-    <button
-      class="sheet-item"
-      onclick="exportHidaTubeData()">
-
-      <i class="fa-solid fa-file-export"></i>
-
-      Export Data
-
+    <button class="sheet-item" onclick="exportHidaTubeData()">
+      <i class="fa-solid fa-file-export"></i> Export Data
     </button>
 
-
-    <label
-      class="sheet-item">
-
-      <i class="fa-solid fa-file-import"></i>
-
-      Import Data
-
-      <input
-        type="file"
-        accept=".json,application/json"
-        onchange="importHidaTubeData(event)"
-        style="display:none;">
-
+    <label class="sheet-item">
+      <i class="fa-solid fa-file-import"></i> Import Data
+      <input type="file" accept=".json,application/json" onchange="importHidaTubeData(event)" style="display:none;">
     </label>
 
-
-    <button
-      class="sheet-item"
-      onclick="clearSearchHistory()">
-
-      <i class="fa-solid fa-magnifying-glass"></i>
-
-      Hapus Riwayat Pencarian
-
+    <button class="sheet-item" onclick="clearSearchHistory()">
+      <i class="fa-solid fa-magnifying-glass"></i> Hapus Riwayat Pencarian
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="clearWatchHistory()">
-
-      <i class="fa-solid fa-clock-rotate-left"></i>
-
-      Hapus Riwayat Tontonan
-
+    <button class="sheet-item" onclick="clearWatchHistory()">
+      <i class="fa-solid fa-clock-rotate-left"></i> Hapus Riwayat Tontonan
     </button>
 
-
-    <button
-      class="sheet-item"
-      style="color:#ff5555;"
-      onclick="clearAllHidaTubeData()">
-
-      <i class="fa-solid fa-trash"></i>
-
-      Hapus Semua Data HidaTube
-
+    <button class="sheet-item" style="color:#ff5555;" onclick="clearAllHidaTubeData()">
+      <i class="fa-solid fa-trash"></i> Hapus Semua Data HidaTube
     </button>
-
     `
   );
 
@@ -11235,384 +6996,140 @@ function showDataCenter() {
 function exportHidaTubeData() {
 
   const data = {
-
     version:2,
-
-    exportedAt:
-      new Date().toISOString(),
-
-    history:
-      watchHistory,
-
-    progress:
-      watchProgress,
-
+    exportedAt:new Date().toISOString(),
+    history:watchHistory,
+    progress:watchProgress,
     searchHistory,
-
     watchLater,
-
     playlists,
-
     subscriptions,
-
     likedVideos,
-
     dislikedVideos,
-
     notInterested,
-
-    settings:
-      appSettings
-
+    settings:appSettings
   };
 
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
 
-  const blob =
-    new Blob(
-      [
-        JSON.stringify(
-          data,
-          null,
-          2
-        )
-      ],
-      {
-        type:'application/json'
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const a =
-    document.createElement(
-      'a'
-    );
-
-
-  a.href =
-    url;
-
-  a.download =
-    `hidatube-backup-${new Date().toISOString().slice(0,10)}.json`;
-
-
+  a.href = url;
+  a.download = `hidatube-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 
-
-  URL.revokeObjectURL(
-    url
-  );
-
-
-  showToast(
-    'Backup berhasil dibuat'
-  );
+  URL.revokeObjectURL(url);
+  showToast('Backup berhasil dibuat');
 
 }
 
 
-function importHidaTubeData(
-  event
-) {
-
-  const file =
-    event.target.files?.[0];
-
-
-  if (!file) {
-    return;
-  }
-
-
-  const reader =
-    new FileReader();
-
-
-  reader.onload =
-    function() {
-
-      try {
-
-        const data =
-          JSON.parse(
-            reader.result
-          );
-
-
-        if (
-          data.history
-        ) {
-
-          watchHistory =
-            data.history;
-
-          writeStorage(
-            STORAGE.history,
-            watchHistory
-          );
-
-        }
-
-
-        if (
-          data.progress
-        ) {
-
-          watchProgress =
-            data.progress;
-
-          writeStorage(
-            STORAGE.progress,
-            watchProgress
-          );
-
-        }
-
-
-        if (
-          data.searchHistory
-        ) {
-
-          searchHistory =
-            data.searchHistory;
-
-          writeStorage(
-            STORAGE.search,
-            searchHistory
-          );
-
-        }
-
-
-        if (
-          data.watchLater
-        ) {
-
-          watchLater =
-            data.watchLater;
-
-          writeStorage(
-            STORAGE.watchLater,
-            watchLater
-          );
-
-        }
-
-
-        if (
-          data.playlists
-        ) {
-
-          playlists =
-            data.playlists;
-
-          writeStorage(
-            STORAGE.playlists,
-            playlists
-          );
-
-        }
-
-
-        if (
-          data.subscriptions
-        ) {
-
-          subscriptions =
-            data.subscriptions;
-
-          writeStorage(
-            STORAGE.subscriptions,
-            subscriptions
-          );
-
-        }
-
-
-        if (
-          data.likedVideos
-        ) {
-
-          likedVideos =
-            data.likedVideos;
-
-          writeStorage(
-            STORAGE.likes,
-            likedVideos
-          );
-
-        }
-
-
-        if (
-          data.dislikedVideos
-        ) {
-
-          dislikedVideos =
-            data.dislikedVideos;
-
-          writeStorage(
-            STORAGE.dislikes,
-            dislikedVideos
-          );
-
-        }
-
-
-        if (
-          data.notInterested
-        ) {
-
-          notInterested =
-            data.notInterested;
-
-          writeStorage(
-            STORAGE.notInterested,
-            notInterested
-          );
-
-        }
-
-
-        if (
-          data.settings
-        ) {
-
-          appSettings =
-            {
-              ...appSettings,
-              ...data.settings
-            };
-
-          writeStorage(
-            STORAGE.settings,
-            appSettings
-          );
-
-        }
-
-
-        applySettings();
-
-        renderContinueWatching();
-
-        closeModal();
-
-
-        showToast(
-          'Data berhasil diimport'
-        );
-
-
-      } catch(error) {
-
-        showToast(
-          'File backup tidak valid',
-          'error'
-        );
-
+function importHidaTubeData(event) {
+
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function() {
+    try {
+      const data = JSON.parse(reader.result);
+
+      if (data.history) {
+        watchHistory = data.history;
+        writeStorage(STORAGE.history, watchHistory);
+      }
+      if (data.progress) {
+        watchProgress = data.progress;
+        writeStorage(STORAGE.progress, watchProgress);
+      }
+      if (data.searchHistory) {
+        searchHistory = data.searchHistory;
+        writeStorage(STORAGE.search, searchHistory);
+      }
+      if (data.watchLater) {
+        watchLater = data.watchLater;
+        writeStorage(STORAGE.watchLater, watchLater);
+      }
+      if (data.playlists) {
+        playlists = data.playlists;
+        writeStorage(STORAGE.playlists, playlists);
+      }
+      if (data.subscriptions) {
+        subscriptions = data.subscriptions;
+        writeStorage(STORAGE.subscriptions, subscriptions);
+      }
+      if (data.likedVideos) {
+        likedVideos = data.likedVideos;
+        writeStorage(STORAGE.likes, likedVideos);
+      }
+      if (data.dislikedVideos) {
+        dislikedVideos = data.dislikedVideos;
+        writeStorage(STORAGE.dislikes, dislikedVideos);
+      }
+      if (data.notInterested) {
+        notInterested = data.notInterested;
+        writeStorage(STORAGE.notInterested, notInterested);
+      }
+      if (data.settings) {
+        appSettings = { ...appSettings, ...data.settings };
+        writeStorage(STORAGE.settings, appSettings);
       }
 
-    };
+      applySettings();
+      renderContinueWatching();
+      closeModal();
 
+      showToast('Data berhasil diimport');
 
-  reader.readAsText(
-    file
-  );
+    } catch(error) {
+      showToast('File backup tidak valid', 'error');
+    }
+  };
+
+  reader.readAsText(file);
 
 }
 
 
 function clearApiCache() {
-
-  localStorage.removeItem(
-    STORAGE.cache
-  );
-
-
-  showToast(
-    'Cache API dibersihkan'
-  );
-
+  localStorage.removeItem(STORAGE.cache);
+  showToast('Cache API dibersihkan');
 }
 
 
 function clearAllHidaTubeData() {
 
-  const confirmDelete =
-    confirm(
-      'Hapus semua data HidaTube dari perangkat ini?'
-    );
+  const confirmDelete = confirm('Hapus semua data HidaTube dari perangkat ini?');
+  if (!confirmDelete) return;
 
-
-  if (!confirmDelete) {
-    return;
-  }
-
-
-  Object.values(
-    STORAGE
-  ).forEach(
-    key =>
-      localStorage.removeItem(
-        key
-      )
-  );
-
+  Object.values(STORAGE).forEach(key => localStorage.removeItem(key));
 
   watchHistory = [];
-
   watchProgress = {};
-
   searchHistory = [];
-
   watchLater = [];
-
   playlists = [];
-
   subscriptions = [];
-
   likedVideos = [];
-
   dislikedVideos = [];
-
   notInterested = [];
 
-
   appSettings = {
-
     theme:'dark',
-
     accent:'#ff0000',
-
     dataSaver:false,
-
     autoplayNext:false,
-
     saveHistory:true,
-
     saveSearchHistory:true,
-
     animations:true
-
   };
 
-
   applySettings();
-
   closeModal();
-
   renderContinueWatching();
 
-
-  showToast(
-    'Semua data HidaTube telah dihapus'
-  );
+  showToast('Semua data HidaTube telah dihapus');
 
 }
 
@@ -11626,30 +7143,15 @@ function showNotifications() {
   openBottomSheet(
     'Notifikasi',
     `
-
-    <div class="empty-state"
-         style="padding:30px 20px;">
-
+    <div class="empty-state" style="padding:30px 20px;">
       <i class="fa-regular fa-bell"></i>
-
       <h3>Notifikasi HidaTube</h3>
-
-      <p>
-        Notifikasi channel yang Anda
-        ikuti dan aktivitas lokal akan
-        ditampilkan di sini.
-      </p>
-
+      <p>Notifikasi channel yang Anda ikuti dan aktivitas lokal akan ditampilkan di sini.</p>
     </div>
-
     `
   );
 
-
-  document.getElementById(
-    'notificationBadge'
-  ).style.display =
-    'none';
+  document.getElementById('notificationBadge').style.display = 'none';
 
 }
 
@@ -11663,96 +7165,30 @@ function showExplore() {
   openBottomSheet(
     'Explore HidaTube',
     `
-
-    <button
-      class="sheet-item"
+    <button class="sheet-item"
       onclick="
         closeBottomSheet();
-        filterCategory(
-          document.getElementById('chipTrending'),
-          ''
-        );
-        loadTrendingVideos(
-          true,
-          document.getElementById('chipTrending'),
-          false
-        );
+        filterCategory(document.getElementById('chipTrending'), '');
+        loadTrendingVideos(true, document.getElementById('chipTrending'), false);
       ">
-
-      <i class="fa-solid fa-fire"></i>
-
-      Trending Indonesia
-
+      <i class="fa-solid fa-fire"></i> Trending Indonesia
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        filterCategory(
-          null,
-          'Berita Indonesia'
-        );
-      ">
-
-      <i class="fa-solid fa-newspaper"></i>
-
-      Berita Indonesia
-
+    <button class="sheet-item" onclick="closeBottomSheet();filterCategory(null, 'Berita Indonesia');">
+      <i class="fa-solid fa-newspaper"></i> Berita Indonesia
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        filterCategory(
-          null,
-          'Teknologi Indonesia'
-        );
-      ">
-
-      <i class="fa-solid fa-microchip"></i>
-
-      Teknologi
-
+    <button class="sheet-item" onclick="closeBottomSheet();filterCategory(null, 'Teknologi Indonesia');">
+      <i class="fa-solid fa-microchip"></i> Teknologi
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        filterCategory(
-          null,
-          'Otomotif Indonesia'
-        );
-      ">
-
-      <i class="fa-solid fa-car"></i>
-
-      Otomotif
-
+    <button class="sheet-item" onclick="closeBottomSheet();filterCategory(null, 'Otomotif Indonesia');">
+      <i class="fa-solid fa-car"></i> Otomotif
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        filterCategory(
-          null,
-          'Tutorial Indonesia'
-        );
-      ">
-
-      <i class="fa-solid fa-graduation-cap"></i>
-
-      Tutorial
-
+    <button class="sheet-item" onclick="closeBottomSheet();filterCategory(null, 'Tutorial Indonesia');">
+      <i class="fa-solid fa-graduation-cap"></i> Tutorial
     </button>
-
     `
   );
 
@@ -11768,48 +7204,17 @@ function showCreateMenu() {
   openBottomSheet(
     'Tambah',
     `
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        promptAddCustomVideo();
-      ">
-
-      <i class="fa-solid fa-link"></i>
-
-      Buka Link YouTube
-
+    <button class="sheet-item" onclick="closeBottomSheet();promptAddCustomVideo();">
+      <i class="fa-solid fa-link"></i> Buka Link YouTube
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        createPlaylist();
-      ">
-
-      <i class="fa-solid fa-list"></i>
-
-      Buat Playlist
-
+    <button class="sheet-item" onclick="closeBottomSheet();createPlaylist();">
+      <i class="fa-solid fa-list"></i> Buat Playlist
     </button>
 
-
-    <button
-      class="sheet-item"
-      onclick="
-        closeBottomSheet();
-        showDataCenter();
-      ">
-
-      <i class="fa-solid fa-file-import"></i>
-
-      Import Backup
-
+    <button class="sheet-item" onclick="closeBottomSheet();showDataCenter();">
+      <i class="fa-solid fa-file-import"></i> Import Backup
     </button>
-
     `
   );
 
@@ -11825,94 +7230,38 @@ function promptAddCustomVideo() {
   openModal(
     'Buka Video YouTube',
     `
+    <input id="customVideoUrl" type="text" placeholder="Tempel link YouTube atau Video ID..."
+      style="width:100%;background:var(--yt-paper-2);color:var(--yt-text-primary);border:1px solid var(--yt-border);border-radius:10px;padding:11px;outline:none;font-size:12px;">
 
-    <input
-      id="customVideoUrl"
-      type="text"
-      placeholder="Tempel link YouTube atau Video ID..."
-      style="
-        width:100%;
-        background:var(--yt-paper-2);
-        color:var(--yt-text-primary);
-        border:1px solid var(--yt-border);
-        border-radius:10px;
-        padding:11px;
-        outline:none;
-        font-size:12px;
-      ">
-
-
-    <button
-      class="btn-subscribe"
-      style="
-        width:100%;
-        margin-top:12px;
-      "
-      onclick="openCustomVideo()">
-
+    <button class="btn-subscribe" style="width:100%;margin-top:12px;" onclick="openCustomVideo()">
       Buka Video
-
     </button>
-
     `
   );
 
 }
 
 
-function extractYouTubeId(
-  input
-) {
+function extractYouTubeId(input) {
 
-  const value =
-    input.trim();
+  const value = input.trim();
 
-
-  if (
-    /^[a-zA-Z0-9_-]{11}$/.test(
-      value
-    )
-  ) {
-
+  if (/^[a-zA-Z0-9_-]{11}$/.test(value)) {
     return value;
-
   }
-
 
   const patterns = [
-
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,
-
     /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-
     /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-
     /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-
     /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
-
   ];
 
-
-  for (
-    const pattern
-    of patterns
-  ) {
-
-    const match =
-      value.match(
-        pattern
-      );
-
-
-    if (match) {
-
-      return match[1];
-
-    }
-
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match) return match[1];
   }
-
 
   return '';
 
@@ -11921,32 +7270,15 @@ function extractYouTubeId(
 
 function openCustomVideo() {
 
-  const input =
-    document.getElementById(
-      'customVideoUrl'
-    );
-
-
-  const id =
-    extractYouTubeId(
-      input.value
-    );
-
+  const input = document.getElementById('customVideoUrl');
+  const id = extractYouTubeId(input.value);
 
   if (!id) {
-
-    showToast(
-      'Link atau Video ID tidak valid',
-      'error'
-    );
-
+    showToast('Link atau Video ID tidak valid', 'error');
     return;
-
   }
 
-
   closeModal();
-
   playVideo(id);
 
 }
@@ -11956,53 +7288,21 @@ function openCustomVideo() {
    BOTTOM SHEET FUNCTIONS
    ========================================================= */
 
-function openBottomSheet(
-  title,
-  content
-) {
+function openBottomSheet(title, content) {
 
-  document.getElementById(
-    'sheetTitle'
-  ).textContent =
-    title;
+  document.getElementById('sheetTitle').textContent = title;
+  document.getElementById('sheetContent').innerHTML = content;
 
-
-  document.getElementById(
-    'sheetContent'
-  ).innerHTML =
-    content;
-
-
-  document.getElementById(
-    'sheetBackdrop'
-  ).classList.add(
-    'active'
-  );
-
-
-  document.getElementById(
-    'bottomSheet'
-  ).classList.add(
-    'active'
-  );
+  document.getElementById('sheetBackdrop').classList.add('active');
+  document.getElementById('bottomSheet').classList.add('active');
 
 }
 
 
 function closeBottomSheet() {
 
-  document.getElementById(
-    'sheetBackdrop'
-  ).classList.remove(
-    'active'
-  );
-
-
-  document.getElementById(
-    'bottomSheet'
-  ).classList.remove(
-    'active'
-  );
+  document.getElementById('sheetBackdrop').classList.remove('active');
+  document.getElementById('bottomSheet').classList.remove('active');
 
 }
 
@@ -12011,56 +7311,25 @@ function closeBottomSheet() {
    MODAL FUNCTIONS
    ========================================================= */
 
-function openModal(
-  title,
-  content
-) {
+function openModal(title, content) {
 
-  document.getElementById(
-    'modalTitle'
-  ).textContent =
-    title;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalContent').innerHTML = content;
 
-
-  document.getElementById(
-    'modalContent'
-  ).innerHTML =
-    content;
-
-
-  document.getElementById(
-    'modalBackdrop'
-  ).classList.add(
-    'active'
-  );
+  document.getElementById('modalBackdrop').classList.add('active');
 
 }
 
 
 function closeModal() {
-
-  document.getElementById(
-    'modalBackdrop'
-  ).classList.remove(
-    'active'
-  );
-
+  document.getElementById('modalBackdrop').classList.remove('active');
 }
 
 
-function handleModalBackdrop(
-  event
-) {
-
-  if (
-    event.target.id ===
-    'modalBackdrop'
-  ) {
-
+function handleModalBackdrop(event) {
+  if (event.target.id === 'modalBackdrop') {
     closeModal();
-
   }
-
 }
 
 
@@ -12068,60 +7337,22 @@ function handleModalBackdrop(
    SEARCH OVERLAY
    ========================================================= */
 
-function toggleSearchOverlay(
-  show
-) {
+function toggleSearchOverlay(show) {
 
-  const overlay =
-    document.getElementById(
-      'searchOverlay'
-    );
+  const overlay = document.getElementById('searchOverlay');
+  overlay.classList.toggle('active', show);
 
-
-  overlay.classList.toggle(
-    'active',
-    show
-  );
-
-
-  const suggestion =
-    document.getElementById(
-      'searchSuggestions'
-    );
-
+  const suggestion = document.getElementById('searchSuggestions');
 
   if (show) {
-
-    document.getElementById(
-      'searchInput'
-    ).focus();
-
-
+    document.getElementById('searchInput').focus();
     renderSearchSuggestions();
 
-
-    if (
-      !history.state ||
-      history.state.page !==
-      'search'
-    ) {
-
-      history.pushState(
-        {
-          page:'search'
-        },
-        '',
-        '#search'
-      );
-
+    if (!history.state || history.state.page !== 'search') {
+      history.pushState({ page:'search' }, '', '#search');
     }
-
   } else {
-
-    suggestion.classList.remove(
-      'active'
-    );
-
+    suggestion.classList.remove('active');
   }
 
 }
@@ -12131,53 +7362,18 @@ function toggleSearchOverlay(
    CATEGORY
    ========================================================= */
 
-function filterCategory(
-  element,
-  query
-) {
+function filterCategory(element, query) {
 
   if (element) {
-
-    document.querySelectorAll(
-      '.chip'
-    ).forEach(
-      c =>
-        c.classList.remove(
-          'active'
-        )
-    );
-
-
-    element.classList.add(
-      'active'
-    );
-
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    element.classList.add('active');
   }
 
-
   if (!query) {
-
-    loadTrendingVideos(
-      false,
-      document.getElementById(
-        'chipSemua'
-      ),
-      false
-    );
-
+    loadTrendingVideos(false, document.getElementById('chipSemua'), false);
   } else {
-
-    document.getElementById(
-      'searchInput'
-    ).value =
-      query;
-
-
-    executeSearch(
-      query,
-      false
-    );
-
+    document.getElementById('searchInput').value = query;
+    executeSearch(query, false);
   }
 
 }
@@ -12188,175 +7384,62 @@ function filterCategory(
    ========================================================= */
 
 let pullStartY = 0;
-
+let currentPullDelta = 0;
 let pulling = false;
 
 
 function initPullToRefresh() {
 
-  const main =
-    document.getElementById(
-      'mainContent'
-    );
+  const main = document.getElementById('mainContent');
 
-
-  main.addEventListener(
-    'touchstart',
-    event => {
-
-      if (
-        window.scrollY === 0
-      ) {
-
-        pullStartY =
-          event.touches[0]
-            .clientY;
-
-        pulling =
-          true;
-
-      }
-
-    },
-    {passive:true}
-  );
-
-
-  main.addEventListener(
-    'touchmove',
-    event => {
-
-      if (!pulling) {
-        return;
-      }
-
-
-      const current =
-        event.touches[0]
-          .clientY;
-
-
-      const delta =
-        current -
-        pullStartY;
-
-
-      if (
-        delta > 20 &&
-        delta < 130
-      ) {
-
-        const indicator =
-          document.getElementById(
-            'pullIndicator'
-          );
-
-
-        indicator.classList.add(
-          'visible'
-        );
-
-
-        indicator.style.transform =
-          `translate(-50%,${Math.min(75,delta/2)}px)`;
-
-      }
-
-    },
-    {passive:true}
-  );
-
-
-  main.addEventListener(
-    'touchend',
-    () => {
-
-      if (!pulling) {
-        return;
-      }
-
-
-      const indicator =
-        document.getElementById(
-          'pullIndicator'
-        );
-
-
-      const transform =
-        indicator.style.transform;
-
-
-      pulling =
-        false;
-
-
-      indicator.classList.remove(
-        'visible'
-      );
-
-
-      indicator.style.transform =
-        '';
-
-
-      if (
-        transform &&
-        transform.includes('60')
-      ) {
-
-        refreshCurrentPage();
-
-      }
-
+  main.addEventListener('touchstart', event => {
+    if (window.scrollY === 0) {
+      pullStartY = event.touches[0].clientY;
+      pulling = true;
     }
-  );
+  }, {passive:true});
+
+  main.addEventListener('touchmove', event => {
+    if (!pulling) return;
+
+    const current = event.touches[0].clientY;
+    currentPullDelta = current - pullStartY;
+
+    if (currentPullDelta > 20 && currentPullDelta < 130) {
+      const indicator = document.getElementById('pullIndicator');
+      indicator.classList.add('visible');
+      indicator.style.transform = `translate(-50%,${Math.min(75, currentPullDelta / 2)}px)`;
+    }
+  }, {passive:true});
+
+  main.addEventListener('touchend', () => {
+    if (!pulling) return;
+
+    const indicator = document.getElementById('pullIndicator');
+
+    if (currentPullDelta > 80) {
+      refreshCurrentPage();
+    }
+
+    pulling = false;
+    currentPullDelta = 0;
+    indicator.classList.remove('visible');
+    indicator.style.transform = '';
+  });
 
 }
 
 
 function refreshCurrentPage() {
 
-  showToast(
-    'Memperbarui HidaTube...'
-  );
+  showToast('Memperbarui HidaTube...');
 
-
-  if (
-    currentMode ===
-    'trending'
-  ) {
-
-    loadTrendingVideos(
-      isTrendingMode,
-      null,
-      false
-    );
-
-  }
-
-  else if (
-    currentMode ===
-    'search'
-  ) {
-
-    executeSearch(
-      currentSearchQuery,
-      false
-    );
-
-  }
-
-  else if (
-    currentMode ===
-    'channel'
-  ) {
-
-    openChannelPage(
-      currentChannelId,
-      currentChannelTitle,
-      false
-    );
-
+  if (currentMode === 'trending') {
+    loadTrendingVideos(isTrendingMode, null, false);
+  } else if (currentMode === 'search') {
+    executeSearch(currentSearchQuery, false);
+  } else if (currentMode === 'channel') {
+    openChannelPage(currentChannelId, currentChannelTitle, false);
   }
 
 }
@@ -12366,370 +7449,162 @@ function refreshCurrentPage() {
    NETWORK
    ========================================================= */
 
-function updateNetworkStatus(
-  online
-) {
+function updateNetworkStatus(online) {
 
-  const status =
-    document.getElementById(
-      'networkStatus'
-    );
+  const status = document.getElementById('networkStatus');
 
+  status.classList.toggle('offline', !online);
+  status.querySelector('span').textContent = online ? 'Online' : 'Tidak ada koneksi';
+  status.querySelector('i').className = online ? 'fa-solid fa-wifi' : 'fa-solid fa-wifi-slash';
 
-  status.classList.toggle(
-    'offline',
-    !online
-  );
-
-
-  status.querySelector(
-    'span'
-  ).textContent =
-    online
-      ? 'Online'
-      : 'Tidak ada koneksi';
-
-
-  status.querySelector(
-    'i'
-  ).className =
-    online
-      ? 'fa-solid fa-wifi'
-      : 'fa-solid fa-wifi-slash';
-
-
-  status.classList.add(
-    'visible'
-  );
-
-
-  setTimeout(
-    () =>
-      status.classList.remove(
-        'visible'
-      ),
-    2500
-  );
+  status.classList.add('visible');
+  setTimeout(() => status.classList.remove('visible'), 2500);
 
 }
 
 
-window.addEventListener(
-  'online',
-  () =>
-    updateNetworkStatus(
-      true
-    )
-);
-
-
-window.addEventListener(
-  'offline',
-  () =>
-    updateNetworkStatus(
-      false
-    )
-);
+window.addEventListener('online', () => updateNetworkStatus(true));
+window.addEventListener('offline', () => updateNetworkStatus(false));
 
 
 /* =========================================================
    BACK BUTTON
    ========================================================= */
 
-window.addEventListener(
-  'popstate',
-  () => {
+window.addEventListener('popstate', () => {
 
-    const player =
-      document.getElementById(
-        'playerView'
-      );
+  const player = document.getElementById('playerView');
+  const search = document.getElementById('searchOverlay');
 
-
-    const search =
-      document.getElementById(
-        'searchOverlay'
-      );
-
-
-    if (
-      player.classList.contains(
-        'active'
-      )
-    ) {
-
-      if (
-        player.classList.contains(
-          'minimized'
-        )
-      ) {
-
-        stopAndClosePlayer();
-
-      } else {
-
-        minimizePlayer();
-
-      }
-
-      return;
-
+  if (player.classList.contains('active')) {
+    if (player.classList.contains('minimized')) {
+      stopAndClosePlayer();
+    } else {
+      minimizePlayer();
     }
-
-
-    if (
-      search.classList.contains(
-        'active'
-      )
-    ) {
-
-      toggleSearchOverlay(
-        false
-      );
-
-      return;
-
-    }
-
-
-    if (
-      currentMode ===
-      'channel'
-    ) {
-
-      resetToHome();
-
-    }
-
+    return;
   }
-);
+
+  if (search.classList.contains('active')) {
+    toggleSearchOverlay(false);
+    return;
+  }
+
+  if (currentMode === 'channel') {
+    resetToHome();
+  }
+
+});
 
 
 /* =========================================================
    PLAYER SCROLL RECOMMENDATION
    ========================================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-    const player =
-      document.getElementById(
-        'playerView'
-      );
+  const player = document.getElementById('playerView');
 
+  player.addEventListener('scroll', () => {
+    if (player.classList.contains('minimized')) return;
 
-    player.addEventListener(
-      'scroll',
-      () => {
+    if (player.scrollTop + player.clientHeight >= player.scrollHeight - 350) {
+      loadMoreRecommendedVideos();
+    }
+  });
 
-        if (
-          player.classList.contains(
-            'minimized'
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        if (
-          player.scrollTop
-          +
-          player.clientHeight
-          >=
-          player.scrollHeight - 350
-        ) {
-
-          loadMoreRecommendedVideos();
-
-        }
-
-      }
-    );
-
-  }
-);
+});
 
 
 /* =========================================================
    INFINITE FEED SCROLL
    ========================================================= */
 
-window.addEventListener(
-  'scroll',
-  () => {
+window.addEventListener('scroll', () => {
 
-    if (
-      document.getElementById(
-        'playerView'
-      ).classList.contains(
-        'active'
-      )
-    ) {
+  if (document.getElementById('playerView').classList.contains('active')) return;
 
-      return;
-
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 600) {
+    if (!isLoadingMore && nextPageToken) {
+      loadMoreVideos();
     }
+  }
 
-
-    if (
-      window.innerHeight +
-      window.scrollY
-      >=
-      document.body.offsetHeight - 600
-    ) {
-
-      if (
-        !isLoadingMore &&
-        nextPageToken
-      ) {
-
-        loadMoreVideos();
-
-      }
-
-    }
-
-  },
-  {passive:true}
-);
+}, {passive:true});
 
 
 /* =========================================================
    KEYBOARD / ESC
    ========================================================= */
 
-document.addEventListener(
-  'keydown',
-  event => {
+document.addEventListener('keydown', event => {
 
-    if (
-      event.key ===
-      'Escape'
-    ) {
-
-      closeBottomSheet();
-
-      closeModal();
-
-      toggleSearchOverlay(
-        false
-      );
-
-    }
-
+  if (event.key === 'Escape') {
+    closeBottomSheet();
+    closeModal();
+    toggleSearchOverlay(false);
   }
-);
+
+});
 
 
 /* =========================================================
    INITIALIZATION
    ========================================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  () => {
+document.addEventListener('DOMContentLoaded', () => {
 
-    applySettings();
+  applySettings();
+  initSwipeGesture();
+  initPullToRefresh();
+  updateNetworkStatus(navigator.onLine);
 
-    initSwipeGesture();
+  renderContinueWatching();
 
-    initPullToRefresh();
+  /* Load Home pertama kali. */
+  loadTrendingVideos(
+    false,
+    document.getElementById('chipSemua'),
+    false
+  );
 
-    updateNetworkStatus(
-      navigator.onLine
-    );
-
-
-    renderContinueWatching();
-
-
-    /*
-      Load Home pertama kali.
-    */
-
-    loadTrendingVideos(
-      false,
-      document.getElementById(
-        'chipSemua'
-      ),
-      false
-    );
-
-  }
-);
+});
 
 
 /* =========================================================
    SYSTEM THEME CHANGE
    ========================================================= */
 
-window.matchMedia(
-  '(prefers-color-scheme: light)'
-).addEventListener(
-  'change',
-  () => {
-
-    if (
-      appSettings.theme ===
-      'system'
-    ) {
-
-      applySettings();
-
-    }
-
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+  if (appSettings.theme === 'system') {
+    applySettings();
   }
-);
+});
 
 
 /* =========================================================
    PERIODIC PROGRESS UPDATE
    ========================================================= */
 
-setInterval(
-  () => {
+setInterval(() => {
 
-    if (
-      currentVideoId &&
-      ytPlayer &&
-      ytPlayer.getPlayerState
-    ) {
-
-      const state =
-        ytPlayer.getPlayerState();
-
-
-      if (
-        state ===
-        YT.PlayerState.PLAYING
-      ) {
-
-        saveCurrentProgress();
-
-      }
-
+  if (currentVideoId && ytPlayer && ytPlayer.getPlayerState) {
+    const state = ytPlayer.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+      saveCurrentProgress();
     }
+  }
 
-  },
-  10000
-);
+}, 10000);
 
 
 /* =========================================================
    BEFORE UNLOAD
    ========================================================= */
 
-window.addEventListener(
-  'beforeunload',
-  () => {
-
-    saveCurrentProgress();
-
-  }
-);
+window.addEventListener('beforeunload', () => {
+  saveCurrentProgress();
+});
 
 
 /* =========================================================
@@ -12739,47 +7614,19 @@ window.addEventListener(
 (function cleanCache() {
 
   try {
+    const cache = readStorage(STORAGE.cache, {});
+    const now = Date.now();
 
-    const cache =
-      readStorage(
-        STORAGE.cache,
-        {}
-      );
-
-
-    const now =
-      Date.now();
-
-
-    Object.keys(
-      cache
-    ).forEach(
-      key => {
-
-        if (
-          now -
-          cache[key].time
-          >
-          CONFIG.cacheTTL
-        ) {
-
-          delete cache[key];
-
-        }
-
+    Object.keys(cache).forEach(key => {
+      if (now - cache[key].time > CONFIG.cacheTTL) {
+        delete cache[key];
       }
-    );
+    });
 
-
-    writeStorage(
-      STORAGE.cache,
-      cache
-    );
-
+    writeStorage(STORAGE.cache, cache);
   } catch(e) {}
 
 })();
-
 
 </script>
 
