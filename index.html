@@ -533,25 +533,27 @@
       line-height: 1.3;
     }
 
-    /* 5. CHANNEL PAGE OVERLAY VIEW */
+    /* 5. CHANNEL PAGE OVERLAY VIEW REAL */
     .channel-banner-card {
       background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-      padding: 20px 16px;
+      padding: 24px 16px;
       margin-bottom: 16px;
       border-bottom: 1px solid var(--yt-border);
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
+      position: relative;
     }
 
     .channel-banner-avatar {
-      width: 72px;
-      height: 72px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       object-fit: cover;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      border: 2px solid rgba(255,255,255,0.2);
     }
 
     /* LOAD MORE BUTTON */
@@ -669,7 +671,7 @@
       <div id="channelHeaderContainer"></div>
       <div class="feed-container" id="feedContainer"></div>
       
-      <!-- TOMBOL / INDIKATOR MUAT LEBIH BANYAK VIDEO -->
+      <!-- INDIKATOR MUAT LEBIH BANYAK VIDEO -->
       <button class="btn-load-more" id="btnLoadMore" onclick="loadMoreVideos()" style="display:none;">
         <i class="fa-solid fa-spinner fa-spin" id="loadMoreSpinner" style="display:none; margin-right:6px;"></i>
         <span>Muat Lebih Banyak Video...</span>
@@ -705,7 +707,7 @@
             <img src="https://via.placeholder.com/36" class="channel-avatar" id="watchAvatar" alt="Avatar">
             <div>
               <div style="font-weight: 700; font-size: 13px;" id="watchChannel">Nama Channel</div>
-              <div style="font-size: 11px; color: var(--yt-text-secondary);">Lihat Channel & Video Lainnya ›</div>
+              <div style="font-size: 11px; color: var(--yt-text-secondary);" id="watchSubscribers">Lihat Channel & Video Lainnya ›</div>
             </div>
           </div>
           <button class="btn-subscribe" onclick="alert('Berhasil Subskrib!')">Subskrib</button>
@@ -722,7 +724,7 @@
 
         <!-- KOTAK DESKRIPSI VIDEO -->
         <div class="description-box" id="descriptionBox" onclick="toggleDescription()">
-          <div class="desc-header" id="descHeaderStats">12RB x ditonton • HidaTube</div>
+          <div class="desc-header" id="descHeaderStats">12RB x ditonton • HidaTube Player</div>
           <div class="desc-text" id="watchDescription">Memuat deskripsi video...</div>
           <div class="desc-toggle-btn" id="descToggleBtn">...selengkapnya</div>
         </div>
@@ -741,9 +743,13 @@
           </div>
         </div>
 
-        <!-- RECOMMENDED FEED -->
+        <!-- RECOMMENDED FEED DENGAN UNLIMITED SCROLLING -->
         <h3 style="font-size: 14px; margin: 16px 0 10px 0;">Video Berikutnya</h3>
         <div id="recommendedFeed"></div>
+        
+        <div id="recLoadingIndicator" style="display:none; text-align:center; padding:15px; color:var(--yt-text-secondary); font-size:12px;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Memuat rekomendasi lainnya...
+        </div>
       </div>
     </div>
 
@@ -782,11 +788,16 @@
     let currentChannelTitle = '';
     
     let videoList = [];
+    let recommendedList = [];
     let isTrendingMode = false;
+    
     let nextPageToken = '';
+    let recNextPageToken = '';
+    
     let currentMode = 'trending'; // 'trending', 'search', 'channel'
     let currentSearchQuery = '';
     let isLoadingMore = false;
+    let isLoadingRecMore = false;
 
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
@@ -804,6 +815,18 @@
       return shortsKeywords[Math.floor(Math.random() * shortsKeywords.length)];
     }
 
+    // FORMAT ANGKA SUBSCRIBER RESMI
+    function formatSubscribers(count) {
+      if (!count) return 'Channel Resmi';
+      const num = parseInt(count);
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace('.0', '') + 'JT subscriber';
+      } else if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace('.0', '') + 'RB subscriber';
+      }
+      return num.toLocaleString('id-ID') + ' subscriber';
+    }
+
     function parseISO8601Duration(duration) {
       if (!duration) return '00:00';
       const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -817,6 +840,33 @@
 
       if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
       return `${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    // MEMANGGIL FOTO PROFIL RESMI / AVATAR DARI API YOUTUBE
+    async function fetchChannelAvatars(items) {
+      const channelIds = [...new Set(items.map(v => v.channelId).filter(Boolean))];
+      if (channelIds.length === 0) return items;
+
+      try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds.join(',')}&key=${apiKey}`);
+        const data = await res.json();
+        
+        const avatarMap = {};
+        if (data.items) {
+          data.items.forEach(c => {
+            avatarMap[c.id] = c.snippet.thumbnails.default ? c.snippet.thumbnails.default.url : c.snippet.thumbnails.medium.url;
+          });
+        }
+
+        items.forEach(v => {
+          if (v.channelId && avatarMap[v.channelId]) {
+            v.channelAvatar = avatarMap[v.channelId];
+          }
+        });
+      } catch (err) {
+        console.warn('Gagal memuat avatar channel:', err);
+      }
+      return items;
     }
 
     function onYouTubeIframeAPIReady() {
@@ -852,7 +902,7 @@
       switchNav(document.querySelector('.nav-item'), 'beranda');
     }
 
-    // MEMUAT VIDEO TRENDING DENGAN PAGINASI (INFINITE SCROLL)
+    // MEMUAT VIDEO TRENDING
     async function loadTrendingVideos(showRankBadge = false, chipEl = null, isAppend = false) {
       if (!isAppend) {
         showLoading(true);
@@ -881,7 +931,7 @@
         if (data.items) {
           nextPageToken = data.nextPageToken || '';
           
-          const newItems = data.items.map((item, idx) => ({
+          let newItems = data.items.map((item, idx) => ({
             rank: (isAppend ? videoList.length : 0) + idx + 1,
             id: item.id,
             channelId: item.snippet.channelId,
@@ -893,6 +943,7 @@
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
 
+          newItems = await fetchChannelAvatars(newItems);
           videoList = isAppend ? videoList.concat(newItems) : newItems;
           renderFeed(videoList);
         }
@@ -904,7 +955,7 @@
       }
     }
 
-    // HASIL PENCARIAN DENGAN PAGINASI UNTUK SCROLLING TANPA BATAS
+    // HASIL PENCARIAN
     async function executeSearch(customQuery = null, isAppend = false) {
       const query = customQuery || document.getElementById('searchInput').value.trim();
       if (!query) return;
@@ -938,7 +989,7 @@
           const detailsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`);
           const detailsData = await detailsRes.json();
 
-          const newItems = detailsData.items.map(item => ({
+          let newItems = detailsData.items.map(item => ({
             id: item.id,
             channelId: item.snippet.channelId,
             title: item.snippet.title,
@@ -949,6 +1000,7 @@
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
 
+          newItems = await fetchChannelAvatars(newItems);
           videoList = isAppend ? videoList.concat(newItems) : newItems;
           renderFeed(videoList);
         }
@@ -960,38 +1012,62 @@
       }
     }
 
-    // OTOMATIS BUKA HALAMAN CHANNEL YOUTUBE BILA NAMA/AVATAR CHANNEL DIKLIK
-    async function openChannelPage(chId, chTitle) {
-      closePlayerView();
-      showLoading(true);
-      currentMode = 'channel';
-      currentChannelId = chId;
-      currentChannelTitle = chTitle;
-      videoList = [];
-      nextPageToken = '';
+    // HALAMAN CHANNEL DENGAN FOTO PROFIL, SUBSCRIBER ASLI & DENGAN INFINITE SCROLLING
+    async function openChannelPage(chId, chTitle, isAppend = false) {
+      if (!isAppend) {
+        closePlayerView();
+        showLoading(true);
+        currentMode = 'channel';
+        currentChannelId = chId;
+        currentChannelTitle = chTitle;
+        videoList = [];
+        nextPageToken = '';
 
-      // Tampilkan Header Banner Profil Channel
-      const headerContainer = document.getElementById('channelHeaderContainer');
-      headerContainer.innerHTML = `
-        <div class="channel-banner-card">
-          <img src="https://picsum.photos/seed/${chId}/120" class="channel-banner-avatar" alt="Avatar Channel">
-          <h2 style="font-size:18px; font-weight:700;">${chTitle}</h2>
-          <p style="font-size:12px; color:var(--yt-text-secondary); margin:4px 0 12px 0;">Channel YouTube Resmi • 1.4JT Subscriber</p>
-          <button class="btn-subscribe" onclick="alert('Berhasil Subskrib ke ${chTitle}!')">Subskrib</button>
-        </div>
-        <h3 style="font-size:14px; margin: 10px 16px;">Video dari ${chTitle}</h3>
-      `;
+        // Panggil data profil & subscriber asli dari YouTube Data API
+        try {
+          const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&id=${chId}&key=${apiKey}`);
+          const chData = await chRes.json();
 
+          if (chData.items && chData.items.length > 0) {
+            const chInfo = chData.items[0];
+            const realAvatar = chInfo.snippet.thumbnails.high ? chInfo.snippet.thumbnails.high.url : chInfo.snippet.thumbnails.medium.url;
+            const realSubs = formatSubscribers(chInfo.statistics.subscriberCount);
+            const bannerUrl = chInfo.brandingSettings && chInfo.brandingSettings.image ? chInfo.brandingSettings.image.bannerExternalUrl : '';
+
+            const headerContainer = document.getElementById('channelHeaderContainer');
+            headerContainer.innerHTML = `
+              <div class="channel-banner-card" style="${bannerUrl ? `background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url('${bannerUrl}'); background-size: cover; background-position: center;` : ''}">
+                <img src="${realAvatar}" class="channel-banner-avatar" alt="${chInfo.snippet.title}">
+                <h2 style="font-size:18px; font-weight:700; color:#fff;">${chInfo.snippet.title}</h2>
+                <p style="font-size:12px; color:#ddd; margin:4px 0 12px 0;">${realSubs} • Channel Resmi</p>
+                <button class="btn-subscribe" onclick="alert('Berhasil Subskrib ke ${chInfo.snippet.title}!')">Subskrib</button>
+              </div>
+              <h3 style="font-size:14px; margin: 12px 16px 8px 16px;">Video dari ${chInfo.snippet.title}</h3>
+            `;
+          }
+        } catch (e) {
+          console.warn('Gagal memuat info channel:', e);
+        }
+      }
+
+      // Ambil daftar video channel dengan paginasi
       try {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=20&order=date&type=video&key=${apiKey}`);
+        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=15&order=date&type=video&key=${apiKey}`;
+        if (isAppend && nextPageToken) {
+          searchUrl += `&pageToken=${nextPageToken}`;
+        }
+
+        const res = await fetch(searchUrl);
         const data = await res.json();
 
         if (data.items && data.items.length > 0) {
+          nextPageToken = data.nextPageToken || '';
           const videoIds = data.items.map(item => item.id.videoId).join(',');
+
           const detailsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`);
           const detailsData = await detailsRes.json();
 
-          videoList = detailsData.items.map(item => ({
+          let newItems = detailsData.items.map(item => ({
             id: item.id,
             channelId: chId,
             title: item.snippet.title,
@@ -1002,10 +1078,12 @@
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
 
+          newItems = await fetchChannelAvatars(newItems);
+          videoList = isAppend ? videoList.concat(newItems) : newItems;
           renderFeed(videoList);
         }
       } catch (err) {
-        alert('Gagal memuat video channel ini.');
+        console.warn('Gagal memuat video channel:', err);
       } finally {
         showLoading(false);
         checkLoadMoreVisibility();
@@ -1014,7 +1092,7 @@
 
     function openChannelFromWatchView() {
       if (currentChannelId) {
-        openChannelPage(currentChannelId, currentChannelTitle);
+        openChannelPage(currentChannelId, currentChannelTitle, false);
       }
     }
 
@@ -1046,6 +1124,8 @@
           container.appendChild(shortsShelf);
         }
 
+        const avatarImg = v.channelAvatar || `https://picsum.photos/seed/${v.channelId || v.id}/100`;
+
         const card = document.createElement('div');
         card.className = 'video-card';
         card.onclick = () => playVideo(v.id);
@@ -1057,11 +1137,11 @@
             <span class="duration-badge">${v.duration || '00:00'}</span>
           </div>
           <div class="video-meta">
-            <img src="https://picsum.photos/seed/${v.channelId || v.id}/100" class="channel-avatar" alt="avatar" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}')">
+            <img src="${avatarImg}" class="channel-avatar" alt="avatar" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}', false)">
             <div class="meta-details">
               <div class="meta-title">${v.title}</div>
               <div class="meta-sub">
-                <span class="channel-click" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}')">${v.channel}</span> • ${v.views} x ditonton
+                <span class="channel-click" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}', false)">${v.channel}</span> • ${v.views} x ditonton
               </div>
             </div>
             <i class="fa-solid fa-ellipsis-vertical" style="color: var(--yt-text-secondary); font-size:14px;"></i>
@@ -1071,7 +1151,7 @@
       });
     }
 
-    // FUNGSI MUAT LEBIH BANYAK VIDEO SAAT DI-SCROLL KE BAWAH
+    // FUNGSI SCROLL KETIKA MENCAPAI BAWAH HALAMAN
     async function loadMoreVideos() {
       if (isLoadingMore || !nextPageToken) return;
       isLoadingMore = true;
@@ -1082,6 +1162,8 @@
         await loadTrendingVideos(isTrendingMode, null, true);
       } else if (currentMode === 'search') {
         await executeSearch(currentSearchQuery, true);
+      } else if (currentMode === 'channel') {
+        await openChannelPage(currentChannelId, currentChannelTitle, true);
       }
 
       isLoadingMore = false;
@@ -1090,16 +1172,15 @@
 
     function checkLoadMoreVisibility() {
       const btn = document.getElementById('btnLoadMore');
-      if (nextPageToken && currentMode !== 'channel') {
+      if (nextPageToken) {
         btn.style.display = 'block';
       } else {
         btn.style.display = 'none';
       }
     }
 
-    // DETEKSI OTOMATIS SCROLL DI PALING BAWAH LAYAR
+    // DETEKSI SCROLL DI UTAMA (BERANDA / PENCARIAN / CHANNEL)
     window.addEventListener('scroll', () => {
-      if (currentMode === 'channel') return;
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
         if (!isLoadingMore && nextPageToken) {
           loadMoreVideos();
@@ -1107,8 +1188,8 @@
       }
     });
 
-    // PLAY VIDEO & MEMUAT KOMENTAR PUBLIK DARI API
-    function playVideo(id) {
+    // PLAY VIDEO
+    async function playVideo(id) {
       const video = videoList.find(v => v.id === id) || {
         id: id,
         channelId: '',
@@ -1124,7 +1205,22 @@
 
       document.getElementById('watchTitle').innerText = video.title;
       document.getElementById('watchChannel').innerText = video.channel;
-      document.getElementById('watchAvatar').src = `https://picsum.photos/seed/${video.channelId || id}/100`;
+      
+      const watchAvatarEl = document.getElementById('watchAvatar');
+      watchAvatarEl.src = video.channelAvatar || `https://picsum.photos/seed/${video.channelId || id}/100`;
+
+      // Ambil foto profil & subscriber real untuk halaman pemutar
+      if (video.channelId) {
+        try {
+          const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${video.channelId}&key=${apiKey}`);
+          const chData = await chRes.json();
+          if (chData.items && chData.items.length > 0) {
+            const chInfo = chData.items[0];
+            watchAvatarEl.src = chInfo.snippet.thumbnails.default.url;
+            document.getElementById('watchSubscribers').innerText = `${formatSubscribers(chInfo.statistics.subscriberCount)} • Lihat Channel ›`;
+          }
+        } catch (e) {}
+      }
 
       document.getElementById('descHeaderStats').innerText = `${video.views} x ditonton • HidaTube Player`;
       document.getElementById('watchDescription').innerText = video.description;
@@ -1140,9 +1236,93 @@
       // Ambil Komentar Asli dari YouTube API
       fetchVideoComments(id);
 
-      addToHistory({ id: video.id, title: video.title, channel: video.channel });
+      // Siapkan Daftar Rekomendasi di Pemutar
+      recommendedList = videoList.filter(v => v.id !== currentVideoId);
+      recNextPageToken = '';
       renderRecommended();
+
+      addToHistory({ id: video.id, title: video.title, channel: video.channel });
       document.getElementById('playerView').classList.add('active');
+    }
+
+    // SCROLL REKOMENDASI UNLIMITED DI HALAMAN PEMUTAR VIDEO
+    async function loadMoreRecommendedVideos() {
+      if (isLoadingRecMore) return;
+      isLoadingRecMore = true;
+
+      document.getElementById('recLoadingIndicator').style.display = 'block';
+
+      try {
+        let recUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&type=video&q=${encodeURIComponent(currentChannelTitle || 'YouTube Trending')}&key=${apiKey}`;
+        if (recNextPageToken) recUrl += `&pageToken=${recNextPageToken}`;
+
+        const res = await fetch(recUrl);
+        const data = await res.json();
+
+        if (data.items && data.items.length > 0) {
+          recNextPageToken = data.nextPageToken || '';
+          const vIds = data.items.map(i => i.id.videoId).join(',');
+          
+          const detRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${vIds}&key=${apiKey}`);
+          const detData = await detRes.json();
+
+          let newRecs = detData.items.map(item => ({
+            id: item.id,
+            channelId: item.snippet.channelId,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            description: item.snippet.description || '',
+            duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
+            views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '12.000',
+            thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
+          }));
+
+          newRecs = await fetchChannelAvatars(newRecs);
+          recommendedList = recommendedList.concat(newRecs);
+          renderRecommended();
+        }
+      } catch (err) {
+        console.warn('Gagal memuat rekomendasi lanjutan:', err);
+      } finally {
+        isLoadingRecMore = false;
+        document.getElementById('recLoadingIndicator').style.display = 'none';
+      }
+    }
+
+    // DETEKSI SCROLL DI HALAMAN PEMUTAR VIDEO
+    document.addEventListener('DOMContentLoaded', () => {
+      const pv = document.getElementById('playerView');
+      pv.addEventListener('scroll', () => {
+        if (pv.scrollTop + pv.clientHeight >= pv.scrollHeight - 300) {
+          loadMoreRecommendedVideos();
+        }
+      });
+    });
+
+    function renderRecommended() {
+      const recContainer = document.getElementById('recommendedFeed');
+      recContainer.innerHTML = '';
+      recommendedList.forEach(v => {
+        const avatarImg = v.channelAvatar || `https://picsum.photos/seed/${v.channelId || v.id}/100`;
+
+        const item = document.createElement('div');
+        item.className = 'video-card';
+        item.onclick = () => playVideo(v.id);
+        item.innerHTML = `
+          <div class="thumbnail-box">
+            <img src="${v.thumb}">
+            <span class="duration-badge">${v.duration || '00:00'}</span>
+          </div>
+          <div class="video-meta">
+            <img src="${avatarImg}" class="channel-avatar">
+            <div class="meta-details">
+              <div class="meta-title">${v.title}</div>
+              <div class="meta-sub">${v.channel} • ${v.views} x ditonton</div>
+            </div>
+          </div>
+        `;
+        recContainer.appendChild(item);
+      });
     }
 
     // AMBIL KOMENTAR REAL DARI API YOUTUBE
@@ -1173,26 +1353,10 @@
           listContainer.innerHTML = '<p style="font-size:12px; color:var(--yt-text-secondary);">Belum ada komentar publik pada video ini.</p>';
         }
       } catch (err) {
-        listContainer.innerHTML = `
-          <div class="comment-item">
-            <img src="https://picsum.photos/seed/user1/28" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-author">@penonton_hidatube</div>
-              <div class="comment-text">Videonya sangat bermanfaat dan jelas sekali informasinya!</div>
-            </div>
-          </div>
-          <div class="comment-item">
-            <img src="https://picsum.photos/seed/user2/28" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-author">@rizky_hida</div>
-              <div class="comment-text">Terima kasih sudah berbagi, ditunggu konten selanjutnya 👍</div>
-            </div>
-          </div>
-        `;
+        listContainer.innerHTML = '<p style="font-size:12px; color:var(--yt-text-secondary);">Komentar ditutup untuk video ini.</p>';
       }
     }
 
-    // FUNGSI KIRIM KOMENTAR BARU
     function postCustomComment() {
       const input = document.getElementById('customCommentInput');
       const text = input.value.trim();
@@ -1247,30 +1411,6 @@
           screen.orientation.unlock();
         }
       }
-    }
-
-    function renderRecommended() {
-      const recContainer = document.getElementById('recommendedFeed');
-      recContainer.innerHTML = '';
-      videoList.filter(v => v.id !== currentVideoId).forEach(v => {
-        const item = document.createElement('div');
-        item.className = 'video-card';
-        item.onclick = () => playVideo(v.id);
-        item.innerHTML = `
-          <div class="thumbnail-box">
-            <img src="${v.thumb}">
-            <span class="duration-badge">${v.duration || '00:00'}</span>
-          </div>
-          <div class="video-meta">
-            <img src="https://picsum.photos/seed/${v.channelId || v.id}/100" class="channel-avatar">
-            <div class="meta-details">
-              <div class="meta-title">${v.title}</div>
-              <div class="meta-sub">${v.channel} • ${v.views} x ditonton</div>
-            </div>
-          </div>
-        `;
-        recContainer.appendChild(item);
-      });
     }
 
     function filterCategory(el, query) {
