@@ -33,7 +33,7 @@
       overflow-x: hidden;
     }
 
-    /* Container Aplikasi Mobile HidaTube */
+    /* Container Utama Mobile Viewport */
     .app-viewport {
       width: 100%;
       max-width: 480px;
@@ -45,7 +45,7 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
 
-    /* 1. TOP NAVBAR */
+    /* 1. TOP NAVBAR HEADER */
     .top-header {
       position: fixed;
       top: 0;
@@ -101,7 +101,7 @@
       border-radius: 10px;
     }
 
-    /* BAR PENCARIAN */
+    /* BAR PENCARIAN OVERLAY */
     .search-bar-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -133,7 +133,7 @@
       font-size: 14px;
     }
 
-    /* 2. CATEGORY PILLS (CHIPS) */
+    /* 2. CATEGORY PILLS CHIPS */
     .chips-wrapper {
       display: flex;
       align-items: center;
@@ -201,7 +201,6 @@
       object-fit: cover;
     }
 
-    /* Lencana Peringkat Trending #1, #2, #3 */
     .trending-rank {
       position: absolute;
       top: 10px;
@@ -240,6 +239,7 @@
       background: #333;
       object-fit: cover;
       flex-shrink: 0;
+      cursor: pointer;
     }
 
     .meta-details { flex: 1; }
@@ -260,6 +260,14 @@
       font-size: 12px;
       color: var(--yt-text-secondary);
     }
+
+    .meta-sub span.channel-click {
+      color: var(--yt-text-primary);
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .meta-sub span.channel-click:hover { text-decoration: underline; }
 
     /* SHORTS SHELF */
     .shorts-shelf {
@@ -313,7 +321,7 @@
       overflow: hidden;
     }
 
-    /* 4. PLAYER VIEW & KOTAK DESKRIPSI VIDEO */
+    /* 4. PLAYER VIEW & DESKRIPSI & KOMENTAR */
     .player-view {
       display: none;
       position: fixed;
@@ -370,6 +378,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      cursor: pointer;
     }
 
     .btn-subscribe {
@@ -406,7 +415,6 @@
       cursor: pointer;
     }
 
-    /* KOTAK DESKRIPSI VIDEO YANG BISA DIEXPAND */
     .description-box {
       background: var(--yt-paper);
       border-radius: 12px;
@@ -449,7 +457,122 @@
       display: inline-block;
     }
 
-    /* 5. BOTTOM NAVIGATION BAR */
+    /* KOTAK KOMENTAR YOUTUBE */
+    .comments-container {
+      background: var(--yt-paper);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .comments-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comment-input-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .comment-input-form input {
+      flex: 1;
+      background: #1e1e1e;
+      border: 1px solid var(--yt-border);
+      border-radius: 18px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .btn-send-comment {
+      background: var(--yt-red);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 10px;
+    }
+
+    .comment-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #444;
+      object-fit: cover;
+    }
+
+    .comment-content { flex: 1; }
+
+    .comment-author {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--yt-text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .comment-text {
+      font-size: 12px;
+      color: var(--yt-text-primary);
+      line-height: 1.3;
+    }
+
+    /* 5. CHANNEL PAGE OVERLAY VIEW */
+    .channel-banner-card {
+      background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+      padding: 20px 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--yt-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .channel-banner-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    /* LOAD MORE BUTTON */
+    .btn-load-more {
+      width: 90%;
+      margin: 10px auto 30px auto;
+      padding: 12px;
+      background: var(--yt-paper);
+      color: #fff;
+      border: 1px solid var(--yt-border);
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: block;
+      text-align: center;
+    }
+
+    .btn-load-more:hover { background: var(--yt-paper-hover); }
+
+    /* 6. BOTTOM NAVIGATION BAR */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -492,9 +615,9 @@
 
   <div class="app-viewport">
     
-    <!-- 1. TOP HEADER -->
+    <!-- TOP HEADER -->
     <header class="top-header">
-      <div class="yt-logo" onclick="switchNav(document.querySelector('.nav-item'), 'beranda')">
+      <div class="yt-logo" onclick="resetToHome()">
         <i class="fa-brands fa-youtube"></i>
         <span>HidaTube</span>
       </div>
@@ -518,17 +641,17 @@
         <div class="search-input-box">
           <input type="text" id="searchInput" placeholder="Cari di HidaTube..." onkeyup="handleSearchKey(event)">
         </div>
-        <button class="icon-btn" onclick="executeSearch()">
+        <button class="icon-btn" onclick="executeSearch(null, false)">
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
       </div>
     </header>
 
-    <!-- 2. CATEGORY PILLS (CHIPS) -->
+    <!-- CATEGORY PILLS -->
     <nav class="chips-wrapper" id="chipsWrapper">
       <div class="explore-chip"><i class="fa-solid fa-compass"></i></div>
       <div class="chip active" id="chipSemua" onclick="filterCategory(this, '')">Semua</div>
-      <div class="chip" id="chipTrending" onclick="loadTrendingVideos(true, this)">🔥 Trending</div>
+      <div class="chip" id="chipTrending" onclick="loadTrendingVideos(true, this, false)">🔥 Trending</div>
       <div class="chip" onclick="filterCategory(this, 'YouTube Shorts Indonesia')">Shorts</div>
       <div class="chip" onclick="filterCategory(this, 'Otomotif Heavy Equipment Truck')">Otomotif & Alat Berat</div>
       <div class="chip" onclick="filterCategory(this, 'Web Development Tutorial')">Coding</div>
@@ -543,12 +666,17 @@
         <p style="margin-top:8px; font-size:12px;">Memuat HidaTube...</p>
       </div>
 
-      <div class="feed-container" id="feedContainer">
-        <!-- Video Cards Dirender di sini -->
-      </div>
+      <div id="channelHeaderContainer"></div>
+      <div class="feed-container" id="feedContainer"></div>
+      
+      <!-- TOMBOL / INDIKATOR MUAT LEBIH BANYAK VIDEO -->
+      <button class="btn-load-more" id="btnLoadMore" onclick="loadMoreVideos()" style="display:none;">
+        <i class="fa-solid fa-spinner fa-spin" id="loadMoreSpinner" style="display:none; margin-right:6px;"></i>
+        <span>Muat Lebih Banyak Video...</span>
+      </button>
     </main>
 
-    <!-- 3. WATCH PLAYER VIEW -->
+    <!-- WATCH PLAYER VIEW -->
     <div class="player-view" id="playerView">
       <div class="player-header-bar">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -573,11 +701,11 @@
 
         <!-- CHANNEL ROW -->
         <div class="channel-row">
-          <div class="channel-info">
+          <div class="channel-info" id="watchChannelRow" onclick="openChannelFromWatchView()">
             <img src="https://via.placeholder.com/36" class="channel-avatar" id="watchAvatar" alt="Avatar">
             <div>
               <div style="font-weight: 700; font-size: 13px;" id="watchChannel">Nama Channel</div>
-              <div style="font-size: 11px; color: var(--yt-text-secondary);">Channel Terverifikasi</div>
+              <div style="font-size: 11px; color: var(--yt-text-secondary);">Lihat Channel & Video Lainnya ›</div>
             </div>
           </div>
           <button class="btn-subscribe" onclick="alert('Berhasil Subskrib!')">Subskrib</button>
@@ -594,18 +722,32 @@
 
         <!-- KOTAK DESKRIPSI VIDEO -->
         <div class="description-box" id="descriptionBox" onclick="toggleDescription()">
-          <div class="desc-header" id="descHeaderStats">12RB x ditonton • Baru saja</div>
+          <div class="desc-header" id="descHeaderStats">12RB x ditonton • HidaTube</div>
           <div class="desc-text" id="watchDescription">Memuat deskripsi video...</div>
           <div class="desc-toggle-btn" id="descToggleBtn">...selengkapnya</div>
         </div>
 
+        <!-- KOTAK KOMENTAR YOUTUBE -->
+        <div class="comments-container">
+          <div class="comments-title">
+            <i class="fa-regular fa-comments"></i> Komentar Publik
+          </div>
+          <div class="comment-input-form">
+            <input type="text" id="customCommentInput" placeholder="Beri komentar publik...">
+            <button class="btn-send-comment" onclick="postCustomComment()">Kirim</button>
+          </div>
+          <div id="commentsList">
+            <p style="font-size:12px; color:var(--yt-text-secondary);">Memuat komentar...</p>
+          </div>
+        </div>
+
         <!-- RECOMMENDED FEED -->
-        <h3 style="font-size: 14px; margin: 16px 0 10px 0;">Berikutnya</h3>
+        <h3 style="font-size: 14px; margin: 16px 0 10px 0;">Video Berikutnya</h3>
         <div id="recommendedFeed"></div>
       </div>
     </div>
 
-    <!-- 4. BOTTOM NAVIGATION BAR -->
+    <!-- BOTTOM NAVIGATION BAR -->
     <nav class="bottom-nav">
       <div class="nav-item active" onclick="switchNav(this, 'beranda')">
         <i class="fa-solid fa-house"></i>
@@ -630,18 +772,24 @@
 
   </div>
 
-  <!-- LOAD YOUTUBE IFRAME API -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
     const apiKey = 'AIzaSyBc1XBpSqaAa9lOIlpLQDICfITMsc0Mfww';
     let ytPlayer = null;
     let currentVideoId = '';
+    let currentChannelId = '';
+    let currentChannelTitle = '';
+    
     let videoList = [];
     let isTrendingMode = false;
+    let nextPageToken = '';
+    let currentMode = 'trending'; // 'trending', 'search', 'channel'
+    let currentSearchQuery = '';
+    let isLoadingMore = false;
+
     let watchHistory = JSON.parse(localStorage.getItem('hidatube_history')) || [];
 
-    // KATA KUNCI VARIASI UNTUK SHORTS
     const shortsKeywords = [
       'YouTube Shorts Indonesia',
       'Shorts Lucu Viral',
@@ -652,13 +800,10 @@
       'Shorts Music Trending'
     ];
 
-    // Dapatkan Kata Kunci Acak agar Shorts Selalu Berubah
     function getRandomShortsQuery() {
-      const index = Math.floor(Math.random() * shortsKeywords.length);
-      return shortsKeywords[index];
+      return shortsKeywords[Math.floor(Math.random() * shortsKeywords.length)];
     }
 
-    // KONVERSI DURASI ISO 8601 PRESISI
     function parseISO8601Duration(duration) {
       if (!duration) return '00:00';
       const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -670,9 +815,7 @@
 
       const pad = (num) => String(num).padStart(2, '0');
 
-      if (hours > 0) {
-        return `${hours}:${pad(minutes)}:${pad(seconds)}`;
-      }
+      if (hours > 0) return `${hours}:${pad(minutes)}:${pad(seconds)}`;
       return `${pad(minutes)}:${pad(seconds)}`;
     }
 
@@ -681,12 +824,7 @@
         height: '100%',
         width: '100%',
         videoId: 'jfKfPfyJRdk',
-        playerVars: { 
-          'autoplay': 1, 
-          'rel': 0, 
-          'modestbranding': 1,
-          'fs': 1
-        }
+        playerVars: { 'autoplay': 1, 'rel': 0, 'modestbranding': 1, 'fs': 1 }
       });
     }
 
@@ -696,17 +834,34 @@
     }
 
     function handleSearchKey(e) {
-      if (e.key === 'Enter') executeSearch();
+      if (e.key === 'Enter') executeSearch(null, false);
     }
 
     function showLoading(show) {
       document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
-      document.getElementById('feedContainer').style.display = show ? 'none' : 'flex';
+      if (show) {
+        document.getElementById('feedContainer').style.display = 'none';
+        document.getElementById('btnLoadMore').style.display = 'none';
+      } else {
+        document.getElementById('feedContainer').style.display = 'flex';
+      }
     }
 
-    // MEMUAT TRENDING DENGAN URUTAN NUMERIK (#1, #2, #3...)
-    async function loadTrendingVideos(showRankBadge = false, chipEl = null) {
-      showLoading(true);
+    function resetToHome() {
+      document.getElementById('channelHeaderContainer').innerHTML = '';
+      switchNav(document.querySelector('.nav-item'), 'beranda');
+    }
+
+    // MEMUAT VIDEO TRENDING DENGAN PAGINASI (INFINITE SCROLL)
+    async function loadTrendingVideos(showRankBadge = false, chipEl = null, isAppend = false) {
+      if (!isAppend) {
+        showLoading(true);
+        videoList = [];
+        nextPageToken = '';
+        document.getElementById('channelHeaderContainer').innerHTML = '';
+      }
+      
+      currentMode = 'trending';
       isTrendingMode = showRankBadge;
 
       if (chipEl) {
@@ -715,41 +870,122 @@
       }
 
       try {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&chart=mostPopular&regionCode=ID&maxResults=15&key=${apiKey}`);
+        let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&chart=mostPopular&regionCode=ID&maxResults=15&key=${apiKey}`;
+        if (isAppend && nextPageToken) {
+          url += `&pageToken=${nextPageToken}`;
+        }
+
+        const res = await fetch(url);
         const data = await res.json();
+        
         if (data.items) {
-          videoList = data.items.map((item, idx) => ({
-            rank: idx + 1,
+          nextPageToken = data.nextPageToken || '';
+          
+          const newItems = data.items.map((item, idx) => ({
+            rank: (isAppend ? videoList.length : 0) + idx + 1,
             id: item.id,
+            channelId: item.snippet.channelId,
             title: item.snippet.title,
             channel: item.snippet.channelTitle,
-            description: item.snippet.description || 'Tidak ada deskripsi tersedia untuk video ini.',
+            description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
             views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '12.000',
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
+
+          videoList = isAppend ? videoList.concat(newItems) : newItems;
           renderFeed(videoList);
         }
       } catch (err) {
         console.warn('Gagal memuat API:', err);
       } finally {
         showLoading(false);
+        checkLoadMoreVisibility();
       }
     }
 
-    // HASIL PENCARIAN & VARIASI
-    async function executeSearch(customQuery = null) {
+    // HASIL PENCARIAN DENGAN PAGINASI UNTUK SCROLLING TANPA BATAS
+    async function executeSearch(customQuery = null, isAppend = false) {
       const query = customQuery || document.getElementById('searchInput').value.trim();
       if (!query) return;
 
+      currentSearchQuery = query;
+      currentMode = 'search';
       isTrendingMode = false;
+
+      if (!isAppend) {
+        showLoading(true);
+        videoList = [];
+        nextPageToken = '';
+        document.getElementById('channelHeaderContainer').innerHTML = '';
+      }
+
       toggleSearchOverlay(false);
-      showLoading(true);
 
       try {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`);
+        let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=15&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`;
+        if (isAppend && nextPageToken) {
+          searchUrl += `&pageToken=${nextPageToken}`;
+        }
+
+        const res = await fetch(searchUrl);
         const data = await res.json();
         
+        if (data.items && data.items.length > 0) {
+          nextPageToken = data.nextPageToken || '';
+          const videoIds = data.items.map(item => item.id.videoId).join(',');
+          
+          const detailsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`);
+          const detailsData = await detailsRes.json();
+
+          const newItems = detailsData.items.map(item => ({
+            id: item.id,
+            channelId: item.snippet.channelId,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
+            duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
+            views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '10.000',
+            thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
+          }));
+
+          videoList = isAppend ? videoList.concat(newItems) : newItems;
+          renderFeed(videoList);
+        }
+      } catch (err) {
+        alert('Gagal mengambil data.');
+      } finally {
+        showLoading(false);
+        checkLoadMoreVisibility();
+      }
+    }
+
+    // OTOMATIS BUKA HALAMAN CHANNEL YOUTUBE BILA NAMA/AVATAR CHANNEL DIKLIK
+    async function openChannelPage(chId, chTitle) {
+      closePlayerView();
+      showLoading(true);
+      currentMode = 'channel';
+      currentChannelId = chId;
+      currentChannelTitle = chTitle;
+      videoList = [];
+      nextPageToken = '';
+
+      // Tampilkan Header Banner Profil Channel
+      const headerContainer = document.getElementById('channelHeaderContainer');
+      headerContainer.innerHTML = `
+        <div class="channel-banner-card">
+          <img src="https://picsum.photos/seed/${chId}/120" class="channel-banner-avatar" alt="Avatar Channel">
+          <h2 style="font-size:18px; font-weight:700;">${chTitle}</h2>
+          <p style="font-size:12px; color:var(--yt-text-secondary); margin:4px 0 12px 0;">Channel YouTube Resmi • 1.4JT Subscriber</p>
+          <button class="btn-subscribe" onclick="alert('Berhasil Subskrib ke ${chTitle}!')">Subskrib</button>
+        </div>
+        <h3 style="font-size:14px; margin: 10px 16px;">Video dari ${chTitle}</h3>
+      `;
+
+      try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${chId}&maxResults=20&order=date&type=video&key=${apiKey}`);
+        const data = await res.json();
+
         if (data.items && data.items.length > 0) {
           const videoIds = data.items.map(item => item.id.videoId).join(',');
           const detailsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`);
@@ -757,35 +993,43 @@
 
           videoList = detailsData.items.map(item => ({
             id: item.id,
+            channelId: chId,
             title: item.snippet.title,
-            channel: item.snippet.channelTitle,
-            description: item.snippet.description || 'Tidak ada deskripsi tersedia untuk video ini.',
+            channel: chTitle,
+            description: item.snippet.description || 'Tidak ada deskripsi tersedia.',
             duration: parseISO8601Duration(item.contentDetails ? item.contentDetails.duration : ''),
-            views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '10.000',
+            views: item.statistics ? Number(item.statistics.viewCount).toLocaleString('id-ID') : '15.000',
             thumb: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
           }));
-          
+
           renderFeed(videoList);
         }
       } catch (err) {
-        alert('Gagal mengambil data.');
+        alert('Gagal memuat video channel ini.');
       } finally {
         showLoading(false);
+        checkLoadMoreVisibility();
       }
     }
 
+    function openChannelFromWatchView() {
+      if (currentChannelId) {
+        openChannelPage(currentChannelId, currentChannelTitle);
+      }
+    }
+
+    // RENDER METODE FEED VIDEO
     function renderFeed(items) {
       const container = document.getElementById('feedContainer');
       container.innerHTML = '';
 
       if (!items || items.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Tidak ada video.</p>';
+        container.innerHTML = '<p style="text-align:center; padding:40px; color:#aaa; font-size:13px;">Tidak ada video ditemukan.</p>';
         return;
       }
 
       items.forEach((v, index) => {
-        // Render Shorts Shelf secara berkala
-        if (index === 2) {
+        if (index === 2 && currentMode !== 'channel') {
           const shortsShelf = document.createElement('div');
           shortsShelf.className = 'shorts-shelf';
           shortsShelf.innerHTML = `
@@ -813,10 +1057,12 @@
             <span class="duration-badge">${v.duration || '00:00'}</span>
           </div>
           <div class="video-meta">
-            <img src="https://picsum.photos/seed/${v.id}/100" class="channel-avatar" alt="avatar">
+            <img src="https://picsum.photos/seed/${v.channelId || v.id}/100" class="channel-avatar" alt="avatar" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}')">
             <div class="meta-details">
               <div class="meta-title">${v.title}</div>
-              <div class="meta-sub">${v.channel} • ${v.views} x ditonton</div>
+              <div class="meta-sub">
+                <span class="channel-click" onclick="event.stopPropagation(); openChannelPage('${v.channelId}', '${escapeQuotes(v.channel)}')">${v.channel}</span> • ${v.views} x ditonton
+              </div>
             </div>
             <i class="fa-solid fa-ellipsis-vertical" style="color: var(--yt-text-secondary); font-size:14px;"></i>
           </div>
@@ -825,9 +1071,47 @@
       });
     }
 
+    // FUNGSI MUAT LEBIH BANYAK VIDEO SAAT DI-SCROLL KE BAWAH
+    async function loadMoreVideos() {
+      if (isLoadingMore || !nextPageToken) return;
+      isLoadingMore = true;
+
+      document.getElementById('loadMoreSpinner').style.display = 'inline-block';
+
+      if (currentMode === 'trending') {
+        await loadTrendingVideos(isTrendingMode, null, true);
+      } else if (currentMode === 'search') {
+        await executeSearch(currentSearchQuery, true);
+      }
+
+      isLoadingMore = false;
+      document.getElementById('loadMoreSpinner').style.display = 'none';
+    }
+
+    function checkLoadMoreVisibility() {
+      const btn = document.getElementById('btnLoadMore');
+      if (nextPageToken && currentMode !== 'channel') {
+        btn.style.display = 'block';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+    // DETEKSI OTOMATIS SCROLL DI PALING BAWAH LAYAR
+    window.addEventListener('scroll', () => {
+      if (currentMode === 'channel') return;
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+        if (!isLoadingMore && nextPageToken) {
+          loadMoreVideos();
+        }
+      }
+    });
+
+    // PLAY VIDEO & MEMUAT KOMENTAR PUBLIK DARI API
     function playVideo(id) {
       const video = videoList.find(v => v.id === id) || {
         id: id,
+        channelId: '',
         title: 'Video Pilihan',
         channel: 'HidaTube Content',
         description: 'Deskripsi tidak tersedia.',
@@ -835,15 +1119,16 @@
       };
 
       currentVideoId = video.id;
+      currentChannelId = video.channelId;
+      currentChannelTitle = video.channel;
+
       document.getElementById('watchTitle').innerText = video.title;
       document.getElementById('watchChannel').innerText = video.channel;
-      document.getElementById('watchAvatar').src = `https://picsum.photos/seed/${id}/100`;
+      document.getElementById('watchAvatar').src = `https://picsum.photos/seed/${video.channelId || id}/100`;
 
-      // Set Deskripsi & Statistik
       document.getElementById('descHeaderStats').innerText = `${video.views} x ditonton • HidaTube Player`;
       document.getElementById('watchDescription').innerText = video.description;
 
-      // Reset kondisi kotak deskripsi ke ringkas
       const descBox = document.getElementById('descriptionBox');
       descBox.classList.remove('expanded');
       document.getElementById('descToggleBtn').innerText = '...selengkapnya';
@@ -852,22 +1137,87 @@
         ytPlayer.loadVideoById(id);
       }
 
+      // Ambil Komentar Asli dari YouTube API
+      fetchVideoComments(id);
+
       addToHistory({ id: video.id, title: video.title, channel: video.channel });
       renderRecommended();
       document.getElementById('playerView').classList.add('active');
     }
 
-    // FUNGSI EXPAND / COLLAPSE DESKRIPSI
+    // AMBIL KOMENTAR REAL DARI API YOUTUBE
+    async function fetchVideoComments(videoId) {
+      const listContainer = document.getElementById('commentsList');
+      listContainer.innerHTML = '<p style="font-size:12px; color:var(--yt-text-secondary);">Memuat komentar...</p>';
+
+      try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=10&key=${apiKey}`);
+        const data = await res.json();
+
+        if (data.items && data.items.length > 0) {
+          listContainer.innerHTML = '';
+          data.items.forEach(item => {
+            const top = item.snippet.topLevelComment.snippet;
+            const commentEl = document.createElement('div');
+            commentEl.className = 'comment-item';
+            commentEl.innerHTML = `
+              <img src="${top.authorProfileImageUrl || 'https://via.placeholder.com/28'}" class="comment-avatar" alt="User">
+              <div class="comment-content">
+                <div class="comment-author">${top.authorDisplayName}</div>
+                <div class="comment-text">${top.textDisplay}</div>
+              </div>
+            `;
+            listContainer.appendChild(commentEl);
+          });
+        } else {
+          listContainer.innerHTML = '<p style="font-size:12px; color:var(--yt-text-secondary);">Belum ada komentar publik pada video ini.</p>';
+        }
+      } catch (err) {
+        listContainer.innerHTML = `
+          <div class="comment-item">
+            <img src="https://picsum.photos/seed/user1/28" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-author">@penonton_hidatube</div>
+              <div class="comment-text">Videonya sangat bermanfaat dan jelas sekali informasinya!</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <img src="https://picsum.photos/seed/user2/28" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-author">@rizky_hida</div>
+              <div class="comment-text">Terima kasih sudah berbagi, ditunggu konten selanjutnya 👍</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // FUNGSI KIRIM KOMENTAR BARU
+    function postCustomComment() {
+      const input = document.getElementById('customCommentInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const listContainer = document.getElementById('commentsList');
+      const newCommentEl = document.createElement('div');
+      newCommentEl.className = 'comment-item';
+      newCommentEl.innerHTML = `
+        <img src="https://picsum.photos/seed/myuser/28" class="comment-avatar">
+        <div class="comment-content">
+          <div class="comment-author">@Pengguna_HidaTube (Anda)</div>
+          <div class="comment-text">${text}</div>
+        </div>
+      `;
+
+      listContainer.prepend(newCommentEl);
+      input.value = '';
+    }
+
     function toggleDescription() {
       const descBox = document.getElementById('descriptionBox');
       const toggleBtn = document.getElementById('descToggleBtn');
-      
       descBox.classList.toggle('expanded');
-      if (descBox.classList.contains('expanded')) {
-        toggleBtn.innerText = 'Tampilkan lebih sedikit';
-      } else {
-        toggleBtn.innerText = '...selengkapnya';
-      }
+      toggleBtn.innerText = descBox.classList.contains('expanded') ? 'Tampilkan lebih sedikit' : '...selengkapnya';
     }
 
     function closePlayerView() {
@@ -912,7 +1262,7 @@
             <span class="duration-badge">${v.duration || '00:00'}</span>
           </div>
           <div class="video-meta">
-            <img src="https://picsum.photos/seed/${v.id}/100" class="channel-avatar">
+            <img src="https://picsum.photos/seed/${v.channelId || v.id}/100" class="channel-avatar">
             <div class="meta-details">
               <div class="meta-title">${v.title}</div>
               <div class="meta-sub">${v.channel} • ${v.views} x ditonton</div>
@@ -931,7 +1281,7 @@
         loadTrendingVideos(false);
       } else {
         document.getElementById('searchInput').value = query;
-        executeSearch(query);
+        executeSearch(query, false);
       }
     }
 
@@ -943,23 +1293,25 @@
 
       if (tab === 'beranda') {
         document.getElementById('chipsWrapper').style.display = 'flex';
-        loadTrendingVideos(false, document.getElementById('chipSemua'));
+        loadTrendingVideos(false, document.getElementById('chipSemua'), false);
       } else if (tab === 'shorts') {
         document.getElementById('chipsWrapper').style.display = 'none';
-        // Ambil query Shorts acak agar video berbeda terus
         const randomQuery = getRandomShortsQuery();
-        executeSearch(randomQuery);
+        executeSearch(randomQuery, false);
       } else if (tab === 'subscription') {
         document.getElementById('chipsWrapper').style.display = 'none';
         container.innerHTML = '<div style="padding:30px; text-align:center; color:#aaa;"><h3>Subscription Terikhtisar</h3><p style="font-size:12px; margin-top:8px;">Video terbaru dari channel favorit Anda di HidaTube akan muncul di sini.</p></div>';
+        document.getElementById('btnLoadMore').style.display = 'none';
       } else if (tab === 'anda') {
         document.getElementById('chipsWrapper').style.display = 'none';
         renderAndaProfile();
+        document.getElementById('btnLoadMore').style.display = 'none';
       }
     }
 
     function renderAndaProfile() {
       const container = document.getElementById('feedContainer');
+      document.getElementById('channelHeaderContainer').innerHTML = '';
       container.innerHTML = `
         <div style="padding: 16px;">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
@@ -1007,8 +1359,12 @@
       }
     }
 
+    function escapeQuotes(str) {
+      return str ? str.replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-      loadTrendingVideos(false);
+      loadTrendingVideos(false, null, false);
     });
   </script>
 </body>
