@@ -1164,7 +1164,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between;
+  justify-space-between;
 
   width:100%;
 }
@@ -1232,7 +1232,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between;
+  justify-space-between;
 
   gap:10px;
 
@@ -1443,7 +1443,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between;
+  justify-space-between;
 
   cursor:pointer;
 }
@@ -1991,7 +1991,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-around;
+  justify-space-around;
 
   z-index:1200;
 }
@@ -2424,7 +2424,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between;
+  justify-space-between;
 
   gap:15px;
 
@@ -3019,13 +3019,7 @@ input:focus-visible {
 
 <body>
 
-<!-- =======================================================
-     APP
-======================================================= -->
-
 <div class="app-viewport">
-
-  <!-- TOP HEADER -->
 
   <header class="top-header">
 
@@ -3075,8 +3069,6 @@ input:focus-visible {
 
     </div>
 
-
-    <!-- SEARCH OVERLAY -->
 
     <div class="search-bar-overlay"
          id="searchOverlay">
@@ -3129,14 +3121,10 @@ input:focus-visible {
   </header>
 
 
-  <!-- SEARCH SUGGESTIONS -->
-
   <div class="search-suggestions"
        id="searchSuggestions">
   </div>
 
-
-  <!-- CATEGORY -->
 
   <nav class="chips-wrapper"
        id="chipsWrapper">
@@ -3145,6 +3133,15 @@ input:focus-visible {
          onclick="showExplore()">
 
       <i class="fa-solid fa-compass"></i>
+
+    </div>
+
+
+    <div class="explore-chip"
+         onclick="toggleSearchOverlay(true)"
+         aria-label="Cari">
+
+      <i class="fa-solid fa-magnifying-glass"></i>
 
     </div>
 
@@ -3209,8 +3206,6 @@ input:focus-visible {
   </nav>
 
 
-  <!-- SORT FILTER -->
-
   <div class="sort-filter-bar"
        id="sortFilterBar">
 
@@ -3260,8 +3255,6 @@ input:focus-visible {
   </div>
 
 
-  <!-- PULL REFRESH -->
-
   <div class="pull-indicator"
        id="pullIndicator">
 
@@ -3269,8 +3262,6 @@ input:focus-visible {
 
   </div>
 
-
-  <!-- NETWORK -->
 
   <div class="network-status"
        id="networkStatus">
@@ -3280,8 +3271,6 @@ input:focus-visible {
 
   </div>
 
-
-  <!-- MAIN -->
 
   <main id="mainContent">
 
@@ -3297,8 +3286,6 @@ input:focus-visible {
 
     <div id="channelHeaderContainer"></div>
 
-
-    <!-- CONTINUE WATCHING -->
 
     <section
       class="continue-section hidden"
@@ -3324,8 +3311,6 @@ input:focus-visible {
     </section>
 
 
-    <!-- FEED -->
-
     <div class="feed-container"
          id="feedContainer">
     </div>
@@ -3347,10 +3332,6 @@ input:focus-visible {
 
   </main>
 
-
-  <!-- =====================================================
-       PLAYER
-  ====================================================== -->
 
   <div class="player-view"
        id="playerView">
@@ -3412,8 +3393,6 @@ input:focus-visible {
     </div>
 
 
-    <!-- MINI PLAYER -->
-
     <div class="mini-player-controls"
          id="miniPlayerControls"
          onclick="expandPlayer()">
@@ -3461,8 +3440,6 @@ input:focus-visible {
     </div>
 
 
-    <!-- WATCH DETAILS -->
-
     <div class="watch-details">
 
 
@@ -3473,8 +3450,6 @@ input:focus-visible {
 
       </h1>
 
-
-      <!-- CHANNEL -->
 
       <div class="channel-row">
 
@@ -3522,8 +3497,6 @@ input:focus-visible {
 
       </div>
 
-
-      <!-- ACTIONS -->
 
       <div class="action-bar-scroll">
 
@@ -3601,8 +3574,6 @@ input:focus-visible {
       </div>
 
 
-      <!-- DESCRIPTION -->
-
       <div
         class="description-box"
         id="descriptionBox"
@@ -3636,8 +3607,6 @@ input:focus-visible {
 
       </div>
 
-
-      <!-- COMMENTS -->
 
       <div class="comments-container">
 
@@ -3761,8 +3730,6 @@ input:focus-visible {
       </div>
 
 
-      <!-- AUTOPLAY -->
-
       <div
         style="
           display:flex;
@@ -3800,8 +3767,6 @@ input:focus-visible {
       </div>
 
 
-      <!-- RECOMMENDED -->
-
       <div id="recommendedFeed"></div>
 
 
@@ -3825,10 +3790,6 @@ input:focus-visible {
 
   </div>
 
-
-  <!-- =====================================================
-       BOTTOM NAV
-  ====================================================== -->
 
   <nav class="bottom-nav">
 
@@ -3894,19 +3855,11 @@ input:focus-visible {
 </div>
 
 
-<!-- =======================================================
-     TOAST
-======================================================= -->
-
 <div
   class="toast-container"
   id="toastContainer">
 </div>
 
-
-<!-- =======================================================
-     BOTTOM SHEET BACKDROP
-======================================================= -->
 
 <div
   class="sheet-backdrop"
@@ -3914,10 +3867,6 @@ input:focus-visible {
   onclick="closeBottomSheet()">
 </div>
 
-
-<!-- =======================================================
-     BOTTOM SHEET
-======================================================= -->
 
 <div
   class="bottom-sheet"
@@ -3937,10 +3886,6 @@ input:focus-visible {
 
 </div>
 
-
-<!-- =======================================================
-     MODAL
-======================================================= -->
 
 <div
   class="modal-backdrop"
@@ -3973,10 +3918,6 @@ input:focus-visible {
 
 </div>
 
-
-<!-- =======================================================
-     YOUTUBE API
-======================================================= -->
 
 <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -6877,7 +6818,6 @@ function showSettings() {
   openModal(
     'Pengaturan HidaTube',
     `
-    <!-- MENU PILIHAN MANUAL API KEY -->
     <div class="settings-section">
       <div class="settings-section-title">Pilihan Server API Key</div>
       <div class="theme-options">
