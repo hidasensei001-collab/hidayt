@@ -463,6 +463,11 @@ img {
   display:block;
 }
 
+.search-suggestions.chips-mode {
+
+  top:calc(var(--top-nav-height) + 48px) !important;
+}
+
 .suggestion-item {
 
   display:flex;
@@ -503,7 +508,7 @@ img {
 
 
 /* =========================================================
-   CATEGORY CHIPS
+   CATEGORY CHIPS & INLINE SEARCH
    ========================================================= */
 
 .chips-wrapper {
@@ -531,6 +536,8 @@ img {
   border-bottom:1px solid var(--yt-border);
 
   scrollbar-width:none;
+
+  transition:padding .2s ease;
 }
 
 .chips-wrapper::-webkit-scrollbar {
@@ -573,6 +580,52 @@ img {
   background:var(--yt-text-primary);
 
   color:var(--yt-black);
+}
+
+/* CHIP INLINE SEARCH STYLING */
+
+.chip-search-box {
+
+  display:none;
+
+  align-items:center;
+
+  gap:6px;
+
+  width:100%;
+
+  flex-shrink:0;
+}
+
+.chips-wrapper.chip-search-active {
+
+  overflow-x:hidden;
+}
+
+.chips-wrapper.chip-search-active .explore-chip,
+.chips-wrapper.chip-search-active .chip {
+
+  display:none !important;
+}
+
+.chips-wrapper.chip-search-active .chip-search-box {
+
+  display:flex !important;
+
+  animation:chipSearchIn .18s ease;
+}
+
+@keyframes chipSearchIn {
+
+  from {
+    opacity:0;
+    transform:scale(.97);
+  }
+
+  to {
+    opacity:1;
+    transform:none;
+  }
 }
 
 
@@ -2008,7 +2061,7 @@ img {
 
   align-items:center;
 
-  justify-content:center;
+  justify-center:center;
 
   gap:4px;
 
@@ -3138,10 +3191,61 @@ input:focus-visible {
 
 
     <div class="explore-chip"
-         onclick="toggleSearchOverlay(true)"
+         onclick="toggleChipSearch(true)"
          aria-label="Cari">
 
       <i class="fa-solid fa-magnifying-glass"></i>
+
+    </div>
+
+
+    <!-- INPUT PENCARIAN INLINE CHIPS -->
+    <div class="chip-search-box" id="chipSearchBox">
+
+      <button class="icon-btn"
+              onclick="toggleChipSearch(false)"
+              aria-label="Kembali"
+              style="width:30px;height:30px;font-size:14px;flex-shrink:0;">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+      </button>
+
+      <div class="search-input-box" style="flex:1;height:34px;">
+
+        <i class="fa-solid fa-magnifying-glass"
+           style="color:var(--yt-text-secondary);font-size:12px;margin-right:6px;">
+        </i>
+
+        <input
+          type="text"
+          id="chipSearchInput"
+          autocomplete="off"
+          placeholder="Cari di HidaTube..."
+          oninput="handleChipSearchInput(this.value)"
+          onkeydown="handleChipSearchKey(event)"
+        >
+
+        <button
+          id="clearChipSearchBtn"
+          class="icon-btn hidden"
+          onclick="clearChipSearchInput()"
+          style="width:22px;height:22px;font-size:12px;">
+
+          <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+      </div>
+
+      <button class="icon-btn"
+              onclick="executeChipSearch()"
+              aria-label="Cari"
+              style="width:30px;height:30px;font-size:14px;flex-shrink:0;">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+      </button>
 
     </div>
 
@@ -4624,8 +4728,77 @@ async function loadTrendingVideos(
 
 
 /* =========================================================
-   SEARCH
+   SEARCH & INLINE CHIP SEARCH
    ========================================================= */
+
+function toggleChipSearch(show) {
+
+  const wrapper = document.getElementById('chipsWrapper');
+  const input = document.getElementById('chipSearchInput');
+  const panel = document.getElementById('searchSuggestions');
+
+  if (show) {
+    wrapper.classList.add('chip-search-active');
+    input.focus();
+    renderSearchSuggestions(input.value);
+  } else {
+    wrapper.classList.remove('chip-search-active');
+    input.value = '';
+    document.getElementById('clearChipSearchBtn').classList.add('hidden');
+    panel.classList.remove('active', 'chips-mode');
+  }
+
+}
+
+
+function handleChipSearchInput(value) {
+
+  const clear = document.getElementById('clearChipSearchBtn');
+  clear.classList.toggle('hidden', !value.trim());
+
+  if (!value.trim()) {
+    renderSearchSuggestions();
+    return;
+  }
+
+  renderSearchSuggestions(value);
+
+}
+
+
+function handleChipSearchKey(event) {
+  if (event.key === 'Enter') {
+    executeChipSearch();
+  }
+}
+
+
+function clearChipSearchInput() {
+
+  const input = document.getElementById('chipSearchInput');
+  input.value = '';
+  input.focus();
+
+  document.getElementById('clearChipSearchBtn').classList.add('hidden');
+  renderSearchSuggestions();
+
+}
+
+
+function executeChipSearch() {
+
+  const query = document.getElementById('chipSearchInput').value.trim();
+
+  if (!query) {
+    showToast('Masukkan kata pencarian', 'error');
+    return;
+  }
+
+  executeSearch(query, false);
+  toggleChipSearch(false);
+
+}
+
 
 function handleSearchInput(value) {
 
@@ -4680,10 +4853,18 @@ function saveSearchHistory(query) {
 function renderSearchSuggestions(value='') {
 
   const panel = document.getElementById('searchSuggestions');
+  const isHeaderSearch = document.getElementById('searchOverlay').classList.contains('active');
+  const isChipSearch = document.getElementById('chipsWrapper').classList.contains('chip-search-active');
 
-  if (!document.getElementById('searchOverlay').classList.contains('active')) {
-    panel.classList.remove('active');
+  if (!isHeaderSearch && !isChipSearch) {
+    panel.classList.remove('active', 'chips-mode');
     return;
+  }
+
+  if (isChipSearch) {
+    panel.classList.add('chips-mode');
+  } else {
+    panel.classList.remove('chips-mode');
   }
 
   let list = searchHistory.slice(0, 7);
@@ -4731,7 +4912,9 @@ function selectSearchSuggestionByIndex(index) {
   const query = currentSuggestions[index];
   if (query) {
     document.getElementById('searchInput').value = query;
+    document.getElementById('chipSearchInput').value = query;
     executeSearch(query, false);
+    toggleChipSearch(false);
   }
 }
 
@@ -4752,7 +4935,7 @@ async function executeSearch(
   sortOrder=currentSortOrder
 ) {
 
-  const query = (customQuery || document.getElementById('searchInput').value).trim();
+  const query = (customQuery || document.getElementById('searchInput').value || document.getElementById('chipSearchInput').value).trim();
 
   if (!query) {
     showToast('Masukkan kata pencarian', 'error');
@@ -4775,6 +4958,7 @@ async function executeSearch(
   }
 
   toggleSearchOverlay(false);
+  toggleChipSearch(false);
 
   try {
 
@@ -7466,6 +7650,7 @@ window.addEventListener('popstate', () => {
 
   const player = document.getElementById('playerView');
   const search = document.getElementById('searchOverlay');
+  const chipSearch = document.getElementById('chipsWrapper');
 
   if (player.classList.contains('active')) {
     if (player.classList.contains('minimized')) {
@@ -7473,6 +7658,11 @@ window.addEventListener('popstate', () => {
     } else {
       minimizePlayer();
     }
+    return;
+  }
+
+  if (chipSearch.classList.contains('chip-search-active')) {
+    toggleChipSearch(false);
     return;
   }
 
@@ -7534,6 +7724,7 @@ document.addEventListener('keydown', event => {
     closeBottomSheet();
     closeModal();
     toggleSearchOverlay(false);
+    toggleChipSearch(false);
   }
 
 });
