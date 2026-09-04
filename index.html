@@ -6,8 +6,6 @@
 <meta name="viewport"
       content="width=device-width,
                initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no,
                viewport-fit=cover">
 
 <meta name="theme-color" content="#0f0f0f">
@@ -30,7 +28,7 @@
 
 /* =========================================================
    HIDATUBE V2
-   MODERN MOBILE VIDEO EXPERIENCE
+   MODERN MOBILE VIDEO EXPERIENCE (OPTIMIZED)
    ========================================================= */
 
 :root {
@@ -121,7 +119,7 @@ body.light-theme .mini-player {
 
 
 /* =========================================================
-   RESET
+   RESET & UTILITIES
    ========================================================= */
 
 * {
@@ -172,6 +170,15 @@ img {
   display:none !important;
 }
 
+/* Utility Class untuk menghilangkan scrollbar secara bersih */
+.no-scrollbar {
+  scrollbar-width:none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display:none;
+}
+
 
 /* =========================================================
    APP VIEWPORT
@@ -190,7 +197,7 @@ img {
 
   background:var(--yt-bg);
 
-  padding-top:var(--top-nav-height);
+  padding-top:calc(var(--top-nav-height) + var(--safe-top));
 
   padding-bottom:
     calc(
@@ -216,7 +223,7 @@ img {
   width:100%;
   max-width:520px;
 
-  height:var(--top-nav-height);
+  height:calc(var(--top-nav-height) + var(--safe-top));
 
   background:var(--yt-black);
 
@@ -224,11 +231,10 @@ img {
 
   align-items:center;
 
-  justify-space-between;
+  justify-content:space-between; /* Perbaikan Flexbox */
 
   padding:
-    0 14px
-    var(--safe-top);
+    var(--safe-top) 14px 0 14px; /* Perbaikan Safe Area Notch */
 
   z-index:1000;
 
@@ -273,13 +279,13 @@ img {
 
   align-items:center;
 
-  gap:18px;
+  gap:12px;
 }
 
 .icon-btn {
 
-  width:34px;
-  height:34px;
+  width:38px; /* Perbaikan Touch Target Size */
+  height:38px;
 
   display:flex;
 
@@ -314,8 +320,8 @@ img {
 
   position:absolute;
 
-  top:0;
-  right:-2px;
+  top:2px;
+  right:0px;
 
   min-width:17px;
 
@@ -360,7 +366,7 @@ img {
 
   align-items:center;
 
-  padding:0 9px;
+  padding:var(--safe-top) 9px 0;
 
   gap:8px;
 
@@ -443,7 +449,7 @@ img {
   left:10px;
   right:10px;
 
-  top:calc(var(--top-nav-height) - 1px);
+  top:calc(var(--top-nav-height) + var(--safe-top) - 1px);
 
   background:var(--yt-paper);
 
@@ -465,7 +471,7 @@ img {
 
 .search-suggestions.chips-mode {
 
-  top:calc(var(--top-nav-height) + 48px) !important;
+  top:calc(var(--top-nav-height) + var(--safe-top) + 48px) !important;
 }
 
 .suggestion-item {
@@ -515,7 +521,7 @@ img {
 
   position:sticky;
 
-  top:var(--top-nav-height);
+  top:calc(var(--top-nav-height) + var(--safe-top));
 
   z-index:800;
 
@@ -535,14 +541,7 @@ img {
 
   border-bottom:1px solid var(--yt-border);
 
-  scrollbar-width:none;
-
   transition:padding .2s ease;
-}
-
-.chips-wrapper::-webkit-scrollbar {
-
-  display:none;
 }
 
 .explore-chip,
@@ -650,13 +649,6 @@ img {
   overflow-x:auto;
 
   white-space:nowrap;
-
-  scrollbar-width:none;
-}
-
-.sort-filter-bar::-webkit-scrollbar {
-
-  display:none;
 }
 
 .sort-label {
@@ -928,8 +920,8 @@ img {
 
 .video-more-btn {
 
-  width:30px;
-  height:35px;
+  width:36px; /* Touch target optimal */
+  height:36px;
 
   background:none;
 
@@ -938,6 +930,12 @@ img {
   flex-shrink:0;
 
   cursor:pointer;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
 }
 
 
@@ -985,13 +983,6 @@ img {
   overflow-x:auto;
 
   padding:0 12px;
-
-  scrollbar-width:none;
-}
-
-.shorts-grid::-webkit-scrollbar {
-
-  display:none;
 }
 
 .short-card {
@@ -1217,7 +1208,7 @@ img {
 
   align-items:center;
 
-  justify-space-between;
+  justify-content:space-between; /* Perbaikan Flexbox */
 
   width:100%;
 }
@@ -1285,7 +1276,7 @@ img {
 
   align-items:center;
 
-  justify-space-between;
+  justify-content:space-between; /* Perbaikan Flexbox */
 
   gap:10px;
 
@@ -1351,13 +1342,6 @@ img {
   padding-bottom:11px;
 
   margin-bottom:5px;
-
-  scrollbar-width:none;
-}
-
-.action-bar-scroll::-webkit-scrollbar {
-
-  display:none;
 }
 
 .action-pill {
@@ -1496,7 +1480,7 @@ img {
 
   align-items:center;
 
-  justify-space-between;
+  justify-content:space-between; /* Perbaikan Flexbox */
 
   cursor:pointer;
 }
@@ -1557,13 +1541,6 @@ img {
   overflow-x:auto;
 
   margin-bottom:11px;
-
-  scrollbar-width:none;
-}
-
-.comment-filter-bar::-webkit-scrollbar {
-
-  display:none;
 }
 
 .comment-filter-btn {
@@ -1817,13 +1794,6 @@ img {
   background:var(--yt-black);
 
   border-bottom:1px solid var(--yt-border);
-
-  scrollbar-width:none;
-}
-
-.channel-tabs::-webkit-scrollbar {
-
-  display:none;
 }
 
 .channel-tab {
@@ -1996,8 +1966,8 @@ img {
 
 .mini-btn {
 
-  width:32px;
-  height:32px;
+  width:36px; /* Touch target optimal */
+  height:36px;
 
   background:none;
 
@@ -2044,7 +2014,7 @@ img {
 
   align-items:center;
 
-  justify-space-around;
+  justify-content:space-around;
 
   z-index:1200;
 }
@@ -2061,7 +2031,7 @@ img {
 
   align-items:center;
 
-  justify-center:center;
+  justify-content:center; /* Perbaikan Flexbox */
 
   gap:4px;
 
@@ -2477,7 +2447,7 @@ img {
 
   align-items:center;
 
-  justify-space-between;
+  justify-content:space-between; /* Perbaikan Flexbox */
 
   gap:15px;
 
@@ -2965,13 +2935,6 @@ img {
   gap:9px;
 
   overflow-x:auto;
-
-  scrollbar-width:none;
-}
-
-.continue-list::-webkit-scrollbar {
-
-  display:none;
 }
 
 .continue-card {
@@ -3078,7 +3041,9 @@ input:focus-visible {
 
     <div class="yt-logo"
          onclick="resetToHome()"
-         aria-label="HidaTube">
+         aria-label="HidaTube"
+         role="button"
+         tabindex="0">
 
       <i class="fa-brands fa-youtube"></i>
 
@@ -3127,7 +3092,8 @@ input:focus-visible {
          id="searchOverlay">
 
       <button class="icon-btn"
-              onclick="toggleSearchOverlay(false)">
+              onclick="toggleSearchOverlay(false)"
+              aria-label="Kembali">
 
         <i class="fa-solid fa-arrow-left"></i>
 
@@ -3153,6 +3119,7 @@ input:focus-visible {
           id="clearSearchBtn"
           class="icon-btn hidden"
           onclick="clearSearchInput()"
+          aria-label="Hapus teks pencarian"
           style="width:25px;height:25px;font-size:13px;">
 
           <i class="fa-solid fa-xmark"></i>
@@ -3163,7 +3130,8 @@ input:focus-visible {
 
 
       <button class="icon-btn"
-              onclick="executeSearch(null,false)">
+              onclick="executeSearch(null,false)"
+              aria-label="Lakukan Pencarian">
 
         <i class="fa-solid fa-magnifying-glass"></i>
 
@@ -3174,16 +3142,19 @@ input:focus-visible {
   </header>
 
 
-  <div class="search-suggestions"
+  <div class="search-suggestions no-scrollbar"
        id="searchSuggestions">
   </div>
 
 
-  <nav class="chips-wrapper"
+  <nav class="chips-wrapper no-scrollbar"
        id="chipsWrapper">
 
     <div class="explore-chip"
-         onclick="showExplore()">
+         onclick="showExplore()"
+         role="button"
+         tabindex="0"
+         aria-label="Jelajahi">
 
       <i class="fa-solid fa-compass"></i>
 
@@ -3192,14 +3163,15 @@ input:focus-visible {
 
     <div class="explore-chip"
          onclick="toggleChipSearch(true)"
-         aria-label="Cari">
+         role="button"
+         tabindex="0"
+         aria-label="Cari Inline">
 
       <i class="fa-solid fa-magnifying-glass"></i>
 
     </div>
 
 
-    <!-- INPUT PENCARIAN INLINE CHIPS -->
     <div class="chip-search-box" id="chipSearchBox">
 
       <button class="icon-btn"
@@ -3230,6 +3202,7 @@ input:focus-visible {
           id="clearChipSearchBtn"
           class="icon-btn hidden"
           onclick="clearChipSearchInput()"
+          aria-label="Hapus"
           style="width:22px;height:22px;font-size:12px;">
 
           <i class="fa-solid fa-xmark"></i>
@@ -3252,7 +3225,9 @@ input:focus-visible {
 
     <div class="chip active"
          id="chipSemua"
-         onclick="filterCategory(this,'')">
+         onclick="filterCategory(this,'')"
+         role="button"
+         tabindex="0">
 
       Semua
 
@@ -3261,7 +3236,9 @@ input:focus-visible {
 
     <div class="chip"
          id="chipTrending"
-         onclick="loadTrendingVideos(true,this,false)">
+         onclick="loadTrendingVideos(true,this,false)"
+         role="button"
+         tabindex="0">
 
       🔥 Trending
 
@@ -3269,7 +3246,9 @@ input:focus-visible {
 
 
     <div class="chip"
-         onclick="filterCategory(this,'YouTube Shorts Indonesia')">
+         onclick="filterCategory(this,'YouTube Shorts Indonesia')"
+         role="button"
+         tabindex="0">
 
       Shorts
 
@@ -3277,7 +3256,9 @@ input:focus-visible {
 
 
     <div class="chip"
-         onclick="filterCategory(this,'Otomotif Heavy Equipment Truck')">
+         onclick="filterCategory(this,'Otomotif Heavy Equipment Truck')"
+         role="button"
+         tabindex="0">
 
       Otomotif & Alat Berat
 
@@ -3285,7 +3266,9 @@ input:focus-visible {
 
 
     <div class="chip"
-         onclick="filterCategory(this,'Web Development Tutorial')">
+         onclick="filterCategory(this,'Web Development Tutorial')"
+         role="button"
+         tabindex="0">
 
       Coding
 
@@ -3293,7 +3276,9 @@ input:focus-visible {
 
 
     <div class="chip"
-         onclick="filterCategory(this,'Lofi Chill Beats')">
+         onclick="filterCategory(this,'Lofi Chill Beats')"
+         role="button"
+         tabindex="0">
 
       Musik
 
@@ -3301,7 +3286,9 @@ input:focus-visible {
 
 
     <div class="chip"
-         onclick="filterCategory(this,'Gaming Indonesia')">
+         onclick="filterCategory(this,'Gaming Indonesia')"
+         role="button"
+         tabindex="0">
 
       Gaming
 
@@ -3310,7 +3297,7 @@ input:focus-visible {
   </nav>
 
 
-  <div class="sort-filter-bar"
+  <div class="sort-filter-bar no-scrollbar"
        id="sortFilterBar">
 
     <span class="sort-label">
@@ -3323,7 +3310,9 @@ input:focus-visible {
 
     <div class="sort-chip active"
          id="sortChipRelevance"
-         onclick="applySortFilter('relevance',this)">
+         onclick="applySortFilter('relevance',this)"
+         role="button"
+         tabindex="0">
 
       ✨ Relevansi
 
@@ -3332,7 +3321,9 @@ input:focus-visible {
 
     <div class="sort-chip"
          id="sortChipNewest"
-         onclick="applySortFilter('date',this)">
+         onclick="applySortFilter('date',this)"
+         role="button"
+         tabindex="0">
 
       ⚡ Terbaru
 
@@ -3341,7 +3332,9 @@ input:focus-visible {
 
     <div class="sort-chip"
          id="sortChipPopular"
-         onclick="applySortFilter('viewCount',this)">
+         onclick="applySortFilter('viewCount',this)"
+         role="button"
+         tabindex="0">
 
       🔥 Terpopuler
 
@@ -3350,7 +3343,9 @@ input:focus-visible {
 
     <div class="sort-chip"
          id="sortChipOldest"
-         onclick="applySortFilter('oldest',this)">
+         onclick="applySortFilter('oldest',this)"
+         role="button"
+         tabindex="0">
 
       ⏳ Terlama
 
@@ -3408,7 +3403,7 @@ input:focus-visible {
 
       </div>
 
-      <div class="continue-list"
+      <div class="continue-list no-scrollbar"
            id="continueList">
       </div>
 
@@ -3452,7 +3447,8 @@ input:focus-visible {
         <div style="display:flex;align-items:center;gap:10px;min-width:0;">
 
           <button class="icon-btn"
-                  onclick="minimizePlayer()">
+                  onclick="minimizePlayer()"
+                  aria-label="Minimalkan Pemutar">
 
             <i class="fa-solid fa-chevron-down"></i>
 
@@ -3468,7 +3464,8 @@ input:focus-visible {
         <div style="display:flex;align-items:center;gap:3px;">
 
           <button class="icon-btn"
-                  onclick="togglePlayerFullScreen()">
+                  onclick="togglePlayerFullScreen()"
+                  aria-label="Layar Penuh">
 
             <i class="fa-solid fa-expand"></i>
 
@@ -3476,7 +3473,8 @@ input:focus-visible {
 
 
           <button class="icon-btn"
-                  onclick="stopAndClosePlayer()">
+                  onclick="stopAndClosePlayer()"
+                  aria-label="Tutup Pemutar">
 
             <i class="fa-solid fa-xmark"></i>
 
@@ -3523,7 +3521,8 @@ input:focus-visible {
       <div class="mini-btns">
 
         <button class="mini-btn"
-                onclick="event.stopPropagation();togglePlayPause()">
+                onclick="event.stopPropagation();togglePlayPause()"
+                aria-label="Putar atau Pause">
 
           <i class="fa-solid fa-pause"
              id="miniPlayPauseIcon">
@@ -3533,7 +3532,8 @@ input:focus-visible {
 
 
         <button class="mini-btn"
-                onclick="event.stopPropagation();stopAndClosePlayer()">
+                onclick="event.stopPropagation();stopAndClosePlayer()"
+                aria-label="Tutup Mini Player">
 
           <i class="fa-solid fa-xmark"></i>
 
@@ -3602,7 +3602,7 @@ input:focus-visible {
       </div>
 
 
-      <div class="action-bar-scroll">
+      <div class="action-bar-scroll no-scrollbar">
 
 
         <div
@@ -3749,7 +3749,7 @@ input:focus-visible {
           id="commentsBody">
 
 
-          <div class="comment-filter-bar">
+          <div class="comment-filter-bar no-scrollbar">
 
             <span
               style="font-size:10px;color:var(--yt-text-secondary);">
@@ -3901,7 +3901,9 @@ input:focus-visible {
     <div
       class="nav-item active"
       id="navBeranda"
-      onclick="switchNav(this,'beranda')">
+      onclick="switchNav(this,'beranda')"
+      role="button"
+      tabindex="0">
 
       <i class="fa-solid fa-house"></i>
 
@@ -3913,7 +3915,9 @@ input:focus-visible {
     <div
       class="nav-item"
       id="navShorts"
-      onclick="switchNav(this,'shorts')">
+      onclick="switchNav(this,'shorts')"
+      role="button"
+      tabindex="0">
 
       <i class="fa-solid fa-bolt"></i>
 
@@ -3924,7 +3928,9 @@ input:focus-visible {
 
     <div
       class="nav-item create-btn"
-      onclick="showCreateMenu()">
+      onclick="showCreateMenu()"
+      role="button"
+      tabindex="0">
 
       <i class="fa-regular fa-circle-plus"></i>
 
@@ -3934,7 +3940,9 @@ input:focus-visible {
     <div
       class="nav-item"
       id="navSubscription"
-      onclick="switchNav(this,'subscription')">
+      onclick="switchNav(this,'subscription')"
+      role="button"
+      tabindex="0">
 
       <i class="fa-solid fa-layer-group"></i>
 
@@ -3946,7 +3954,9 @@ input:focus-visible {
     <div
       class="nav-item"
       id="navAnda"
-      onclick="switchNav(this,'anda')">
+      onclick="switchNav(this,'anda')"
+      role="button"
+      tabindex="0">
 
       <i class="fa-regular fa-user"></i>
 
@@ -4002,7 +4012,8 @@ input:focus-visible {
 
     <button
       class="modal-close"
-      onclick="closeModal()">
+      onclick="closeModal()"
+      aria-label="Tutup Modal">
 
       <i class="fa-solid fa-xmark"></i>
 
@@ -4029,7 +4040,7 @@ input:focus-visible {
 <script>
 
 /* =========================================================
-   HIDATUBE V2 JAVASCRIPT
+   HIDATUBE V2 JAVASCRIPT (OPTIMIZED)
    ========================================================= */
 
 
@@ -4043,7 +4054,6 @@ const apiKeys = [
   'AIzaSyA2b3B-yedWF13_hzp8ynhq4b68mqcHdKw'  // API 3
 ];
 
-// Ambil index API Key aktif dari penyimpanan lokal (Default: API 1 / Index 0)
 let activeApiKeyIndex = Number(localStorage.getItem('hidatube_active_api_index') || 0);
 
 function getActiveApiKey() {
@@ -4076,7 +4086,7 @@ const CONFIG = {
 
 
 /* =========================================================
-   STATE
+   STATE & TIMER
    ========================================================= */
 
 let ytPlayer = null;
@@ -4122,6 +4132,8 @@ let isCommentsSectionOpen = false;
 let currentChannelTab = 'videos';
 
 let currentRecommendationLoading = false;
+
+let progressInterval = null; // Timer pintar untuk progress video
 
 
 /* =========================================================
@@ -4478,7 +4490,7 @@ function setCached(key,data) {
 
 
 /* =========================================================
-   API REQUEST (DENGAN DUKUNGAN PILIHAN API KEY MANUAL)
+   API REQUEST (MANUAL KEY ROTATION)
    ========================================================= */
 
 async function apiFetch(baseUrl, cacheKey = null) {
@@ -4489,7 +4501,6 @@ async function apiFetch(baseUrl, cacheKey = null) {
 
   const activeKey = getActiveApiKey();
 
-  // Selalu pastikan parameter key= menggunakan API Key aktif saat ini
   let fullUrl = baseUrl;
   if (fullUrl.includes('key=')) {
     fullUrl = fullUrl.replace(/key=[^&]+/, `key=${encodeURIComponent(activeKey)}`);
@@ -5205,7 +5216,7 @@ function renderFeed(items) {
         <div class="shelf-title">
           <i class="fa-solid fa-bolt"></i> Shorts
         </div>
-        <div class="shorts-grid">
+        <div class="shorts-grid no-scrollbar">
           ${items.slice(0,4).map(s => `
             <div class="short-card" onclick="playVideo('${escapeHTML(s.id)}')">
               <img src="${escapeHTML(s.thumb)}" class="short-thumb" loading="lazy" alt="Short">
@@ -5230,8 +5241,7 @@ function createVideoCard(v, showRank=false) {
 
   const card = document.createElement('div');
   card.className = 'video-card';
-
-  card.addEventListener('click', () => playVideo(v.id));
+  card.dataset.id = v.id;
 
   const avatar = v.channelAvatar || `https://picsum.photos/seed/${encodeURIComponent(v.channelId || v.id)}/100`;
   const progress = watchProgress[v.id];
@@ -5255,14 +5265,8 @@ function createVideoCard(v, showRank=false) {
 
     <div class="video-meta">
       <img src="${escapeHTML(avatar)}" class="channel-avatar" loading="lazy" alt="Avatar"
-        onclick="
-          event.stopPropagation();
-          openChannelPage(
-            '${escapeHTML(v.channelId)}',
-            '${escapeHTML(v.channel)}',
-            false
-          );
-        ">
+        data-channelid="${escapeHTML(v.channelId)}"
+        data-channeltitle="${escapeHTML(v.channel)}">
 
       <div class="meta-details">
         <div class="meta-title">${escapeHTML(v.title)}</div>
@@ -5273,12 +5277,7 @@ function createVideoCard(v, showRank=false) {
         </div>
       </div>
 
-      <button class="video-more-btn"
-        onclick="
-          event.stopPropagation();
-          showVideoMenu('${escapeHTML(v.id)}');
-        "
-        aria-label="Menu">
+      <button class="video-more-btn" data-action="more" data-id="${escapeHTML(v.id)}" aria-label="Menu">
         <i class="fa-solid fa-ellipsis-vertical"></i>
       </button>
     </div>
@@ -5390,13 +5389,26 @@ function handlePlayerStateChange(event) {
   if (event.data === YT.PlayerState.PLAYING) {
     icon.className = 'fa-solid fa-pause';
     saveCurrentProgress();
-  } else if (event.data === YT.PlayerState.PAUSED) {
-    icon.className = 'fa-solid fa-play';
-    saveCurrentProgress();
-  } else if (event.data === YT.PlayerState.ENDED) {
-    saveCurrentProgress(true);
-    if (appSettings.autoplayNext) {
-      playNextVideo();
+
+    // Timer pintar: Jalankan interval hanya saat memutar video
+    if (!progressInterval) {
+      progressInterval = setInterval(saveCurrentProgress, 5000);
+    }
+  } else {
+    // Hentikan timer jika di-pause / ended untuk menghemat baterai & memori
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      progressInterval = null;
+    }
+
+    if (event.data === YT.PlayerState.PAUSED) {
+      icon.className = 'fa-solid fa-play';
+      saveCurrentProgress();
+    } else if (event.data === YT.PlayerState.ENDED) {
+      saveCurrentProgress(true);
+      if (appSettings.autoplayNext) {
+        playNextVideo();
+      }
     }
   }
 
@@ -5529,9 +5541,6 @@ function saveCurrentProgress(ended=false) {
   } catch(e) {}
 
 }
-
-
-setInterval(saveCurrentProgress, 5000);
 
 
 /* =========================================================
@@ -6356,6 +6365,11 @@ function stopAndClosePlayer() {
 
   saveCurrentProgress();
 
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+
   if (ytPlayer && ytPlayer.stopVideo) {
     ytPlayer.stopVideo();
   }
@@ -6560,7 +6574,7 @@ function renderSubscriptionPage() {
       Subscription Anda
     </div>
 
-    <div style="display:flex;gap:10px;overflow-x:auto;padding:8px 12px 15px;">
+    <div style="display:flex;gap:10px;overflow-x:auto;padding:8px 12px 15px;" class="no-scrollbar">
       ${subscriptions.map(s => `
           <div style="min-width:78px;text-align:center;cursor:pointer;"
             onclick="openChannelPage('${escapeHTML(s.channelId)}', '${escapeHTML(s.channel)}', false);">
@@ -6714,7 +6728,7 @@ function renderAndaProfile() {
     history.forEach(item => {
       const video = document.createElement('div');
       video.className = 'video-card';
-      video.onclick = () => playVideo(item.id);
+      video.dataset.id = item.id;
 
       video.innerHTML = `
         <div class="thumbnail-box">
@@ -6770,7 +6784,7 @@ function showHistoryPage() {
   watchHistory.forEach(item => {
     const video = document.createElement('div');
     video.className = 'video-card';
-    video.onclick = () => playVideo(item.id);
+    video.dataset.id = item.id;
 
     const progress = watchProgress[item.id];
     const percent = progress?.duration
@@ -6847,7 +6861,7 @@ function showWatchLaterPage() {
   watchLater.forEach(item => {
     const card = document.createElement('div');
     card.className = 'video-card';
-    card.onclick = () => playVideo(item.id);
+    card.dataset.id = item.id;
 
     card.innerHTML = `
       <div class="thumbnail-box">
@@ -6973,7 +6987,7 @@ function showPlaylistDetail(playlistId) {
   playlist.videos.forEach(video => {
     const card = document.createElement('div');
     card.className = 'video-card';
-    card.onclick = () => playVideo(video.id);
+    card.dataset.id = video.id;
 
     card.innerHTML = `
       <div class="thumbnail-box">
@@ -6994,7 +7008,7 @@ function showPlaylistDetail(playlistId) {
 
 
 /* =========================================================
-   SETTINGS (DENGAN PILIHAN API KEY MANUAL)
+   SETTINGS (ROTASI API KEY MANUAL INTACK)
    ========================================================= */
 
 function showSettings() {
@@ -7731,7 +7745,7 @@ document.addEventListener('keydown', event => {
 
 
 /* =========================================================
-   INITIALIZATION
+   INITIALIZATION & EVENT DELEGATION
    ========================================================= */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -7742,6 +7756,38 @@ document.addEventListener('DOMContentLoaded', () => {
   updateNetworkStatus(navigator.onLine);
 
   renderContinueWatching();
+
+  // Implementasi Event Delegation pada Feed Container (Efisiensi Memori RAM)
+  const feedContainer = document.getElementById('feedContainer');
+  if (feedContainer) {
+    feedContainer.addEventListener('click', (event) => {
+      
+      // 1. Klik Tombol "More" (Titik Tiga)
+      const moreBtn = event.target.closest('.video-more-btn');
+      if (moreBtn) {
+        event.stopPropagation();
+        const id = moreBtn.dataset.id;
+        if (id) showVideoMenu(id);
+        return;
+      }
+
+      // 2. Klik Avatar Channel
+      const avatar = event.target.closest('.channel-avatar');
+      if (avatar) {
+        event.stopPropagation();
+        const chId = avatar.dataset.channelid;
+        const chTitle = avatar.dataset.channeltitle;
+        if (chId) openChannelPage(chId, chTitle, false);
+        return;
+      }
+
+      // 3. Klik Kartu Video
+      const card = event.target.closest('.video-card');
+      if (card && card.dataset.id) {
+        playVideo(card.dataset.id);
+      }
+    });
+  }
 
   /* Load Home pertama kali. */
   loadTrendingVideos(
@@ -7762,22 +7808,6 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', ()
     applySettings();
   }
 });
-
-
-/* =========================================================
-   PERIODIC PROGRESS UPDATE
-   ========================================================= */
-
-setInterval(() => {
-
-  if (currentVideoId && ytPlayer && ytPlayer.getPlayerState) {
-    const state = ytPlayer.getPlayerState();
-    if (state === YT.PlayerState.PLAYING) {
-      saveCurrentProgress();
-    }
-  }
-
-}, 10000);
 
 
 /* =========================================================
