@@ -4041,7 +4041,7 @@ input:focus-visible {
 <script>
 
 /* =========================================================
-   HIDATUBE V2 JAVASCRIPT (OPTIMIZED)
+   HIDATUBE V2 JAVASCRIPT (OPTIMIZED & FIXED)
    ========================================================= */
 
 
@@ -7758,6 +7758,38 @@ document.addEventListener('keydown', event => {
 
 
 /* =========================================================
+   EVENT DELEGATION HANDLER UNTUK KARTU VIDEO
+   ========================================================= */
+
+function handleVideoCardEvents(event) {
+  // 1. Klik Tombol "More" (Titik Tiga)
+  const moreBtn = event.target.closest('.video-more-btn');
+  if (moreBtn) {
+    event.stopPropagation();
+    const id = moreBtn.dataset.id;
+    if (id) showVideoMenu(id);
+    return;
+  }
+
+  // 2. Klik Avatar Channel
+  const avatar = event.target.closest('.channel-avatar');
+  if (avatar) {
+    event.stopPropagation();
+    const chId = avatar.dataset.channelid;
+    const chTitle = avatar.dataset.channeltitle;
+    if (chId) openChannelPage(chId, chTitle, false);
+    return;
+  }
+
+  // 3. Klik Kartu Video (Termasuk Rekomendasi)
+  const card = event.target.closest('.video-card');
+  if (card && card.dataset.id) {
+    playVideo(card.dataset.id);
+  }
+}
+
+
+/* =========================================================
    INITIALIZATION & EVENT DELEGATION
    ========================================================= */
 
@@ -7770,36 +7802,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderContinueWatching();
 
-  // Implementasi Event Delegation pada Feed Container (Efisiensi Memori RAM)
+  // Implementasi Event Delegation pada Feed Utama & Feed Rekomendasi Player
   const feedContainer = document.getElementById('feedContainer');
   if (feedContainer) {
-    feedContainer.addEventListener('click', (event) => {
-      
-      // 1. Klik Tombol "More" (Titik Tiga)
-      const moreBtn = event.target.closest('.video-more-btn');
-      if (moreBtn) {
-        event.stopPropagation();
-        const id = moreBtn.dataset.id;
-        if (id) showVideoMenu(id);
-        return;
-      }
+    feedContainer.addEventListener('click', handleVideoCardEvents);
+  }
 
-      // 2. Klik Avatar Channel
-      const avatar = event.target.closest('.channel-avatar');
-      if (avatar) {
-        event.stopPropagation();
-        const chId = avatar.dataset.channelid;
-        const chTitle = avatar.dataset.channeltitle;
-        if (chId) openChannelPage(chId, chTitle, false);
-        return;
-      }
-
-      // 3. Klik Kartu Video
-      const card = event.target.closest('.video-card');
-      if (card && card.dataset.id) {
-        playVideo(card.dataset.id);
-      }
-    });
+  const recommendedFeed = document.getElementById('recommendedFeed');
+  if (recommendedFeed) {
+    recommendedFeed.addEventListener('click', handleVideoCardEvents);
   }
 
   /* Load Home pertama kali. */
