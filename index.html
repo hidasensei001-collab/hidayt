@@ -231,10 +231,10 @@ img {
 
   align-items:center;
 
-  justify-content:space-between; /* Perbaikan Flexbox */
+  justify-content:space-between;
 
   padding:
-    var(--safe-top) 14px 0 14px; /* Perbaikan Safe Area Notch */
+    var(--safe-top) 14px 0 14px;
 
   z-index:1000;
 
@@ -284,7 +284,7 @@ img {
 
 .icon-btn {
 
-  width:38px; /* Perbaikan Touch Target Size */
+  width:38px;
   height:38px;
 
   display:flex;
@@ -580,8 +580,6 @@ img {
 
   color:var(--yt-black);
 }
-
-/* CHIP INLINE SEARCH STYLING */
 
 .chip-search-box {
 
@@ -920,7 +918,7 @@ img {
 
 .video-more-btn {
 
-  width:36px; /* Touch target optimal */
+  width:36px;
   height:36px;
 
   background:none;
@@ -1208,7 +1206,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between; /* Perbaikan Flexbox */
+  justify-content:space-between;
 
   width:100%;
 }
@@ -1276,7 +1274,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between; /* Perbaikan Flexbox */
+  justify-content:space-between;
 
   gap:10px;
 
@@ -1480,7 +1478,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between; /* Perbaikan Flexbox */
+  justify-content:space-between;
 
   cursor:pointer;
 }
@@ -1966,7 +1964,7 @@ img {
 
 .mini-btn {
 
-  width:36px; /* Touch target optimal */
+  width:36px;
   height:36px;
 
   background:none;
@@ -2014,7 +2012,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-around;
+  justify-style:space-around;
 
   z-index:1200;
 }
@@ -2031,7 +2029,7 @@ img {
 
   align-items:center;
 
-  justify-content:center; /* Perbaikan Flexbox */
+  justify-content:center;
 
   gap:4px;
 
@@ -2448,7 +2446,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-between; /* Perbaikan Flexbox */
+  justify-content:space-between;
 
   gap:15px;
 
@@ -2976,6 +2974,136 @@ img {
   -webkit-box-orient:vertical;
 
   overflow:hidden;
+}
+
+
+/* =========================================================
+   MAINTENANCE OVERLAY
+   ========================================================= */
+
+.maintenance-overlay {
+
+  position:fixed;
+
+  inset:0;
+
+  background:#0f0f0f;
+
+  z-index:99999;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  padding:20px;
+
+  text-align:center;
+}
+
+.maintenance-overlay.hidden {
+
+  display:none !important;
+}
+
+.maint-admin-btn {
+
+  position:absolute;
+
+  top:calc(15px + var(--safe-top));
+
+  right:15px;
+
+  background:rgba(255,255,255,0.08);
+
+  color:var(--yt-text-secondary);
+
+  width:38px;
+
+  height:38px;
+
+  border-radius:50%;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  cursor:pointer;
+
+  font-size:16px;
+}
+
+.maint-content {
+
+  max-width:360px;
+
+  width:100%;
+}
+
+.maint-icon {
+
+  font-size:55px;
+
+  color:var(--yt-red);
+
+  margin-bottom:20px;
+
+  animation:pulseIcon 2s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+
+  0%, 100% {
+    transform:scale(1);
+    opacity:0.9;
+  }
+
+  50% {
+    transform:scale(1.08);
+    opacity:1;
+  }
+}
+
+.maint-content h2 {
+
+  font-size:20px;
+
+  font-weight:700;
+
+  margin-bottom:10px;
+
+  color:var(--yt-text-primary);
+}
+
+.maint-content p {
+
+  font-size:13px;
+
+  color:var(--yt-text-secondary);
+
+  line-height:1.5;
+
+  margin-bottom:20px;
+}
+
+.maint-badge {
+
+  display:inline-block;
+
+  background:var(--yt-paper);
+
+  color:var(--yt-text-primary);
+
+  padding:8px 16px;
+
+  border-radius:20px;
+
+  font-size:12px;
+
+  border:1px solid var(--yt-border);
 }
 
 
@@ -3970,6 +4098,24 @@ input:focus-visible {
 </div>
 
 
+<!-- MAINTENANCE OVERLAY -->
+<div id="maintenanceOverlay" class="maintenance-overlay hidden">
+  <button class="maint-admin-btn" onclick="promptDeveloperOTP()" title="Pengembang">
+    <i class="fa-solid fa-gear"></i>
+  </button>
+  <div class="maint-content">
+    <div class="maint-icon">
+      <i class="fa-solid fa-screwdriver-wrench"></i>
+    </div>
+    <h2>HidaTube Sedang Perbaikan</h2>
+    <p>Layanan saat ini sedang dalam pemeliharaan sistem. Silakan coba lagi nanti.</p>
+    <div id="maintTimerBadge" class="maint-badge">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Memeriksa status...
+    </div>
+  </div>
+</div>
+
+
 <div
   class="toast-container"
   id="toastContainer">
@@ -4134,7 +4280,7 @@ let currentChannelTab = 'videos';
 
 let currentRecommendationLoading = false;
 
-let progressInterval = null; // Timer pintar untuk progress video
+let progressInterval = null;
 
 
 /* =========================================================
@@ -4167,7 +4313,9 @@ const STORAGE = {
 
   comments:'hidatube_local_comments',
 
-  notifications:'hidatube_notifications'
+  notifications:'hidatube_notifications',
+
+  maintenance:'hidatube_maintenance'
 
 };
 
@@ -5391,12 +5539,10 @@ function handlePlayerStateChange(event) {
     icon.className = 'fa-solid fa-pause';
     saveCurrentProgress();
 
-    // Timer pintar: Jalankan interval hanya saat memutar video
     if (!progressInterval) {
       progressInterval = setInterval(saveCurrentProgress, 5000);
     }
   } else {
-    // Hentikan timer jika di-pause / ended untuk menghemat baterai & memori
     if (progressInterval) {
       clearInterval(progressInterval);
       progressInterval = null;
@@ -7021,7 +7167,7 @@ function showPlaylistDetail(playlistId) {
 
 
 /* =========================================================
-   SETTINGS (ROTASI API KEY MANUAL INTACK)
+   SETTINGS & DEVELOPER FEATURES
    ========================================================= */
 
 function showSettings() {
@@ -7071,6 +7217,13 @@ function showSettings() {
     </div>
 
     <div class="settings-section">
+      <div class="settings-section-title">Pengembang</div>
+      <button class="sheet-item" onclick="promptDeveloperOTP()">
+        <i class="fa-solid fa-code"></i> Fitur Pengembang
+      </button>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-section-title">Data</div>
       <button class="sheet-item" onclick="showDataCenter()">
         <i class="fa-solid fa-database"></i> Pusat Data & Backup
@@ -7085,6 +7238,180 @@ function showSettings() {
     </div>
     `
   );
+
+}
+
+
+/* =========================================================
+   DEVELOPER & MAINTENANCE FUNCTIONS
+   ========================================================= */
+
+function promptDeveloperOTP() {
+
+  closeModal();
+
+  openModal(
+    'Verifikasi Pengembang',
+    `
+    <div style="text-align:center;padding:10px 0;">
+      <i class="fa-solid fa-shield-halved" style="font-size:36px;color:var(--yt-red);margin-bottom:12px;"></i>
+      <p style="font-size:12px;color:var(--yt-text-secondary);margin-bottom:15px;line-height:1.5;">
+        Kode OTP telah dikirim melalui SMS.<br>Masukkan kode OTP untuk mengakses Halaman Pengembang.
+      </p>
+      <input id="otpCodeInput" type="password" placeholder="Masukkan OTP"
+        style="width:100%;background:var(--yt-paper-2);color:var(--yt-text-primary);border:1px solid var(--yt-border);border-radius:10px;padding:11px;outline:none;font-size:14px;text-align:center;letter-spacing:2px;"
+        onkeydown="if(event.key==='Enter')verifyDeveloperOTP()">
+
+      <button class="btn-subscribe" style="width:100%;margin-top:15px;" onclick="verifyDeveloperOTP()">
+        Verifikasi Kode
+      </button>
+    </div>
+    `
+  );
+
+  setTimeout(() => {
+    document.getElementById('otpCodeInput')?.focus();
+  }, 200);
+
+}
+
+
+function verifyDeveloperOTP() {
+
+  const input = document.getElementById('otpCodeInput')?.value.trim();
+
+  if (input === 'kode') {
+    closeModal();
+    showToast('Akses Pengembang Diberikan');
+    showDeveloperPanel();
+  } else {
+    showToast('Kode OTP Salah!', 'error');
+  }
+
+}
+
+
+function showDeveloperPanel() {
+
+  const maint = readStorage(STORAGE.maintenance, { active: false, until: null, duration: '12h' });
+  const isON = maint.active && (maint.until === null || Date.now() < maint.until);
+
+  openModal(
+    'Halaman Pengembang',
+    `
+    <div class="settings-section">
+      <div class="settings-section-title">Pemeliharaan Sistem (Maintenance)</div>
+      
+      <div class="settings-row">
+        <div class="settings-info">
+          <div class="settings-name">Fitur Maintenance</div>
+          <div class="settings-description">
+            ${isON ? 'Aplikasi sedang nonaktif / maintenance.' : 'Aplikasi berjalan normal.'}
+          </div>
+        </div>
+        <div class="switch ${isON ? 'active' : ''}" onclick="toggleMaintenanceMode()"></div>
+      </div>
+
+      ${isON ? `
+        <div style="background:var(--yt-paper-2);padding:12px;border-radius:10px;margin-top:12px;font-size:11px;color:var(--yt-text-secondary);line-height:1.6;border:1px solid var(--yt-border);">
+          <i class="fa-solid fa-circle-info" style="color:var(--yt-red);"></i> Status: <strong style="color:#fff;">AKTIF</strong><br>
+          ${maint.until ? `Berakhir pada: <strong style="color:#fff;">${new Date(maint.until).toLocaleString('id-ID')}</strong>` : 'Durasi: <strong style="color:#fff;">Always (Selamanya)</strong>'}
+        </div>
+      ` : `
+        <div style="margin-top:14px;">
+          <div class="settings-section-title" style="margin-bottom:6px;">Pilih Durasi Maintenance</div>
+          <select id="maintDurationSelect" style="width:100%;background:var(--yt-paper-2);color:var(--yt-text-primary);border:1px solid var(--yt-border);border-radius:10px;padding:10px;outline:none;font-size:12px;">
+            <option value="6h">6 Jam</option>
+            <option value="12h" selected>12 Jam</option>
+            <option value="24h">24 Jam</option>
+            <option value="48h">48 Jam</option>
+            <option value="always">Always (Selamanya / Manual Off)</option>
+          </select>
+        </div>
+      `}
+    </div>
+
+    <div style="text-align:center;padding-top:10px;color:var(--yt-text-secondary);font-size:9px;">
+      Developer Panel • HidaTube System
+    </div>
+    `
+  );
+
+}
+
+
+function toggleMaintenanceMode() {
+
+  let maint = readStorage(STORAGE.maintenance, { active: false, until: null, duration: '12h' });
+  const isON = maint.active && (maint.until === null || Date.now() < maint.until);
+
+  if (isON) {
+    maint.active = false;
+    maint.until = null;
+    writeStorage(STORAGE.maintenance, maint);
+
+    showToast('Maintenance Dimatikan');
+    checkMaintenanceState();
+    showDeveloperPanel();
+  } else {
+    const dur = document.getElementById('maintDurationSelect')?.value || '12h';
+    let until = null;
+    const now = Date.now();
+
+    if (dur === '6h') until = now + 6 * 3600 * 1000;
+    else if (dur === '12h') until = now + 12 * 3600 * 1000;
+    else if (dur === '24h') until = now + 24 * 3600 * 1000;
+    else if (dur === '48h') until = now + 48 * 3600 * 1000;
+    else if (dur === 'always') until = null;
+
+    maint = { active: true, until: until, duration: dur };
+    writeStorage(STORAGE.maintenance, maint);
+
+    showToast('Maintenance Diaktifkan!');
+    closeModal();
+    checkMaintenanceState();
+  }
+
+}
+
+
+function checkMaintenanceState() {
+
+  const maint = readStorage(STORAGE.maintenance, { active: false, until: null });
+  const overlay = document.getElementById('maintenanceOverlay');
+  const timerBadge = document.getElementById('maintTimerBadge');
+
+  if (!overlay) return;
+
+  if (maint.active) {
+    const now = Date.now();
+
+    if (maint.until !== null && now >= maint.until) {
+      maint.active = false;
+      maint.until = null;
+      writeStorage(STORAGE.maintenance, maint);
+      overlay.classList.add('hidden');
+    } else {
+      overlay.classList.remove('hidden');
+      stopAndClosePlayer();
+
+      if (timerBadge) {
+        if (maint.until === null) {
+          timerBadge.innerHTML = `<i class="fa-solid fa-infinity"></i> Pemeliharaan tanpa batas waktu`;
+        } else {
+          const remainingSec = Math.max(0, Math.floor((maint.until - now) / 1000));
+          const hours = Math.floor(remainingSec / 3600);
+          const mins = Math.floor((remainingSec % 3600) / 60);
+          const secs = remainingSec % 60;
+          const pad = n => String(n).padStart(2, '0');
+
+          timerBadge.innerHTML = `<i class="fa-solid fa-hourglass-half"></i> Sisa Waktu: ${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+        }
+      }
+    }
+  } else {
+    overlay.classList.add('hidden');
+  }
 
 }
 
@@ -7801,6 +8128,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateNetworkStatus(navigator.onLine);
 
   renderContinueWatching();
+
+  // Cek status maintenance secara periodik (setiap detik)
+  checkMaintenanceState();
+  setInterval(checkMaintenanceState, 1000);
 
   // Implementasi Event Delegation pada Feed Utama & Feed Rekomendasi Player
   const feedContainer = document.getElementById('feedContainer');
