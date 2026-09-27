@@ -1983,7 +1983,7 @@ img {
 
 
 /* =========================================================
-   BOTTOM NAV
+   BOTTOM NAV (PERBAIKAN TYPO CSS HASIL FIX)
    ========================================================= */
 
 .bottom-nav {
@@ -2012,7 +2012,7 @@ img {
 
   align-items:center;
 
-  justify-style:space-around;
+  justify-content:space-around; /* PERBAIKAN: Dari justify-style ke justify-content */
 
   z-index:1200;
 }
@@ -2103,882 +2103,7 @@ img {
 
 
 /* =========================================================
-   TOAST
-   ========================================================= */
-
-.toast-container {
-
-  position:fixed;
-
-  left:50%;
-
-  bottom:
-    calc(
-      var(--bottom-nav-height)
-      + var(--safe-bottom)
-      + 15px
-    );
-
-  transform:translateX(-50%);
-
-  width:min(90%,460px);
-
-  z-index:5000;
-
-  pointer-events:none;
-
-  display:flex;
-
-  flex-direction:column;
-
-  align-items:center;
-
-  gap:8px;
-}
-
-.toast {
-
-  max-width:95%;
-
-  display:flex;
-
-  align-items:center;
-
-  gap:8px;
-
-  background:#292929;
-
-  color:#fff;
-
-  padding:10px 14px;
-
-  border-radius:22px;
-
-  font-size:11px;
-
-  font-weight:500;
-
-  box-shadow:0 8px 25px rgba(0,0,0,.5);
-
-  animation:
-    toastIn .25s ease,
-    toastOut .25s ease 2.7s forwards;
-}
-
-.toast.success i {
-
-  color:#55d66b;
-}
-
-.toast.error i {
-
-  color:#ff5555;
-}
-
-@keyframes toastIn {
-
-  from {
-    opacity:0;
-    transform:translateY(15px) scale(.95);
-  }
-
-  to {
-    opacity:1;
-    transform:none;
-  }
-}
-
-@keyframes toastOut {
-
-  to {
-    opacity:0;
-    transform:translateY(10px);
-  }
-}
-
-
-/* =========================================================
-   BOTTOM SHEET
-   ========================================================= */
-
-.sheet-backdrop {
-
-  position:fixed;
-
-  inset:0;
-
-  background:rgba(0,0,0,.65);
-
-  z-index:4500;
-
-  opacity:0;
-
-  pointer-events:none;
-
-  transition:opacity .2s ease;
-}
-
-.sheet-backdrop.active {
-
-  opacity:1;
-
-  pointer-events:auto;
-}
-
-.bottom-sheet {
-
-  position:fixed;
-
-  left:50%;
-
-  bottom:0;
-
-  transform:
-    translate(-50%,110%);
-
-  width:100%;
-
-  max-width:520px;
-
-  max-height:80vh;
-
-  overflow-y:auto;
-
-  background:var(--yt-paper);
-
-  border-radius:20px 20px 0 0;
-
-  z-index:4600;
-
-  padding:
-    10px
-    10px
-    calc(15px + var(--safe-bottom));
-
-  transition:transform .25s ease;
-
-  box-shadow:0 -10px 40px rgba(0,0,0,.5);
-}
-
-.bottom-sheet.active {
-
-  transform:translate(-50%,0);
-}
-
-.sheet-handle {
-
-  width:40px;
-  height:4px;
-
-  border-radius:4px;
-
-  background:rgba(255,255,255,.25);
-
-  margin:4px auto 13px;
-}
-
-.sheet-title {
-
-  font-size:15px;
-
-  font-weight:700;
-
-  padding:0 8px 10px;
-}
-
-.sheet-item {
-
-  display:flex;
-
-  align-items:center;
-
-  gap:13px;
-
-  width:100%;
-
-  padding:13px 10px;
-
-  border-radius:11px;
-
-  background:none;
-
-  color:var(--yt-text-primary);
-
-  font-size:12px;
-
-  text-align:left;
-
-  cursor:pointer;
-}
-
-.sheet-item:active {
-
-  background:var(--yt-paper-hover);
-}
-
-.sheet-item i {
-
-  width:22px;
-
-  text-align:center;
-
-  color:var(--yt-text-secondary);
-
-  font-size:15px;
-}
-
-
-/* =========================================================
-   MODAL
-   ========================================================= */
-
-.modal-backdrop {
-
-  position:fixed;
-
-  inset:0;
-
-  background:rgba(0,0,0,.7);
-
-  z-index:4700;
-
-  display:none;
-
-  align-items:flex-end;
-
-  justify-content:center;
-}
-
-.modal-backdrop.active {
-
-  display:flex;
-}
-
-.modal-box {
-
-  width:100%;
-
-  max-width:520px;
-
-  max-height:88vh;
-
-  overflow-y:auto;
-
-  background:var(--yt-paper);
-
-  border-radius:20px 20px 0 0;
-
-  padding:
-    16px
-    15px
-    calc(18px + var(--safe-bottom));
-
-  animation:modalUp .22s ease;
-}
-
-@keyframes modalUp {
-
-  from {
-    transform:translateY(100%);
-  }
-
-  to {
-    opacity:1;
-    transform:none;
-  }
-}
-
-.modal-title {
-
-  font-size:16px;
-
-  font-weight:700;
-
-  margin-bottom:15px;
-}
-
-.modal-close {
-
-  float:right;
-
-  width:30px;
-  height:30px;
-
-  background:rgba(255,255,255,.08);
-
-  color:var(--yt-text-primary);
-
-  border-radius:50%;
-
-  cursor:pointer;
-}
-
-
-/* =========================================================
-   SETTINGS
-   ========================================================= */
-
-.settings-section {
-
-  margin-bottom:20px;
-}
-
-.settings-section-title {
-
-  color:var(--yt-text-secondary);
-
-  font-size:10px;
-
-  font-weight:700;
-
-  text-transform:uppercase;
-
-  letter-spacing:.7px;
-
-  margin-bottom:7px;
-
-  padding:0 4px;
-}
-
-.settings-row {
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:space-between;
-
-  gap:15px;
-
-  padding:12px 5px;
-
-  border-bottom:1px solid var(--yt-border);
-}
-
-.settings-row:last-child {
-
-  border-bottom:0;
-}
-
-.settings-info {
-
-  flex:1;
-}
-
-.settings-name {
-
-  font-size:12px;
-
-  font-weight:500;
-}
-
-.settings-description {
-
-  font-size:10px;
-
-  color:var(--yt-text-secondary);
-
-  margin-top:3px;
-
-  line-height:1.4;
-}
-
-
-/* SWITCH */
-
-.switch {
-
-  width:42px;
-  height:23px;
-
-  background:#555;
-
-  border-radius:20px;
-
-  position:relative;
-
-  cursor:pointer;
-
-  flex-shrink:0;
-
-  transition:background .2s ease;
-}
-
-.switch::after {
-
-  content:"";
-
-  position:absolute;
-
-  top:3px;
-  left:3px;
-
-  width:17px;
-  height:17px;
-
-  background:white;
-
-  border-radius:50%;
-
-  transition:transform .2s ease;
-}
-
-.switch.active {
-
-  background:var(--yt-red);
-}
-
-.switch.active::after {
-
-  transform:translateX(19px);
-}
-
-
-/* =========================================================
-   THEME OPTIONS
-   ========================================================= */
-
-.theme-options {
-
-  display:grid;
-
-  grid-template-columns:repeat(3,1fr);
-
-  gap:8px;
-}
-
-.theme-option {
-
-  padding:12px 7px;
-
-  border:1px solid var(--yt-border);
-
-  border-radius:10px;
-
-  text-align:center;
-
-  font-size:10px;
-
-  cursor:pointer;
-}
-
-.theme-option.active {
-
-  border-color:var(--yt-red);
-
-  background:rgba(255,0,0,.1);
-}
-
-
-/* =========================================================
-   PLAYLIST
-   ========================================================= */
-
-.playlist-item {
-
-  display:flex;
-
-  align-items:center;
-
-  gap:11px;
-
-  padding:10px;
-
-  border-bottom:1px solid var(--yt-border);
-
-  cursor:pointer;
-}
-
-.playlist-icon {
-
-  width:45px;
-  height:45px;
-
-  border-radius:8px;
-
-  background:var(--yt-paper-hover);
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  color:var(--yt-text-secondary);
-}
-
-.playlist-info {
-
-  flex:1;
-}
-
-.playlist-name {
-
-  font-size:12px;
-
-  font-weight:600;
-}
-
-.playlist-count {
-
-  font-size:10px;
-
-  color:var(--yt-text-secondary);
-
-  margin-top:3px;
-}
-
-
-/* =========================================================
-   LIBRARY
-   ========================================================= */
-
-.library-menu {
-
-  display:grid;
-
-  grid-template-columns:repeat(2,1fr);
-
-  gap:9px;
-
-  padding:14px 12px;
-}
-
-.library-card {
-
-  min-height:80px;
-
-  background:var(--yt-paper);
-
-  border-radius:13px;
-
-  padding:13px;
-
-  cursor:pointer;
-
-  transition:transform .15s ease;
-}
-
-.library-card:active {
-
-  transform:scale(.96);
-}
-
-.library-card i {
-
-  font-size:19px;
-
-  margin-bottom:9px;
-}
-
-.library-card-title {
-
-  font-size:11px;
-
-  font-weight:600;
-}
-
-.library-card-count {
-
-  color:var(--yt-text-secondary);
-
-  font-size:9px;
-
-  margin-top:3px;
-}
-
-
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-
-.empty-state {
-
-  text-align:center;
-
-  padding:50px 25px;
-
-  color:var(--yt-text-secondary);
-}
-
-.empty-state i {
-
-  font-size:35px;
-
-  margin-bottom:13px;
-
-  opacity:.6;
-}
-
-.empty-state h3 {
-
-  color:var(--yt-text-primary);
-
-  font-size:15px;
-
-  margin-bottom:6px;
-}
-
-.empty-state p {
-
-  font-size:11px;
-
-  line-height:1.5;
-}
-
-
-/* =========================================================
-   NETWORK STATUS
-   ========================================================= */
-
-.network-status {
-
-  position:fixed;
-
-  top:
-    calc(
-      var(--top-nav-height)
-      + var(--safe-top)
-      + 5px
-    );
-
-  left:50%;
-
-  transform:
-    translate(-50%,-80px);
-
-  background:#242424;
-
-  color:#fff;
-
-  padding:7px 12px;
-
-  border-radius:18px;
-
-  font-size:10px;
-
-  z-index:6000;
-
-  transition:transform .25s ease;
-}
-
-.network-status.visible {
-
-  transform:translate(-50%,0);
-}
-
-.network-status.offline {
-
-  background:#b00020;
-}
-
-
-/* =========================================================
-   PULL REFRESH
-   ========================================================= */
-
-.pull-indicator {
-
-  position:fixed;
-
-  top:
-    calc(
-      var(--top-nav-height)
-      + var(--safe-top)
-    );
-
-  left:50%;
-
-  transform:translate(-50%,-60px);
-
-  width:34px;
-  height:34px;
-
-  background:var(--yt-paper);
-
-  border-radius:50%;
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  z-index:700;
-
-  transition:transform .2s ease;
-
-  box-shadow:var(--shadow);
-}
-
-.pull-indicator.visible {
-
-  transform:translate(-50%,10px);
-}
-
-
-/* =========================================================
-   LOADING
-   ========================================================= */
-
-.loading-spinner {
-
-  text-align:center;
-
-  padding:35px 0;
-
-  color:var(--yt-text-secondary);
-
-  font-size:12px;
-}
-
-.loading-spinner i {
-
-  font-size:25px;
-
-  margin-bottom:8px;
-}
-
-
-/* =========================================================
-   PROFILE
-   ========================================================= */
-
-.profile-header {
-
-  padding:22px 16px;
-
-  display:flex;
-
-  align-items:center;
-
-  gap:13px;
-
-  border-bottom:1px solid var(--yt-border);
-}
-
-.profile-avatar {
-
-  width:62px;
-  height:62px;
-
-  border-radius:50%;
-
-  background:var(--yt-paper);
-
-  display:flex;
-
-  align-items:center;
-  justify-content:center;
-
-  font-size:28px;
-
-  color:var(--yt-text-secondary);
-}
-
-.profile-name {
-
-  font-size:16px;
-
-  font-weight:700;
-}
-
-.profile-handle {
-
-  font-size:10px;
-
-  color:var(--yt-text-secondary);
-
-  margin-top:4px;
-}
-
-
-/* =========================================================
-   PROGRESS / CONTINUE
-   ========================================================= */
-
-.continue-section {
-
-  padding:14px 12px 3px;
-}
-
-.section-heading {
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:space-between;
-
-  margin-bottom:10px;
-}
-
-.section-heading h3 {
-
-  font-size:14px;
-}
-
-.section-heading button {
-
-  background:none;
-
-  color:var(--yt-text-secondary);
-
-  font-size:10px;
-
-  cursor:pointer;
-}
-
-.continue-list {
-
-  display:flex;
-
-  gap:9px;
-
-  overflow-x:auto;
-}
-
-.continue-card {
-
-  width:155px;
-
-  flex-shrink:0;
-
-  cursor:pointer;
-}
-
-.continue-thumb {
-
-  width:155px;
-  height:87px;
-
-  object-fit:cover;
-
-  border-radius:8px;
-
-  display:block;
-}
-
-.continue-title {
-
-  font-size:10px;
-
-  font-weight:500;
-
-  line-height:1.3;
-
-  margin-top:5px;
-
-  display:-webkit-box;
-
-  -webkit-line-clamp:2;
-
-  -webkit-box-orient:vertical;
-
-  overflow:hidden;
-}
-
-
-/* =========================================================
-   MAINTENANCE OVERLAY
+   MAINTENANCE OVERLAY (PERBAIKAN Z-INDEX HIERARKI)
    ========================================================= */
 
 .maintenance-overlay {
@@ -2989,7 +2114,7 @@ img {
 
   background:#0f0f0f;
 
-  z-index:99999;
+  z-index:9000; /* PERBAIKAN: Diturunkan dari 99999 ke 9000 agar Modal Popup Pengembang (z-index 9700) berada di atasnya */
 
   display:flex;
 
@@ -3108,8 +2233,859 @@ img {
 
 
 /* =========================================================
-   ACCESSIBILITY
+   BOTTOM SHEET & MODAL & TOAST (Z-INDEX KELAS ATAS)
    ========================================================= */
+
+.sheet-backdrop {
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,.65);
+
+  z-index:9500; /* PERBAIKAN: Lebih tinggi dari maintenance-overlay */
+
+  opacity:0;
+
+  pointer-events:none;
+
+  transition:opacity .2s ease;
+}
+
+.sheet-backdrop.active {
+
+  opacity:1;
+
+  pointer-events:auto;
+}
+
+.bottom-sheet {
+
+  position:fixed;
+
+  left:50%;
+
+  bottom:0;
+
+  transform:
+    translate(-50%,110%);
+
+  width:100%;
+
+  max-width:520px;
+
+  max-height:80vh;
+
+  overflow-y:auto;
+
+  background:var(--yt-paper);
+
+  border-radius:20px 20px 0 0;
+
+  z-index:9600; /* PERBAIKAN: Lebih tinggi dari backdrop sheet */
+
+  padding:
+    10px
+    10px
+    calc(15px + var(--safe-bottom));
+
+  transition:transform .25s ease;
+
+  box-shadow:0 -10px 40px rgba(0,0,0,.5);
+}
+
+.bottom-sheet.active {
+
+  transform:translate(-50%,0);
+}
+
+.sheet-handle {
+
+  width:40px;
+  height:4px;
+
+  border-radius:4px;
+
+  background:rgba(255,255,255,.25);
+
+  margin:4px auto 13px;
+}
+
+.sheet-title {
+
+  font-size:15px;
+
+  font-weight:700;
+
+  padding:0 8px 10px;
+}
+
+.sheet-item {
+
+  display:flex;
+
+  align-items:center;
+
+  gap:13px;
+
+  width:100%;
+
+  padding:13px 10px;
+
+  border-radius:11px;
+
+  background:none;
+
+  color:var(--yt-text-primary);
+
+  font-size:12px;
+
+  text-align:left;
+
+  cursor:pointer;
+}
+
+.sheet-item:active {
+
+  background:var(--yt-paper-hover);
+}
+
+.sheet-item i {
+
+  width:22px;
+
+  text-align:center;
+
+  color:var(--yt-text-secondary);
+
+  font-size:15px;
+}
+
+
+/* MODAL */
+
+.modal-backdrop {
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,.7);
+
+  z-index:9700; /* PERBAIKAN: Lebih tinggi dari maintenance-overlay (9000) agar OTP/Panel muncul di paling depan */
+
+  display:none;
+
+  align-items:flex-end;
+
+  justify-content:center;
+}
+
+.modal-backdrop.active {
+
+  display:flex;
+}
+
+.modal-box {
+
+  width:100%;
+
+  max-width:520px;
+
+  max-height:88vh;
+
+  overflow-y:auto;
+
+  background:var(--yt-paper);
+
+  border-radius:20px 20px 0 0;
+
+  padding:
+    16px
+    15px
+    calc(18px + var(--safe-bottom));
+
+  animation:modalUp .22s ease;
+}
+
+@keyframes modalUp {
+
+  from {
+    transform:translateY(100%);
+  }
+
+  to {
+    opacity:1;
+    transform:none;
+  }
+}
+
+.modal-title {
+
+  font-size:16px;
+
+  font-weight:700;
+
+  margin-bottom:15px;
+}
+
+.modal-close {
+
+  float:right;
+
+  width:30px;
+  height:30px;
+
+  background:rgba(255,255,255,.08);
+
+  color:var(--yt-text-primary);
+
+  border-radius:50%;
+
+  cursor:pointer;
+}
+
+
+/* TOAST */
+
+.toast-container {
+
+  position:fixed;
+
+  left:50%;
+
+  bottom:
+    calc(
+      var(--bottom-nav-height)
+      + var(--safe-bottom)
+      + 15px
+    );
+
+  transform:translateX(-50%);
+
+  width:min(90%,460px);
+
+  z-index:10000; /* PERBAIKAN: Selalu berada di layer teratas */
+
+  pointer-events:none;
+
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+
+  gap:8px;
+}
+
+.toast {
+
+  max-width:95%;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:8px;
+
+  background:#292929;
+
+  color:#fff;
+
+  padding:10px 14px;
+
+  border-radius:22px;
+
+  font-size:11px;
+
+  font-weight:500;
+
+  box-shadow:0 8px 25px rgba(0,0,0,.5);
+
+  animation:
+    toastIn .25s ease,
+    toastOut .25s ease 2.7s forwards;
+}
+
+.toast.success i {
+
+  color:#55d66b;
+}
+
+.toast.error i {
+
+  color:#ff5555;
+}
+
+@keyframes toastIn {
+
+  from {
+    opacity:0;
+    transform:translateY(15px) scale(.95);
+  }
+
+  to {
+    opacity:1;
+    transform:none;
+  }
+}
+
+@keyframes toastOut {
+
+  to {
+    opacity:0;
+    transform:translateY(10px);
+  }
+}
+
+
+/* =========================================================
+   SETTINGS & OTHER UTILITIES
+   ========================================================= */
+
+.settings-section {
+
+  margin-bottom:20px;
+}
+
+.settings-section-title {
+
+  color:var(--yt-text-secondary);
+
+  font-size:10px;
+
+  font-weight:700;
+
+  text-transform:uppercase;
+
+  letter-spacing:.7px;
+
+  margin-bottom:7px;
+
+  padding:0 4px;
+}
+
+.settings-row {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  gap:15px;
+
+  padding:12px 5px;
+
+  border-bottom:1px solid var(--yt-border);
+}
+
+.settings-row:last-child {
+
+  border-bottom:0;
+}
+
+.settings-info {
+
+  flex:1;
+}
+
+.settings-name {
+
+  font-size:12px;
+
+  font-weight:500;
+}
+
+.settings-description {
+
+  font-size:10px;
+
+  color:var(--yt-text-secondary);
+
+  margin-top:3px;
+
+  line-height:1.4;
+}
+
+
+/* SWITCH */
+
+.switch {
+
+  width:42px;
+  height:23px;
+
+  background:#555;
+
+  border-radius:20px;
+
+  position:relative;
+
+  cursor:pointer;
+
+  flex-shrink:0;
+
+  transition:background .2s ease;
+}
+
+.switch::after {
+
+  content:"";
+
+  position:absolute;
+
+  top:3px;
+  left:3px;
+
+  width:17px;
+  height:17px;
+
+  background:white;
+
+  border-radius:50%;
+
+  transition:transform .2s ease;
+}
+
+.switch.active {
+
+  background:var(--yt-red);
+}
+
+.switch.active::after {
+
+  transform:translateX(19px);
+}
+
+
+/* THEME OPTIONS */
+
+.theme-options {
+
+  display:grid;
+
+  grid-template-columns:repeat(3,1fr);
+
+  gap:8px;
+}
+
+.theme-option {
+
+  padding:12px 7px;
+
+  border:1px solid var(--yt-border);
+
+  border-radius:10px;
+
+  text-align:center;
+
+  font-size:10px;
+
+  cursor:pointer;
+}
+
+.theme-option.active {
+
+  border-color:var(--yt-red);
+
+  background:rgba(255,0,0,.1);
+}
+
+
+/* PLAYLIST */
+
+.playlist-item {
+
+  display:flex;
+
+  align-items:center;
+
+  gap:11px;
+
+  padding:10px;
+
+  border-bottom:1px solid var(--yt-border);
+
+  cursor:pointer;
+}
+
+.playlist-icon {
+
+  width:45px;
+  height:45px;
+
+  border-radius:8px;
+
+  background:var(--yt-paper-hover);
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  color:var(--yt-text-secondary);
+}
+
+.playlist-info {
+
+  flex:1;
+}
+
+.playlist-name {
+
+  font-size:12px;
+
+  font-weight:600;
+}
+
+.playlist-count {
+
+  font-size:10px;
+
+  color:var(--yt-text-secondary);
+
+  margin-top:3px;
+}
+
+
+/* LIBRARY */
+
+.library-menu {
+
+  display:grid;
+
+  grid-template-columns:repeat(2,1fr);
+
+  gap:9px;
+
+  padding:14px 12px;
+}
+
+.library-card {
+
+  min-height:80px;
+
+  background:var(--yt-paper);
+
+  border-radius:13px;
+
+  padding:13px;
+
+  cursor:pointer;
+
+  transition:transform .15s ease;
+}
+
+.library-card:active {
+
+  transform:scale(.96);
+}
+
+.library-card i {
+
+  font-size:19px;
+
+  margin-bottom:9px;
+}
+
+.library-card-title {
+
+  font-size:11px;
+
+  font-weight:600;
+}
+
+.library-card-count {
+
+  color:var(--yt-text-secondary);
+
+  font-size:9px;
+
+  margin-top:3px;
+}
+
+
+/* EMPTY STATE */
+
+.empty-state {
+
+  text-align:center;
+
+  padding:50px 25px;
+
+  color:var(--yt-text-secondary);
+}
+
+.empty-state i {
+
+  font-size:35px;
+
+  margin-bottom:13px;
+
+  opacity:.6;
+}
+
+.empty-state h3 {
+
+  color:var(--yt-text-primary);
+
+  font-size:15px;
+
+  margin-bottom:6px;
+}
+
+.empty-state p {
+
+  font-size:11px;
+
+  line-height:1.5;
+}
+
+
+/* NETWORK STATUS */
+
+.network-status {
+
+  position:fixed;
+
+  top:
+    calc(
+      var(--top-nav-height)
+      + var(--safe-top)
+      + 5px
+    );
+
+  left:50%;
+
+  transform:
+    translate(-50%,-80px);
+
+  background:#242424;
+
+  color:#fff;
+
+  padding:7px 12px;
+
+  border-radius:18px;
+
+  font-size:10px;
+
+  z-index:6000;
+
+  transition:transform .25s ease;
+}
+
+.network-status.visible {
+
+  transform:translate(-50%,0);
+}
+
+.network-status.offline {
+
+  background:#b00020;
+}
+
+
+/* PULL REFRESH */
+
+.pull-indicator {
+
+  position:fixed;
+
+  top:
+    calc(
+      var(--top-nav-height)
+      + var(--safe-top)
+    );
+
+  left:50%;
+
+  transform:translate(-50%,-60px);
+
+  width:34px;
+  height:34px;
+
+  background:var(--yt-paper);
+
+  border-radius:50%;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  z-index:700;
+
+  transition:transform .2s ease;
+
+  box-shadow:var(--shadow);
+}
+
+.pull-indicator.visible {
+
+  transform:translate(-50%,10px);
+}
+
+
+/* LOADING */
+
+.loading-spinner {
+
+  text-align:center;
+
+  padding:35px 0;
+
+  color:var(--yt-text-secondary);
+
+  font-size:12px;
+}
+
+.loading-spinner i {
+
+  font-size:25px;
+
+  margin-bottom:8px;
+}
+
+
+/* PROFILE */
+
+.profile-header {
+
+  padding:22px 16px;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:13px;
+
+  border-bottom:1px solid var(--yt-border);
+}
+
+.profile-avatar {
+
+  width:62px;
+  height:62px;
+
+  border-radius:50%;
+
+  background:var(--yt-paper);
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  font-size:28px;
+
+  color:var(--yt-text-secondary);
+}
+
+.profile-name {
+
+  font-size:16px;
+
+  font-weight:700;
+}
+
+.profile-handle {
+
+  font-size:10px;
+
+  color:var(--yt-text-secondary);
+
+  margin-top:4px;
+}
+
+
+/* PROGRESS / CONTINUE */
+
+.continue-section {
+
+  padding:14px 12px 3px;
+}
+
+.section-heading {
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:space-between;
+
+  margin-bottom:10px;
+}
+
+.section-heading h3 {
+
+  font-size:14px;
+}
+
+.section-heading button {
+
+  background:none;
+
+  color:var(--yt-text-secondary);
+
+  font-size:10px;
+
+  cursor:pointer;
+}
+
+.continue-list {
+
+  display:flex;
+
+  gap:9px;
+
+  overflow-x:auto;
+}
+
+.continue-card {
+
+  width:155px;
+
+  flex-shrink:0;
+
+  cursor:pointer;
+}
+
+.continue-thumb {
+
+  width:155px;
+  height:87px;
+
+  object-fit:cover;
+
+  border-radius:8px;
+
+  display:block;
+}
+
+.continue-title {
+
+  font-size:10px;
+
+  font-weight:500;
+
+  line-height:1.3;
+
+  margin-top:5px;
+
+  display:-webkit-box;
+
+  -webkit-line-clamp:2;
+
+  -webkit-box-orient:vertical;
+
+  overflow:hidden;
+}
+
+
+/* ACCESSIBILITY */
 
 button:focus-visible,
 input:focus-visible {
@@ -3120,9 +3096,7 @@ input:focus-visible {
 }
 
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+/* RESPONSIVE */
 
 @media (min-width:521px) {
 
@@ -3138,9 +3112,7 @@ input:focus-visible {
 }
 
 
-/* =========================================================
-   REDUCED MOTION
-   ========================================================= */
+/* REDUCED MOTION */
 
 @media (prefers-reduced-motion:reduce) {
 
@@ -7243,7 +7215,7 @@ function showSettings() {
 
 
 /* =========================================================
-   DEVELOPER & MAINTENANCE FUNCTIONS
+   DEVELOPER & MAINTENANCE FUNCTIONS (OPTIMIZED)
    ========================================================= */
 
 function promptDeveloperOTP() {
@@ -7256,8 +7228,9 @@ function promptDeveloperOTP() {
     <div style="text-align:center;padding:10px 0;">
       <i class="fa-solid fa-shield-halved" style="font-size:36px;color:var(--yt-red);margin-bottom:12px;"></i>
       <p style="font-size:12px;color:var(--yt-text-secondary);margin-bottom:15px;line-height:1.5;">
-        Kode OTP telah dikirim melalui SMS.<br>Masukkan kode OTP untuk mengakses Halaman Pengembang.
+        Masukkan kode OTP untuk mengakses Halaman Pengembang.
       </p>
+
       <input id="otpCodeInput" type="password" placeholder="Masukkan OTP"
         style="width:100%;background:var(--yt-paper-2);color:var(--yt-text-primary);border:1px solid var(--yt-border);border-radius:10px;padding:11px;outline:none;font-size:14px;text-align:center;letter-spacing:2px;"
         onkeydown="if(event.key==='Enter')verifyDeveloperOTP()">
@@ -7352,7 +7325,7 @@ function toggleMaintenanceMode() {
 
     showToast('Maintenance Dimatikan');
     checkMaintenanceState();
-    showDeveloperPanel();
+    closeModal();
   } else {
     const dur = document.getElementById('maintDurationSelect')?.value || '12h';
     let until = null;
@@ -8089,7 +8062,7 @@ document.addEventListener('keydown', event => {
    ========================================================= */
 
 function handleVideoCardEvents(event) {
-  // 1. Klik Tombol "More" (Titik Tiga)
+
   const moreBtn = event.target.closest('.video-more-btn');
   if (moreBtn) {
     event.stopPropagation();
@@ -8098,7 +8071,6 @@ function handleVideoCardEvents(event) {
     return;
   }
 
-  // 2. Klik Avatar Channel
   const avatar = event.target.closest('.channel-avatar');
   if (avatar) {
     event.stopPropagation();
@@ -8108,7 +8080,6 @@ function handleVideoCardEvents(event) {
     return;
   }
 
-  // 3. Klik Kartu Video (Termasuk Rekomendasi)
   const card = event.target.closest('.video-card');
   if (card && card.dataset.id) {
     playVideo(card.dataset.id);
@@ -8129,11 +8100,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderContinueWatching();
 
-  // Cek status maintenance secara periodik (setiap detik)
   checkMaintenanceState();
   setInterval(checkMaintenanceState, 1000);
 
-  // Implementasi Event Delegation pada Feed Utama & Feed Rekomendasi Player
   const feedContainer = document.getElementById('feedContainer');
   if (feedContainer) {
     feedContainer.addEventListener('click', handleVideoCardEvents);
@@ -8144,7 +8113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     recommendedFeed.addEventListener('click', handleVideoCardEvents);
   }
 
-  /* Load Home pertama kali. */
   loadTrendingVideos(
     false,
     document.getElementById('chipSemua'),
