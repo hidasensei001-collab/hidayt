@@ -24,6 +24,10 @@
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+<!-- Firebase Realtime Database SDK (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
 
 /* =========================================================
@@ -2012,7 +2016,7 @@ img {
 
   align-items:center;
 
-  justify-content:space-around; /* PERBAIKAN: Dari justify-style ke justify-content */
+  justify-content:space-around;
 
   z-index:1200;
 }
@@ -2114,7 +2118,7 @@ img {
 
   background:#0f0f0f;
 
-  z-index:9000; /* PERBAIKAN: Diturunkan dari 99999 ke 9000 agar Modal Popup Pengembang (z-index 9700) berada di atasnya */
+  z-index:9000;
 
   display:flex;
 
@@ -2244,7 +2248,7 @@ img {
 
   background:rgba(0,0,0,.65);
 
-  z-index:9500; /* PERBAIKAN: Lebih tinggi dari maintenance-overlay */
+  z-index:9500;
 
   opacity:0;
 
@@ -2283,7 +2287,7 @@ img {
 
   border-radius:20px 20px 0 0;
 
-  z-index:9600; /* PERBAIKAN: Lebih tinggi dari backdrop sheet */
+  z-index:9600;
 
   padding:
     10px
@@ -2373,7 +2377,7 @@ img {
 
   background:rgba(0,0,0,.7);
 
-  z-index:9700; /* PERBAIKAN: Lebih tinggi dari maintenance-overlay (9000) agar OTP/Panel muncul di paling depan */
+  z-index:9700;
 
   display:none;
 
@@ -2466,7 +2470,7 @@ img {
 
   width:min(90%,460px);
 
-  z-index:10000; /* PERBAIKAN: Selalu berada di layer teratas */
+  z-index:10000;
 
   pointer-events:none;
 
@@ -7313,6 +7317,39 @@ function showDeveloperPanel() {
 }
 
 
+/* =========================================================
+   FIREBASE REALTIME DATABASE SYNC (GLOBAL MAINTENANCE)
+   ========================================================= */
+
+// Konfigurasi Firebase Realtime Database
+const firebaseConfig = {
+  databaseURL: "https://hidatube-app-default-rtdb.firebaseio.com"
+};
+
+let dbMaintenanceRef = null;
+
+function initFirebaseMaintenance() {
+  try {
+    if (typeof firebase !== 'undefined' && firebaseConfig.databaseURL) {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      dbMaintenanceRef = firebase.database().ref('hidatube_system/maintenance');
+      
+      // Realtime Listener: Terkoneksi ke seluruh HP pengguna secara global
+      dbMaintenanceRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          writeStorage(STORAGE.maintenance, val);
+          checkMaintenanceState();
+        }
+      });
+    }
+  } catch(e) {
+    console.warn('Firebase init warning:', e);
+  }
+}
+
 function toggleMaintenanceMode() {
 
   let maint = readStorage(STORAGE.maintenance, { active: false, until: null, duration: '12h' });
@@ -7321,9 +7358,15 @@ function toggleMaintenanceMode() {
   if (isON) {
     maint.active = false;
     maint.until = null;
+    maint.updatedAt = Date.now();
     writeStorage(STORAGE.maintenance, maint);
 
-    showToast('Maintenance Dimatikan');
+    // Sync ke Firebase Realtime Database agar SEMUA HP pengguna ikut nonaktifkan maintenance
+    if (dbMaintenanceRef) {
+      dbMaintenanceRef.set(maint).catch(e => console.warn(e));
+    }
+
+    showToast('Maintenance Dimatikan (Global)');
     checkMaintenanceState();
     closeModal();
   } else {
@@ -7337,10 +7380,15 @@ function toggleMaintenanceMode() {
     else if (dur === '48h') until = now + 48 * 3600 * 1000;
     else if (dur === 'always') until = null;
 
-    maint = { active: true, until: until, duration: dur };
+    maint = { active: true, until: until, duration: dur, updatedAt: now };
     writeStorage(STORAGE.maintenance, maint);
 
-    showToast('Maintenance Diaktifkan!');
+    // Sync ke Firebase Realtime Database agar SEMUA HP pengguna langsung terkunci maintenance
+    if (dbMaintenanceRef) {
+      dbMaintenanceRef.set(maint).catch(e => console.warn(e));
+    }
+
+    showToast('Maintenance Diaktifkan (Global)!');
     closeModal();
     checkMaintenanceState();
   }
@@ -8100,6 +8148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderContinueWatching();
 
+  initFirebaseMaintenance();
   checkMaintenanceState();
   setInterval(checkMaintenanceState, 1000);
 
